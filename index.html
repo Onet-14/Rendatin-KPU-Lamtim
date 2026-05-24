@@ -39,14 +39,14 @@
         .login-box button { background-color: #C8102E; border-color: #C8102E; color: white; width: 100%; }
         .login-box button:hover { background-color: #a50d24; border-color: #a50d24; }
 
-        /* LAYOUT UTAMA (Disembunyikan awalnya) */
+        /* LAYOUT UTAMA */
         #app-wrapper {
-            display: none; /* Default tersembunyi */
+            display: none; /* Tersembunyi sebelum login */
             height: 100vh;
             width: 100vw;
         }
 
-        /* === SIDEBAR KIRI === */
+        /* === SIDEBAR KIRI (LIGHT MODE) === */
         #sidebar {
             width: 280px;
             min-width: 280px;
@@ -66,57 +66,197 @@
             align-items: center;
             gap: 12px;
         }
-        .sidebar-header img { height: 45px; }
-        .sidebar-title { color: #C8102E; font-weight: 800; font-size: 1.2rem; letter-spacing: 0.5px; }
 
-        .sidebar-menu { flex: 1; padding: 15px 10px; overflow-y: auto; }
-        .menu-item {
-            display: flex; align-items: center; padding: 14px 15px; border-radius: 8px;
-            color: #555555; text-decoration: none; margin-bottom: 4px;
-            transition: all 0.2s ease; cursor: pointer; font-weight: 500;
+        .sidebar-header img {
+            height: 45px;
         }
-        .menu-item i { margin-right: 15px; font-size: 1.1rem; width: 20px; text-align: center; }
-        .menu-item:hover { background-color: #fff5f5; color: #C8102E; }
-        .menu-item.active { background-color: #C8102E; color: #ffffff; box-shadow: 0 4px 10px rgba(200, 16, 46, 0.3); }
-        .sidebar-footer { padding: 20px; border-top: 1px solid #e0e0e0; font-size: 0.8rem; color: #999999; text-align: center; font-style: italic; }
+
+        .sidebar-title {
+            color: #C8102E; /* Warna Merah KPU */
+            font-weight: 800;
+            font-size: 1.2rem;
+            letter-spacing: 0.5px;
+        }
+
+        .sidebar-menu {
+            flex: 1;
+            padding: 15px 10px;
+            overflow-y: auto;
+        }
+
+        /* MENU INDUK (LIGHT MODE) */
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 15px;
+            border-radius: 8px;
+            color: #555555;
+            text-decoration: none;
+            margin-bottom: 4px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .menu-item i {
+            margin-right: 15px;
+            font-size: 1.1rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        .menu-item:hover {
+            background-color: #fff5f5;
+            color: #C8102E;
+        }
+
+        .menu-item.active {
+            background-color: #C8102E;
+            color: #ffffff;
+            box-shadow: 0 4px 10px rgba(200, 16, 46, 0.3);
+        }
+
+        .sidebar-footer {
+            padding: 20px;
+            border-top: 1px solid #e0e0e0;
+            font-size: 0.8rem;
+            color: #999999;
+            text-align: center;
+            font-style: italic;
+        }
 
         /* === AREA KONTEN KANAN === */
-        #main-content { flex: 1; display: flex; flex-direction: column; background-color: #f4f6f9; overflow: hidden; }
+        #main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: #f4f6f9;
+            overflow: hidden;
+        }
+
         .topbar {
-            background-color: #ffffff; padding: 15px 25px; border-bottom: 1px solid #e0e0e0;
-            display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+            background-color: #ffffff;
+            padding: 15px 25px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
         }
-        .topbar-title { font-weight: 700; color: #333333; }
-        #content-frame { flex: 1; width: 100%; height: 100%; border: none; background-color: #ffffff; }
 
-        /* === HALAMAN DASHBOARD === */
+        .topbar-title {
+            font-weight: 700;
+            color: #333333;
+        }
+
+        /* === PEMBATAS STANDAR LOOKER STUDIO === */
+        #iframe-wrapper {
+            flex: 1;
+            padding: 25px; /* Jarak dari tepi */
+            background-color: #f4f6f9;
+            display: none; /* Tersembunyi saat di dashboard */
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        #iframe-container {
+            width: 100%;
+            max-width: 1500px; /* LEBAR STANDAR WEBSITE (Bisa diubah 1300px/1400px jika ingin lebih sempit) */
+            height: 100%;
+            background-color: #ffffff;
+            border-radius: 12px; /* Sudut membulat */
+            box-shadow: 0 4px 15px rgba(0,0,0,0.07); /* Bayangan halus */
+            overflow: hidden;
+            display: flex;
+        }
+
+        #content-frame { 
+            flex: 1; 
+            border: none; 
+        }
+
+        /* === HALAMAN DASHBOARD MERAH KPU === */
         #dashboard-view {
-            height: 100%; display: flex; align-items: center; justify-content: center;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             background: linear-gradient(135deg, #8a0b1a 0%, #C8102E 60%, #e6334a 100%);
-            padding: 40px; position: relative; overflow: hidden;
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
         }
-        #dashboard-view::before { content: ''; position: absolute; top: -100px; right: -100px; width: 400px; height: 400px; background: rgba(255,255,255,0.1); border-radius: 50%; }
-        #dashboard-view::after { content: ''; position: absolute; bottom: -150px; left: -100px; width: 500px; height: 500px; background: rgba(255,255,255,0.05); border-radius: 50%; }
 
-        .dashboard-content { display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 1000px; z-index: 10; }
-        .text-section { flex: 1; color: #ffffff; text-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+        #dashboard-view::before {
+            content: '';
+            position: absolute;
+            top: -100px;
+            right: -100px;
+            width: 400px;
+            height: 400px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+        }
+        #dashboard-view::after {
+            content: '';
+            position: absolute;
+            bottom: -150px;
+            left: -100px;
+            width: 500px;
+            height: 500px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 50%;
+        }
+
+        .dashboard-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 1000px;
+            z-index: 10;
+        }
+
+        .text-section {
+            flex: 1;
+            color: #ffffff;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
         .text-section h1 { font-size: 5rem; font-weight: 900; margin-bottom: 10px; letter-spacing: 2px; line-height: 1; }
         .text-section h2 { font-size: 2.5rem; font-weight: 700; margin-bottom: 30px; }
         .text-section p { font-size: 1.2rem; margin-bottom: 5px; opacity: 0.9; }
-        .logo-section { flex: 0 0 250px; display: flex; justify-content: center; align-items: center; margin-left: 60px; }
-        .logo-section img { max-width: 100%; height: auto; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.4)); }
+
+        .logo-section {
+            flex: 0 0 250px; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-left: 60px;
+        }
+
+        .logo-section img {
+            max-width: 100%;
+            height: auto;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.4));
+        }
 
         /* === RESPONSIVE MOBILE === */
         #sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 999; display: none; }
+
         @media (max-width: 768px) {
             #sidebar { position: fixed; left: 0; top: 0; bottom: 0; transform: translateX(-100%); box-shadow: 5px 0 15px rgba(0,0,0,0.1); }
             #sidebar.open { transform: translateX(0); }
             #sidebar-overlay.open { display: block; }
+            
+            #iframe-wrapper { padding: 15px; } /* Jarak lebih kecil di HP */
+            
             .dashboard-content { flex-direction: column-reverse; text-align: center; }
             .logo-section { margin-left: 0; margin-bottom: 30px; flex: 0 0 auto; }
             .logo-section img { max-width: 150px; }
             .text-section h1 { font-size: 3rem; }
             .text-section h2 { font-size: 1.5rem; }
+            .text-section p { font-size: 1rem; }
         }
     </style>
 </head>
@@ -126,7 +266,7 @@
 <div id="login-screen">
     <div class="login-box">
         <h3>RENDATIN KPU LAMTIM</h3>
-        <p style="color: #666; font-size: 0.9rem;">Masukkan Password</p>
+        <p style="color: #666; font-size: 0.9rem;">Masukkan password untuk mengakses sistem</p>
         <input type="password" id="password-input" class="form-control" placeholder="Password...">
         <button class="btn btn-primary" onclick="checkPassword()">MASUK</button>
         <p id="error-msg" style="color: red; display: none; margin-top: 10px; font-size: 0.9rem;">Password salah!</p>
@@ -140,6 +280,7 @@
             <img src="logo_kpu.png" alt="Logo KPU">
             <span class="sidebar-title">RENDATIN<br>KPU LAMTIM</span>
         </div>
+
         <div class="sidebar-menu">
             <div class="menu-item active" onclick="showDashboard(this)"><i class="fas fa-home"></i> Beranda</div>
             <div style="height: 15px;"></div>
@@ -147,6 +288,7 @@
             <div class="menu-item" onclick="loadPage('https://datastudio.google.com/embed/reporting/71ef8c4d-1cb5-480b-8fb2-b979fdae6985/page/p_4xo5e60psd', this)"><i class="fas fa-map-marked-alt"></i> <span>Peta Data Pemilih</span></div>
             <div class="menu-item" onclick="loadPage('https://datastudio.google.com/embed/reporting/9311ee84-5d19-4f77-8a4c-7c67c9e67982/page/gb4UF', this)"><i class="fas fa-sync-alt"></i> <span>Pemutakhiran Data Berkelanjutan</span></div>
         </div>
+
         <div class="sidebar-footer">Crafted by Onet14</div>
     </aside>
 
@@ -173,7 +315,13 @@
             </div>
         </div>
 
-        <iframe id="content-frame" style="display: none;" sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
+        <!-- Wrapper Standar untuk Looker Studio -->
+        <div id="iframe-wrapper">
+            <div id="iframe-container">
+                <iframe id="content-frame" sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
+            </div>
+        </div>
+
     </main>
 </div>
 
@@ -181,7 +329,7 @@
     // --- FUNGSI PASSWORD ---
     function checkPassword() {
         const passInput = document.getElementById('password-input').value;
-        const correctPassword = "1807_kpulamtim2026@#"; // GANTI PASSWORD INI SESUKA ANDA
+        const correctPassword = "kpu2024"; // GANTI PASSWORD INI SESUKA ANDA
 
         if (passInput === correctPassword) {
             document.getElementById('login-screen').style.display = 'none';
@@ -192,18 +340,14 @@
         }
     }
 
-    // Agar bisa tekan Enter di keyboard untuk login
     document.getElementById("password-input").addEventListener("keypress", function(event) {
-        if (event.key === "Enter") {
-            event.preventDefault();
-            checkPassword();
-        }
+        if (event.key === "Enter") { event.preventDefault(); checkPassword(); }
     });
 
     // --- FUNGSI NAVIGASI ---
     function loadPage(pageUrl, element) {
         document.getElementById('dashboard-view').style.display = 'none';
-        document.getElementById('content-frame').style.display = 'block';
+        document.getElementById('iframe-wrapper').style.display = 'flex'; // Tampilkan wrapper
         document.getElementById('content-frame').src = pageUrl;
         
         let titleText = element.querySelector('span') ? element.querySelector('span').innerText.trim() : element.innerText.trim();
@@ -216,7 +360,7 @@
     }
 
     function showDashboard(element) {
-        document.getElementById('content-frame').style.display = 'none';
+        document.getElementById('iframe-wrapper').style.display = 'none'; // Sembunyikan wrapper
         document.getElementById('content-frame').src = '';
         document.getElementById('dashboard-view').style.display = 'flex';
         
