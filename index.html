@@ -39,9 +39,9 @@
         .login-box button { background-color: #C8102E; border-color: #C8102E; color: white; width: 100%; }
         .login-box button:hover { background-color: #a50d24; border-color: #a50d24; }
 
-        /* LAYOUT UTAMA */
+        /* LAYOUT UTAMA (Disembunyikan awalnya) */
         #app-wrapper {
-            display: none; /* Tersembunyi sebelum login */
+            display: none; /* Default tersembunyi */
             height: 100vh;
             width: 100vw;
         }
@@ -87,34 +87,7 @@
             display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 5px rgba(0,0,0,0.03);
         }
         .topbar-title { font-weight: 700; color: #333333; }
-
-        /* === PEMBATAS LEBAR LOOKER STUDIO (PERBAIKAN UTAMA) === */
-        #iframe-container {
-            flex: 1;
-            display: none; /* Tersembunyi saat di dashboard */
-            padding: 30px; /* Jarak dari tepi layar */
-            background-color: #f4f6f9;
-            overflow: hidden;
-            justify-content: center; /* Tengah secara horizontal */
-            align-items: flex-start; /* Mulai dari atas */
-        }
-        
-        #report-wrapper {
-            width: 100%;
-            max-width: 1400px; /* INI YANG MEMBATASI LEBARNYA. Bisa Anda ubah jadi 1200px atau 1000px */
-            height: 100%;
-            background-color: #ffffff;
-            border-radius: 12px; /* Sudut membulat */
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08); /* Bayangan halus */
-            overflow: hidden; /* Agar iframe tidak merusak sudut membulat */
-            display: flex;
-        }
-
-        #content-frame { 
-            width: 100%; 
-            height: 100%; 
-            border: none; 
-        }
+        #content-frame { flex: 1; width: 100%; height: 100%; border: none; background-color: #ffffff; }
 
         /* === HALAMAN DASHBOARD === */
         #dashboard-view {
@@ -139,7 +112,6 @@
             #sidebar { position: fixed; left: 0; top: 0; bottom: 0; transform: translateX(-100%); box-shadow: 5px 0 15px rgba(0,0,0,0.1); }
             #sidebar.open { transform: translateX(0); }
             #sidebar-overlay.open { display: block; }
-            #iframe-container { padding: 15px; } /* Jarak lebih kecil di HP */
             .dashboard-content { flex-direction: column-reverse; text-align: center; }
             .logo-section { margin-left: 0; margin-bottom: 30px; flex: 0 0 auto; }
             .logo-section img { max-width: 150px; }
@@ -154,7 +126,7 @@
 <div id="login-screen">
     <div class="login-box">
         <h3>RENDATIN KPU LAMTIM</h3>
-        <p style="color: #666; font-size: 0.9rem;">Masukkan password untuk mengakses sistem</p>
+        <p style="color: #666; font-size: 0.9rem;">Masukkan Password</p>
         <input type="password" id="password-input" class="form-control" placeholder="Password...">
         <button class="btn btn-primary" onclick="checkPassword()">MASUK</button>
         <p id="error-msg" style="color: red; display: none; margin-top: 10px; font-size: 0.9rem;">Password salah!</p>
@@ -201,13 +173,7 @@
             </div>
         </div>
 
-        <!-- Container Khusus Looker Studio (Agar tidak terlalu lebar) -->
-        <div id="iframe-container">
-            <div id="report-wrapper">
-                <iframe id="content-frame" sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
-            </div>
-        </div>
-
+        <iframe id="content-frame" style="display: none;" sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
     </main>
 </div>
 
@@ -215,7 +181,7 @@
     // --- FUNGSI PASSWORD ---
     function checkPassword() {
         const passInput = document.getElementById('password-input').value;
-        const correctPassword = "kpu2024"; // GANTI PASSWORD INI SESUKA ANDA
+        const correctPassword = "1807_kpulamtim2026@#"; // GANTI PASSWORD INI SESUKA ANDA
 
         if (passInput === correctPassword) {
             document.getElementById('login-screen').style.display = 'none';
@@ -226,14 +192,18 @@
         }
     }
 
+    // Agar bisa tekan Enter di keyboard untuk login
     document.getElementById("password-input").addEventListener("keypress", function(event) {
-        if (event.key === "Enter") { event.preventDefault(); checkPassword(); }
+        if (event.key === "Enter") {
+            event.preventDefault();
+            checkPassword();
+        }
     });
 
     // --- FUNGSI NAVIGASI ---
     function loadPage(pageUrl, element) {
         document.getElementById('dashboard-view').style.display = 'none';
-        document.getElementById('iframe-container').style.display = 'flex'; // Tampilkan container baru
+        document.getElementById('content-frame').style.display = 'block';
         document.getElementById('content-frame').src = pageUrl;
         
         let titleText = element.querySelector('span') ? element.querySelector('span').innerText.trim() : element.innerText.trim();
@@ -246,7 +216,7 @@
     }
 
     function showDashboard(element) {
-        document.getElementById('iframe-container').style.display = 'none'; // Sembunyikan container
+        document.getElementById('content-frame').style.display = 'none';
         document.getElementById('content-frame').src = '';
         document.getElementById('dashboard-view').style.display = 'flex';
         
