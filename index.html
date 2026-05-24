@@ -20,12 +20,24 @@
         #login-screen {
             position: fixed;
             inset: 0;
-            background: linear-gradient(135deg, #8a0b1a 0%, #C8102E 60%, #e6334a 100%);
+            /* GANTI DENGAN GAMBAR BACKGROUND ANDA */
+            background: url('background_png.png') no-repeat center center fixed;
+            background-size: cover;
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 9999;
         }
+
+        /* Overlay gelap agar teks di background tidak mengganggu form login */
+        #login-screen::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.6); 
+            z-index: 1;
+        }
+
         .login-box {
             background: #ffffff;
             padding: 40px;
@@ -33,9 +45,11 @@
             box-shadow: 0 15px 30px rgba(0,0,0,0.3);
             text-align: center;
             width: 350px;
+            position: relative;
+            z-index: 2; /* Agar kotak berada di atas overlay gelap */
         }
         .login-box h3 { color: #C8102E; font-weight: bold; margin-bottom: 20px; }
-        .login-box input { text-align: center; margin-bottom: 15px; }
+        .login-box input { margin-bottom: 15px; }
         .login-box button { background-color: #C8102E; border-color: #C8102E; color: white; width: 100%; }
         .login-box button:hover { background-color: #a50d24; border-color: #a50d24; }
 
@@ -151,10 +165,12 @@
 <div id="login-screen">
     <div class="login-box">
         <h3>LOGIN WEB</h3>
-        <p style="color: #666; font-size: 0.9rem;">Input Password!</p>
+        <p style="color: #666; font-size: 0.9rem;">Input User dan Password!</p>
+        <!-- TAMBAHAN INPUT USER -->
+        <input type="text" id="user-input" class="form-control" placeholder="Username...">
         <input type="password" id="password-input" class="form-control" placeholder="Password...">
-        <button class="btn btn-primary" onclick="checkPassword()">Login</button>
-        <p id="error-msg" style="color: red; display: none; margin-top: 10px; font-size: 0.9rem;">Password salah!</p>
+        <button class="btn btn-primary" onclick="checkCredentials()">Login</button>
+        <p id="error-msg" style="color: red; display: none; margin-top: 10px; font-size: 0.9rem;">User atau Password salah!</p>
     </div>
 </div>
 
@@ -214,23 +230,36 @@
 
 <script>
     // --- FUNGSI PASSWORD & SESI ---
-    function checkPassword() {
+    function checkCredentials() {
+        const userInput = document.getElementById('user-input').value;
         const passInput = document.getElementById('password-input').value;
-        const correctPassword = "1807_kpulamtim2026@#"; // GANTI PASSWORD INI SESUKA ANDA
+        
+        // Daftar User yang diizinkan
+        const allowedUsers = ['Onett123', 'Duppp123', 'Titoo123', 'Zaina123', 'Sulis123'];
+        const correctPassword = "1807_kpulamtim2026@#"; 
 
-        if (passInput === correctPassword) {
+        // Cek apakah user terdaftar DAN password cocok
+        if (allowedUsers.includes(userInput) && passInput === correctPassword) {
             sessionStorage.setItem('isAuthenticated', 'true'); // Simpan status login
+            sessionStorage.setItem('currentUser', userInput); // Simpan siapa yang login (opsional)
             sessionStorage.setItem('currentPage', 'dashboard'); // Set default halaman
             sessionStorage.setItem('activeMenuId', 'menu-dashboard');
             initializeApp(); // Tampilkan aplikasi
         } else {
             document.getElementById('error-msg').style.display = 'block';
+            document.getElementById('user-input').value = '';
             document.getElementById('password-input').value = '';
         }
     }
 
+    // Event listener tekan Enter di kolom Password
     document.getElementById("password-input").addEventListener("keypress", function(event) {
-        if (event.key === "Enter") { event.preventDefault(); checkPassword(); }
+        if (event.key === "Enter") { event.preventDefault(); checkCredentials(); }
+    });
+    
+    // Event listener tekan Enter di kolom User (agar bisa langsung enter tanpa klik tombol)
+    document.getElementById("user-input").addEventListener("keypress", function(event) {
+        if (event.key === "Enter") { event.preventDefault(); document.getElementById('password-input').focus(); }
     });
 
     // --- FUNGSI LOGOUT ---
@@ -238,6 +267,7 @@
         sessionStorage.clear(); // Hapus semua data sesi (login & halaman terakhir)
         document.getElementById('app-wrapper').style.display = 'none';
         document.getElementById('login-screen').style.display = 'flex';
+        document.getElementById('user-input').value = '';
         document.getElementById('password-input').value = '';
         document.getElementById('error-msg').style.display = 'none';
         // Reset tampilan konten ke dashboard agar saat login ulang bersih
