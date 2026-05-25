@@ -20,8 +20,7 @@
         #login-screen {
             position: fixed;
             inset: 0;
-            /* GANTI DENGAN GAMBAR BACKGROUND ANDA */
-            background: url('background.png') no-repeat center center fixed;
+            background: url('background_png.png') no-repeat center center fixed;
             background-size: cover;
             display: flex;
             justify-content: center;
@@ -29,7 +28,6 @@
             z-index: 9999;
         }
 
-        /* Overlay gelap agar teks di background tidak mengganggu form login */
         #login-screen::before {
             content: '';
             position: absolute;
@@ -46,7 +44,7 @@
             text-align: center;
             width: 350px;
             position: relative;
-            z-index: 2; /* Agar kotak berada di atas overlay gelap */
+            z-index: 2;
         }
         .login-box h3 { color: #C8102E; font-weight: bold; margin-bottom: 20px; }
         .login-box input { margin-bottom: 15px; }
@@ -55,38 +53,24 @@
 
         /* LAYOUT UTAMA */
         #app-wrapper {
-            display: none; /* Tersembunyi sebelum login */
+            display: none; 
             height: 100vh;
             width: 100vw;
         }
 
-        /* === SIDEBAR KIRI (LIGHT MODE) === */
+        /* === SIDEBAR KIRI === */
         #sidebar {
-            width: 280px;
-            min-width: 280px;
-            background-color: #ffffff;
-            border-right: 1px solid #e0e0e0;
-            display: flex;
-            flex-direction: column;
-            transition: transform 0.3s ease;
-            z-index: 1000;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+            width: 280px; min-width: 280px; background-color: #ffffff;
+            border-right: 1px solid #e0e0e0; display: flex; flex-direction: column;
+            transition: transform 0.3s ease; z-index: 1000; box-shadow: 2px 0 10px rgba(0,0,0,0.05);
         }
 
-        .sidebar-header {
-            padding: 20px;
-            border-bottom: 1px solid #e0e0e0;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
+        .sidebar-header { padding: 20px; border-bottom: 1px solid #e0e0e0; display: flex; align-items: center; gap: 12px; }
         .sidebar-header img { height: 45px; }
         .sidebar-title { color: #C8102E; font-weight: 800; font-size: 1.2rem; letter-spacing: 0.5px; }
 
         .sidebar-menu { flex: 1; padding: 15px 10px; overflow-y: auto; }
         
-        /* MENU INDUK (LIGHT MODE) */
         .menu-item {
             display: flex; align-items: center; padding: 14px 15px; border-radius: 8px;
             color: #555555; text-decoration: none; margin-bottom: 4px;
@@ -96,14 +80,7 @@
         .menu-item:hover { background-color: #fff5f5; color: #C8102E; }
         .menu-item.active { background-color: #C8102E; color: #ffffff; box-shadow: 0 4px 10px rgba(200, 16, 46, 0.3); }
 
-        /* Styling Khusus Tombol Keluar */
-        .menu-logout {
-            color: #d90429 !important; 
-            margin-top: auto; 
-            border-top: 1px solid #e0e0e0; 
-            border-radius: 0 !important;
-            padding-top: 20px !important;
-        }
+        .menu-logout { color: #d90429 !important; margin-top: auto; border-top: 1px solid #e0e0e0; border-radius: 0 !important; padding-top: 20px !important; }
         .menu-logout:hover { background-color: #fff0f0 !important; }
 
         .sidebar-footer { padding: 20px; border-top: 1px solid #e0e0e0; font-size: 0.8rem; color: #999999; text-align: center; font-style: italic; }
@@ -117,17 +94,14 @@
         .topbar-title { font-weight: 700; color: #333333; }
 
         /* === PEMBATAS STANDAR LOOKER STUDIO === */
-        #iframe-wrapper {
-            flex: 1; padding: 25px; background-color: #f4f6f9;
-            display: none; justify-content: center; overflow: hidden;
-        }
+        #iframe-wrapper { flex: 1; padding: 25px; background-color: #f4f6f9; display: none; justify-content: center; overflow: hidden; }
         #iframe-container {
             width: 100%; max-width: 1500px; height: 100%; background-color: #ffffff;
             border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.07); overflow: hidden; display: flex;
         }
         #content-frame { flex: 1; border: none; }
 
-        /* === HALAMAN DASHBOARD MERAH KPU === */
+        /* === HALAMAN DASHBOARD === */
         #dashboard-view {
             height: 100%; display: flex; align-items: center; justify-content: center;
             background: linear-gradient(135deg, #8a0b1a 0%, #C8102E 60%, #e6334a 100%);
@@ -166,11 +140,10 @@
     <div class="login-box">
         <h3>LOGIN WEB</h3>
         <p style="color: #666; font-size: 0.9rem;">Input User dan Password!</p>
-        <!-- TAMBAHAN INPUT USER -->
         <input type="text" id="user-input" class="form-control" placeholder="Username...">
         <input type="password" id="password-input" class="form-control" placeholder="Password...">
         <button class="btn btn-primary" onclick="checkCredentials()">Login</button>
-        <p id="error-msg" style="color: red; display: none; margin-top: 10px; font-size: 0.9rem;">Salah, Bengak! Liat Dulu Yang Bener!</p>
+        <p id="error-msg" style="color: red; display: none; margin-top: 10px; font-size: 0.9rem;">User atau Password salah!</p>
     </div>
 </div>
 
@@ -229,48 +202,55 @@
 </div>
 
 <script>
-    // --- FUNGSI PASSWORD & SESI ---
-    function checkCredentials() {
+    // --- FUNGSI PASSWORD & SESI MENGGUNAKAN FILE JSON ---
+    async function checkCredentials() {
         const userInput = document.getElementById('user-input').value;
         const passInput = document.getElementById('password-input').value;
-        
-        // Daftar User yang diizinkan
-        const allowedUsers = ['Onett123', 'Duppp123', 'Titoo123', 'Zaina123', 'Sulis123'];
-        const correctPassword = "1807_kpulamtim2026@#"; 
+        const errorMsg = document.getElementById('error-msg');
 
-        // Cek apakah user terdaftar DAN password cocok
-        if (allowedUsers.includes(userInput) && passInput === correctPassword) {
-            sessionStorage.setItem('isAuthenticated', 'true'); // Simpan status login
-            sessionStorage.setItem('currentUser', userInput); // Simpan siapa yang login (opsional)
-            sessionStorage.setItem('currentPage', 'dashboard'); // Set default halaman
-            sessionStorage.setItem('activeMenuId', 'menu-dashboard');
-            initializeApp(); // Tampilkan aplikasi
-        } else {
-            document.getElementById('error-msg').style.display = 'block';
-            document.getElementById('user-input').value = '';
-            document.getElementById('password-input').value = '';
+        try {
+            // Mengambil data dari file users.json
+            const response = await fetch('users.json');
+            if (!response.ok) throw new Error('File users.json tidak ditemukan');
+            
+            const usersList = await response.json();
+
+            // Cek apakah user dan password cocok dengan data di JSON
+            const isAuthenticated = usersList.some(u => u.user === userInput && u.password === passInput);
+
+            if (isAuthenticated) {
+                sessionStorage.setItem('isAuthenticated', 'true');
+                sessionStorage.setItem('currentUser', userInput);
+                sessionStorage.setItem('currentPage', 'dashboard');
+                sessionStorage.setItem('activeMenuId', 'menu-dashboard');
+                initializeApp();
+            } else {
+                errorMsg.style.display = 'block';
+                document.getElementById('password-input').value = '';
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            errorMsg.innerText = "Sistem login error! Cek file users.json.";
+            errorMsg.style.display = 'block';
         }
     }
 
-    // Event listener tekan Enter di kolom Password
+    // Event listener tekan Enter
     document.getElementById("password-input").addEventListener("keypress", function(event) {
         if (event.key === "Enter") { event.preventDefault(); checkCredentials(); }
     });
-    
-    // Event listener tekan Enter di kolom User (agar bisa langsung enter tanpa klik tombol)
     document.getElementById("user-input").addEventListener("keypress", function(event) {
         if (event.key === "Enter") { event.preventDefault(); document.getElementById('password-input').focus(); }
     });
 
     // --- FUNGSI LOGOUT ---
     function logout() {
-        sessionStorage.clear(); // Hapus semua data sesi (login & halaman terakhir)
+        sessionStorage.clear();
         document.getElementById('app-wrapper').style.display = 'none';
         document.getElementById('login-screen').style.display = 'flex';
         document.getElementById('user-input').value = '';
         document.getElementById('password-input').value = '';
         document.getElementById('error-msg').style.display = 'none';
-        // Reset tampilan konten ke dashboard agar saat login ulang bersih
         document.getElementById('content-frame').src = ''; 
     }
 
@@ -286,7 +266,6 @@
         document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
         element.classList.add('active');
 
-        // Simpan state ke sessionStorage
         sessionStorage.setItem('currentPage', pageUrl);
         sessionStorage.setItem('activeMenuId', menuId);
 
@@ -303,7 +282,6 @@
         document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
         element.classList.add('active');
 
-        // Simpan state ke sessionStorage
         sessionStorage.setItem('currentPage', 'dashboard');
         sessionStorage.setItem('activeMenuId', 'menu-dashboard');
 
@@ -324,7 +302,6 @@
         let activeMenuId = sessionStorage.getItem('activeMenuId');
 
         if (currentPage && currentPage !== 'dashboard' && activeMenuId) {
-            // Jika terakhir buka Looker Studio, muat kembali laporan & aktifkan menu nya
             let element = document.getElementById(activeMenuId);
             if(element) {
                 loadPage(currentPage, element, activeMenuId);
@@ -332,7 +309,6 @@
                 showDashboard(document.getElementById('menu-dashboard'));
             }
         } else {
-            // Jika terakhir di dashboard, tampilkan dashboard
             showDashboard(document.getElementById('menu-dashboard'));
         }
     }
@@ -340,7 +316,7 @@
     // CEK SESI SAAT PERTAMA KALI WEBSITE DIBUKA / DIREFRESH
     window.onload = function() {
         if (sessionStorage.getItem('isAuthenticated') === 'true') {
-            initializeApp(); // Jika sudah login sebelumnya, langsung masuk
+            initializeApp();
         }
     };
 </script>
