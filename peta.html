@@ -185,7 +185,22 @@
             font-size: 1rem;
         }
         .btn-popup-tps:hover { background-color: #a50d24; }
-        .btn-popup-tps:disabled { background-color: #ccc; cursor: not-allowed; }
+
+        /* STYLE TOMBOL TUTUP (KEDUA) */
+        .btn-popup-close {
+            width: 100%;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: background 0.2s;
+            font-size: 1rem;
+        }
+        .btn-popup-close:hover { background-color: #5a6268; }
 
         /* RESPONSIVE */
         @media (max-width: 768px) {
@@ -232,7 +247,7 @@
         <ul style="margin-bottom: 0; padding-left: 20px; font-size: 0.8rem; margin-top: 5px; color: #555;">
             <li>Hover untuk melihat Label Data.</li>
             <li>Klik wilayah untuk melihat Data.</li>
-            <li>Klik tombol di Popup untuk Zoom & Lihat TPS.</li>
+            <li>Tekan tombol di Popup untuk Zoom & Lihat TPS.</li>
         </ul>
     </div>
 </aside>
@@ -460,7 +475,6 @@
                 geoJsonLayerDesa.resetStyle(e.target);
             },
             click: (e) => {
-                // Pastikan layer diangkat ke paling depan agar klik terbaca
                 e.target.bringToFront();
                 highlightSelectedDesa(e.target, feature);
             }
@@ -471,13 +485,9 @@
         selectedDesaLayer = clickedLayer;
         selectedDesaFeature = feature;
 
-        // Highlight visual
         clickedLayer.setStyle(styleDesaSelected);
-        
-        // Bersihkan TPS lama
         tpsMarkersLayer.clearLayers();
 
-        // Munculkan Popup Data
         showDesaPopup(feature, clickedLayer);
     }
 
@@ -507,12 +517,9 @@
         const totalJumlah = totalLaki + totalPerempuan;
         const uniqueTPS = dataInDesa.length;
 
-        // Tombol dengan ID unik untuk manipulasi DOM nanti
-        const btnHtml = `
-            <button id="btn-show-tps-action" class="btn-popup-tps" onclick="triggerShowTPS()">
-                <i class="fas fa-map-marker-alt"></i> LIHAT TITIK TPS
-            </button>
-        `;
+        // TOMBOL DENGAN ID KHUSUS
+        // Status awal selalu Tidak Ditampilkan
+        const btnHtml = `<button id="btn-show-tps-action" class="btn-popup-tps" onclick="triggerShowTPS()"><i class="fas fa-map-marker-alt"></i> LIHAT TITIK TPS</button>`;
 
         const content = `
             <div class="popup-header">${headerTitle}</div>
@@ -529,28 +536,40 @@
         layer.bindPopup(content).openPopup();
     }
 
-    // --- PERBAIKAN UTAMA: FUNGSI TRIGGER TPS ---
+    // --- PERBAIKAN FUNGSI TRIGGER TPS (TOGGLE LOGIC) ---
     window.triggerShowTPS = function() {
-        if (selectedDesaLayer && selectedDesaFeature) {
-            // 1. Aktifkan Zoom ke peta desa tersebut saja (Max Zoom 16 agar tetangga hanya desa itu)
-            map.fitBounds(selectedDesaLayer.getBounds(), { padding: 20, maxZoom: 16 });
+        const btn = document.getElementById('btn-show-tps-action');
+        if(!btn) return;
+
+        const isShown = tpsMarkersLayer.getLayers().length > 0;
+
+        if (isShown) {
+            // MODE TUTUP TPS
+            tpsMarkersLayer.clearLayers();
             
-            // 2. Munculkan Titik TPS
-            showTPSPoints(selectedDesaFeature);
+            // Kembalikan tombol ke Merah
+            btn.innerHTML = `<i class="fas fa-map-marker-alt"></i> LIHAT TITIK TPS`;
+            btn.className = "btn-popup-tps";
+            btn.style.backgroundColor = "#C8102E";
+            btn.style.color = "white";
             
-            // 3. Update Tampilan Tombol TANPA MENGHAPUS POPUP (Mencegah Tombol Hilang/Reset)
-            const popup = selectedDesaLayer.getPopup();
-            if (popup) {
-                const btn = popup.getElement().querySelector('#btn-show-tps-action');
-                if (btn) {
-                    // Ubah tampilan tombol menjadi teks status (bukan tombol aktif lagi)
-                    btn.innerHTML = `<i class="fas fa-check-circle"></i> Titik TPS Ditampilkan`;
-                    btn.className = "btn-popup-tps";
-                    btn.style.backgroundColor = "#28a745"; // Hijau
-                    btn.style.borderColor = "#28a745";
-                    // Hilangkan event onclick agar tombol tidak bisa diklik dua kali
-                    btn.removeAttribute('onclick');
-                }
+            // Opsional: Zoom out kembali (user meminta hanya klik tombol untuk tampil, tapi biasanya enak jika bisa balik)
+            // map.fitBounds(selectedDesaLayer.getBounds(), { padding: 50, maxZoom: 14 });
+            
+        } else {
+            // MODE LIHAT TPS
+            if (selectedDesaLayer && selectedDesaFeature) {
+                // 1. Zoom In
+                map.fitBounds(selectedDesaLayer.getBounds(), { padding: 20, maxZoom: 16 });
+                
+                // 2. Munculkan Titik TPS
+                showTPSPoints(selectedDesaFeature);
+                
+                // 3. Ubah Tombol jadi Abu-abu (Tutup)
+                btn.innerHTML = `<i class="fas fa-times-circle"></i> TUTUP TITIK TPS`;
+                btn.className = "btn-popup-close"; // Class abu-abu
+                btn.style.backgroundColor = "#6c757d";
+                btn.style.color = "white";
             }
         }
     }
@@ -601,7 +620,6 @@
         if (map.hasLayer(geoJsonLayerDesa)) map.removeLayer(geoJsonLayerDesa);
         if (!map.hasLayer(geoJsonLayerKec)) map.addLayer(geoJsonLayerKec);
         
-        // Reset ke tampilan awal
         map.fitBounds(geoJsonLayerKec.getBounds(), { padding: [20, 20] });
         map.closePopup();
         
@@ -671,7 +689,7 @@
                 const tahapanSet = new Set(currentCsvData.map(row => row.tahapan).filter(t => t));
                 const tahapanList = Array.from(tahapanSet).sort();
 
-                tahapanSelect.innerHTML = '<option value="">-- Pilih Tahapan Dulu --</option>';
+                tahapanSelect.innerHTML = '<option value="">-- Pilih Tahapan --</option>';
                 let foundDefault = false;
                 
                 tahapanList.forEach(t => {
@@ -709,7 +727,6 @@
         });
 
         if(selectedDesaLayer) {
-            // Jika ada desa yang dipilih sebelum ganti filter, refresh popup-nya
             showDesaPopup(selectedDesaFeature, selectedDesaLayer);
         }
     }
