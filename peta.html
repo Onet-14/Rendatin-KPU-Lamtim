@@ -315,15 +315,15 @@
         fillColor: '#ffcccc'
     };
 
-    // STYLE DIMMED (TIDAK DIPILIH) - DIPERBAIKI: Lebih Pekat & Tidak Transparan Berlebih
+    // STYLE DIMMED (TIDAK DIPILIH)
     const styleDesaDimmed = {
         weight: 1,
-        color: '#666666', // Garis batas tetap gelap agar terlihat
-        fillOpacity: 0.7, // Dinaikkan dari 0.2 ke 0.7 agar jelas terlihat
-        fillColor: '#d3d3d3' // Abu-abu solid yang kontras dengan peta putih
+        color: '#666666',
+        fillOpacity: 0.7, 
+        fillColor: '#d3d3d3' 
     };
     
-    // STYLE HOVER (SAAT KURSOR DIARAHKAN KE DESA LAIN)
+    // STYLE HOVER
     const styleDesaHover = {
         weight: 2,
         color: '#000000',
@@ -436,17 +436,30 @@
 
         layer.on({
             mouseover: (e) => {
-                if (selectedDesaLayer !== e.target) {
+                // Jika sedang ada desa yang dipilih, dan kursor di desa LAIN, beri efek hover
+                if (selectedDesaLayer && selectedDesaLayer !== e.target) {
+                    e.target.setStyle(styleDesaHover);
+                } 
+                // Jika TIDAK ada desa yang dipilih, tetap beri efek hover biasa
+                else if (!selectedDesaLayer) {
                     e.target.setStyle(styleDesaHover);
                 }
             },
             mouseout: (e) => {
-                if (selectedDesaLayer === e.target) {
-                    e.target.setStyle(styleDesaSelected);
+                // --- FIX BUG DI SINI ---
+                if (selectedDesaLayer) {
+                    // MODE SELEKSI: Ada desa yang dipilih
+                    if (selectedDesaLayer === e.target) {
+                        e.target.setStyle(styleDesaSelected);
+                    } else {
+                        e.target.setStyle(styleDesaDimmed);
+                    }
                 } else {
-                    // PENTING: Saat mouse keluar, kembali ke style DIMMED (yang sekarang sudah lebih gelap)
-                    e.target.setStyle(styleDesaDimmed);
+                    // MODE NORMAL: Belum ada yang dipilih
+                    // Kembalikan ke style DEFAULT (Warna-warni), jangan Dimmed!
+                    geoJsonLayerDesa.resetStyle(e.target);
                 }
+                // ------------------------
             },
             click: (e) => {
                 highlightSelectedDesa(e.target, feature);
@@ -459,11 +472,14 @@
         selectedDesaLayer = clickedLayer;
         selectedDesaFeature = feature;
 
+        // Set semua layer menjadi Dimmed
         geoJsonLayerDesa.eachLayer(function (layer) {
             layer.setStyle(styleDesaDimmed);
         });
 
+        // Set yang diklik menjadi Selected
         clickedLayer.setStyle(styleDesaSelected);
+        
         tpsMarkersLayer.clearLayers();
         map.fitBounds(clickedLayer.getBounds(), { padding: [50, 50], maxZoom: 16 });
     }
