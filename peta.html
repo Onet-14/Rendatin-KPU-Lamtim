@@ -108,7 +108,7 @@
 
         /* CUSTOM TOOLTIP STYLE */
         .custom-tooltip {
-            background: #C8102E; /* Background Merah KPU */
+            background: #C8102E;
             color: #ffffff;
             border: none;
             font-weight: 700;
@@ -289,8 +289,6 @@
 
     let selectedDesaLayer = null;
     let selectedDesaFeature = null;
-    
-    // Variabel Global untuk menyimpan konteks popup Kecamatan
     let activeKecContext = null;
 
     let desaNameMap = {};
@@ -399,7 +397,6 @@
     function onEachFeatureKecamatan(feature, layer) {
         const name = getFeatureName(feature, 'kecamatan');
         
-        // TOOLTIP OTOMATIS: "DATA KECAMATAN: [Nama]"
         layer.bindTooltip("DATA KECAMATAN: " + name, {
             sticky: true, direction: 'top', className: 'custom-tooltip'
         });
@@ -411,7 +408,6 @@
             mouseout: (e) => { geoJsonLayerKec.resetStyle(e.target); },
             click: (e) => {
                 showKecamatanPopup(feature, layer);
-                // DIHAPUS: drillDownToDesa otomatis. User harus klik tombol.
             }
         });
     }
@@ -457,7 +453,7 @@
             </div>
         `;
         
-        activeKecContext = { feature, layer };
+        activeKecContext = { feature, layer, content }; // Simpan content juga
         layer.bindPopup(content).openPopup();
     }
 
@@ -490,12 +486,20 @@
         
         tpsMarkersLayer.clearLayers();
         document.getElementById('btn-back').style.display = 'block';
+
+        // --- PERBAIKAN: Munculkan Popup Ringkasan Kecamatan Saat Masuk Desa ---
+        // Agar user tahu data total desa/tps sebelum memilih desa spesifik
+        if (activeKecContext && activeKecContext.content) {
+            const center = map.getCenter();
+            L.popup()
+                .setLatLng(center)
+                .setContent(activeKecContext.content)
+                .openOn(map);
+        }
     }
 
     function onEachFeatureDesa(feature, layer) {
         const name = getFeatureName(feature, 'desa');
-        
-        // TOOLTIP OTOMATIS: "DATA DESA: [Nama]"
         layer.bindTooltip("DATA DESA: " + name, { 
             sticky: true, direction: 'top', className: 'custom-tooltip'
         });
@@ -642,7 +646,13 @@
         if (map.hasLayer(geoJsonLayerDesa)) map.removeLayer(geoJsonLayerDesa);
         if (!map.hasLayer(geoJsonLayerKec)) map.addLayer(geoJsonLayerKec);
 
+        // PERBAIKAN: Fit bounds kecamatan saat kembali
         map.fitBounds(geoJsonLayerKec.getBounds(), { padding: [50, 50] });
+        
+        // Opsional: Buka popup kecamatan yang sedang aktif kembali
+        if (activeKecContext && activeKecContext.layer) {
+             activeKecContext.layer.openPopup();
+        }
     }
 
     function resetMap() {
@@ -654,7 +664,9 @@
         if (map.hasLayer(geoJsonLayerDesa)) map.removeLayer(geoJsonLayerDesa);
         if (!map.hasLayer(geoJsonLayerKec)) map.addLayer(geoJsonLayerKec);
         
-        map.setView([-5.10, 105.40], 10);
+        // PERBAIKAN: Gunakan fit bounds pada reset, bukan setView statis
+        map.fitBounds(geoJsonLayerKec.getBounds(), { padding: [50, 50] });
+        
         map.closePopup();
         
         document.getElementById('jenis-select').value = 'pemutakhiran';
@@ -669,6 +681,9 @@
         ]).then(([dataKec, dataDesa]) => {
             geoJsonLayerKec.addData(dataKec);
             rawDesaGeoJson = dataDesa; 
+            
+            // --- PERBAIKAN: TAMPILAN AWAL PAS DENGAN UKURAN KECAMATAN ---
+            map.fitBounds(geoJsonLayerKec.getBounds(), { padding: [50, 50] });
             
             const loader = document.getElementById('loading-overlay');
             loader.classList.add('fade-out');
