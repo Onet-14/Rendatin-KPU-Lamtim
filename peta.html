@@ -2,185 +2,577 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Peta Data Pemilih</title>
-    <!-- Library Peta Leaflet -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Peta Data Pemilih - KPU Lamtim</title>
+    
+    <!-- External Libraries -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <!-- Library Parse CSV -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    
     <style>
-        body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; background: #f4f6f9; display: flex; flex-direction: column; height: 100vh; }
-        #header-peta { background: #fff; padding: 10px 20px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; }
-        #header-peta h5 { margin: 0; color: #C8102E; font-weight: bold; }
-        #btn-back { display: none; background: #C8102E; color: white; border: none; padding: 5px 15px; border-radius: 5px; cursor: pointer; }
-        #map { flex: 1; width: 100%; }
-        .info-panel { padding: 6px 8px; font-size: 14px; background: white; border-radius: 5px; box-shadow: 0 0 15px rgba(0,0,0,0.2); }
-        .info-panel b { color: #C8102E; }
+        /* CSS Reset & Layout untuk Iframe */
+        html, body { height: 100%; width: 100%; margin: 0; padding: 0; background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; }
+        
+        /* Container Utama Flexbox */
+        .app-container { display: flex; height: 100vh; width: 100vw; }
+
+        /* SIDEBAR KONTROL (Kiri) */
+        .sidebar-panel {
+            width: 320px;
+            background: #ffffff;
+            border-right: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-header {
+            background-color: #C8102E;
+            color: white;
+            padding: 15px 20px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-content {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        /* Styling Form Controls */
+        .form-label { font-size: 0.85rem; font-weight: 600; color: #555; margin-bottom: 5px; }
+        .form-select, .form-control { font-size: 0.9rem; border-radius: 6px; border: 1px solid #ced4da; }
+        .form-select:focus, .form-control:focus { border-color: #C8102E; box-shadow: 0 0 0 0.2rem rgba(200, 16, 46, 0.25); }
+
+        /* Stats Cards */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+        .stat-card {
+            background: #f8f9fa; border-radius: 8px; padding: 10px; text-align: center;
+            border: 1px solid #eee; transition: all 0.2s;
+        }
+        .stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.05); border-color: #C8102E; }
+        .stat-value { display: block; font-size: 1.2rem; font-weight: 800; color: #C8102E; }
+        .stat-label { font-size: 0.75rem; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        .stat-card.full-width { grid-column: span 2; background: #fff5f5; border-color: #fed7d7; }
+        .stat-card.full-width .stat-value { color: #9b2c2c; font-size: 1.4rem; }
+
+        /* MAP AREA (Kanan) */
+        .map-wrapper { flex: 1; position: relative; background: #e9ecef; }
+        #map { width: 100%; height: 100%; }
+
+        /* Loading Overlay Khusus Peta */
+        #map-loader {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.9); z-index: 2000;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+
+        /* Legend Control */
+        .info.legend { 
+            background: white; padding: 10px; border-radius: 5px; box-shadow: 0 0 15px rgba(0,0,0,0.2); 
+            line-height: 18px; color: #555; font-size: 12px; 
+        }
+        .info.legend i { width: 18px; height: 18px; float: left; margin-right: 8px; opacity: 0.7; }
+
+        /* Responsive Mobile */
+        @media (max-width: 768px) {
+            .app-container { flex-direction: column; }
+            .sidebar-panel { width: 100%; height: 40%; order: 2; border-right: none; border-top: 1px solid #e0e0e0; }
+            .map-wrapper { height: 60%; order: 1; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+        }
     </style>
 </head>
 <body>
 
-<div id="header-peta">
-    <h5 id="judul-peta">Peta Pemilih Lampung Timur (Klik Kecamatan untuk Detail Desa)</h5>
-    <button id="btn-back" onclick="loadKecamatan()"><i class="fas fa-arrow-left"></i> Kembali ke Kecamatan</button>
+<div class="app-container">
+    <!-- SIDEBAR KONTROL -->
+    <aside class="sidebar-panel">
+        <div class="sidebar-header">
+            <i class="fas fa-map-marked-alt"></i> PETA DATA PEMILIH
+        </div>
+        
+        <div class="sidebar-content">
+            <!-- Filter Jenis -->
+            <div class="mb-3">
+                <label class="form-label">Filter Jenis</label>
+                <select id="filter-jenis" class="form-select" onchange="handleJenisChange()">
+                    <option value="pemutakhiran">Rekap Pemutakhiran</option>
+                    <option value="pdpb">Rekap PDPB</option>
+                </select>
+            </div>
+
+            <!-- Filter Tahapan -->
+            <div class="mb-3">
+                <label class="form-label">Filter Tahapan</label>
+                <select id="filter-tahapan" class="form-select" onchange="updateMapAndStats()">
+                    <!-- Opsi akan diisi oleh JS -->
+                </select>
+            </div>
+
+            <hr class="my-3 text-secondary opacity-25">
+
+            <!-- Dropdown Wilayah -->
+            <div class="mb-3">
+                <label class="form-label">Pilih Kecamatan</label>
+                <select id="select-kecamatan" class="form-select" onchange="handleKecamatanChange()">
+                    <option value="">-- Semua Kecamatan --</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Pilih Desa / Kelurahan</label>
+                <select id="select-desa" class="form-select" onchange="handleDesaChange()" disabled>
+                    <option value="">-- Pilih Kecamatan Dulu --</option>
+                </select>
+            </div>
+
+            <!-- Statistik -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-value" id="val-jml-desa">0</span>
+                    <span class="stat-label">Jml Desa</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="val-jml-tps">0</span>
+                    <span class="stat-label">Jml TPS</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="val-lk">0</span>
+                    <span class="stat-label">Laki-Laki</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="val-pr">0</span>
+                    <span class="stat-label">Perempuan</span>
+                </div>
+                <div class="stat-card full-width">
+                    <span class="stat-value" id="val-total">0</span>
+                    <span class="stat-label">TOTAL PEMILIH</span>
+                </div>
+            </div>
+
+            <div class="mt-3 text-center">
+                <button class="btn btn-sm btn-outline-danger w-100" onclick="resetMap()">
+                    <i class="fas fa-sync-alt"></i> Reset Peta
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- AREA PETA -->
+    <main class="map-wrapper">
+        <div id="map-loader">
+            <div class="spinner-border text-danger" role="status"></div>
+            <div class="mt-2 text-secondary fw-bold">Memuat Data Spasial...</div>
+        </div>
+        <div id="map"></div>
+    </main>
 </div>
 
-<div id="map"></div>
-
-<!-- Library Leaflet JS -->
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- PapaParse untuk CSV -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
 <script>
-    // 1. INISIALISASI PETA
-    const map = L.map('map').setView([-5.1, 105.6], 10); // Koordinat tengah Lampung Timur
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(map);
+    // ==========================================
+    // KONFIGURASI URL (WAJIB DIISI PENGGUNA)
+    // ==========================================
+    
+    // 1. Link Google Sheet (Format: File -> Share -> Publish to Web -> CSV)
+    // Pastikan kolom di Sheet mencakup: kec_id, kel_id, tahapan, jenis, laki, perempuan
+    const URL_GSS = "LINK_GOOGLE_SHEET_ANDA_DISINI.csv"; 
 
-    // Panel Info saat hover
-    const info = L.control();
-    info.onAdd = function (map) {
-        this._div = L.DomUtil.create('div', 'info-panel');
-        this.update();
-        return this._div;
+    // 2. Link GeoJSON Kecamatan (GitHub Raw)
+    const URL_GEOJSON_KEC = "LINK_GITHUB_RAW_KECAMATAN.geojson";
+
+    // 3. Link GeoJSON Desa (GitHub Raw)
+    const URL_GEOJSON_DES = "LINK_GITHUB_RAW_DESA.geojson";
+
+    // ==========================================
+    // KONFIGURASI TAHAPAN (Sesuaikan isinya)
+    // ==========================================
+    const TAHAPAN_CONFIG = {
+        'pemutakhiran': ["Tahap 1", "Tahap 2", "Tahap 3", "Final"], // Contoh
+        'pdpb': ["Pleno DCS I", "Pleno DCS II", "Rekapitulasi Akhir"] // Contoh
     };
-    info.update = function (props) {
-        this._div.innerHTML = '<h6>Data Pemilih</h6>' + (props ? `<b>${props.NAMA}</b><br>Pemilih: ${props.PEMILIH || 'N/A'}<br>TPS: ${props.TPS || 'N/A'}` : 'Arahkan kursor ke wilayah');
+
+    // ==========================================
+    // VARIABEL GLOBAL
+    // ==========================================
+    let map;
+    let geoJsonKecLayer = null;
+    let geoJsonDesLayer = null;
+    let rawDataGSS = []; // Menyimpan data mentah dari Google Sheet
+    
+    // State saat ini
+    let currentState = {
+        jenis: 'pemutakhiran',
+        tahapan: '',
+        kecId: null,
+        desaId: null
     };
-    info.addTo(map);
 
-    let geojsonLayer;
-
-    // 2. GANTI DENGAN LINK CSV GOOGLE SHEETS ANDA
-    const CSV_URL = 'MASUKKAN_LINK_CSV_GOOGLE_SHEETS_ANDA_DISINI';
-
-    // 3. GANTI DENGAN NAMA FILE GEOJSON ANDA
-    const GEOJSON_URL = 'peta_lamtim.geojson'; 
-
-    let sheetData = {};
-
-    // Fungsi untuk mengambil data Spreadsheet
-    Papa.parse(CSV_URL, {
-        download: true,
-        header: true,
-        complete: function(results) {
-            // Simpan data sheet dalam bentuk objek dengan Kode_Wilayah sebagai key
-            results.data.forEach(row => {
-                // SESUAIKAN NAMA KOLOM DENGAN SPREADSHEET ANDA
-                let kode = row.Kode_Wilayah; 
-                if(kode) {
-                    sheetData[kode] = {
-                        PEMILIH: row.Jumlah_Pemilih,
-                        TPS: row.Jumlah_TPS
-                    };
-                }
-            });
-            // Setelah data siap, muat peta Kecamatan
-            loadKecamatan();
-        }
+    // ==========================================
+    // INISIALISASI
+    // ==========================================
+    document.addEventListener('DOMContentLoaded', () => {
+        initMap();
+        loadInitialData();
     });
 
-    // Styling untuk peta
-    function getColor(d) {
-        return d > 50000 ? '#800026' :
-               d > 20000 ? '#BD0026' :
-               d > 10000 ? '#E31A1C' :
-               d > 5000  ? '#FC4E2A' :
-               d > 1000  ? '#FD8D3C' :
-                           '#FEB24C';
+    function initMap() {
+        // Posisi awal (Lampung Timur approx)
+        map = L.map('map').setView([-5.1500, 105.3500], 10);
+
+        // Base Layer (OpenStreetMap)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 19
+        }).addTo(map);
+
+        // Control Scale
+        L.control.scale({ position: 'bottomright' }).addTo(map);
     }
 
-    function style(feature) {
-        let kode = feature.properties.KEC_ID; // SESUAIKAN DENGAN PROPERTI GEOJSON
-        let pemilih = sheetData[kode] ? parseInt(sheetData[kode].PEMILIH) : 0;
+    async function loadInitialData() {
+        try {
+            // 1. Set Opsi Tahapan Default
+            handleJenisChange();
+
+            // 2. Fetch Data Paralel (GeoJSON & GSS)
+            const [resKec, resDes, resGSS] = await Promise.all([
+                fetch(URL_GEOJSON_KEC),
+                fetch(URL_GEOJSON_DES),
+                fetch(URL_GSS)
+            ]);
+
+            if (!resKec.ok || !resDes.ok) throw new Error("Gagal memuat GeoJSON.");
+
+            const dataKec = await resKec.json();
+            const dataDes = await resDes.json();
+
+            // Parse GSS CSV
+            Papa.parse(resGSS, {
+                header: true,
+                download: true,
+                complete: function(results) {
+                    rawDataGSS = results.data.filter(row => row.kec_id); // Filter row kosong
+                    renderGeoJSONs(dataKec, dataDes);
+                    hideLoader();
+                },
+                error: function() { alert("Gagal memuat data Google Sheet"); hideLoader(); }
+            });
+
+        } catch (error) {
+            console.error(error);
+            // Mode Demo jika URL belum diisi
+            alert("Mohon isi URL Data di dalam kode script (line 190-196). Menampilkan mode placeholder.");
+            hideLoader();
+            
+            // Dummy data untuk testing UI tanpa file asli
+            document.getElementById('filter-tahapan').innerHTML = '<option value="Demo">Data Belum Dimuat</option>';
+        }
+    }
+
+    function hideLoader() {
+        const loader = document.getElementById('map-loader');
+        loader.style.opacity = '0';
+        setTimeout(() => loader.style.display = 'none', 500);
+    }
+
+    // ==========================================
+    // LOGIKA FILTER & DROPDOWN
+    // ==========================================
+    
+    function handleJenisChange() {
+        const jenis = document.getElementById('filter-jenis').value;
+        currentState.jenis = jenis;
+        
+        // Update Dropdown Tahapan
+        const tahapanSelect = document.getElementById('filter-tahapan');
+        tahapanSelect.innerHTML = '';
+        
+        const tahapans = TAHAPAN_CONFIG[jenis] || [];
+        tahapans.forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t;
+            opt.innerText = t;
+            tahapanSelect.appendChild(opt);
+        });
+
+        if(tahapans.length > 0) {
+            currentState.tahapan = tahapans[0];
+            updateMapAndStats();
+        }
+    }
+
+    function renderGeoJSONs(dataKec, dataDes) {
+        // Render Kecamatan
+        geoJsonKecLayer = L.geoJSON(dataKec, {
+            style: styleKecamatan,
+            onEachFeature: onEachFeatureKec
+        }).addTo(map);
+
+        // Render Desa (Awalnya disembunyikan/dibiarkan transparan di bawah)
+        geoJsonDesLayer = L.geoJSON(dataDes, {
+            style: styleDesa,
+            onEachFeature: onEachFeatureDesa
+        }).addTo(map);
+
+        // Isi Dropdown Kecamatan dari GeoJSON
+        const kecSelect = document.getElementById('select-kecamatan');
+        // Sort berdasarkan nama prop (asumsi ada properti 'name' atau 'nama_kec')
+        const features = dataKec.features.sort((a,b) => (a.properties.nama_kec || "").localeCompare(b.properties.nama_kec || ""));
+        
+        features.forEach(f => {
+            const opt = document.createElement('option');
+            opt.value = f.properties.kec_id;
+            opt.innerText = f.properties.nama_kec || f.properties.name;
+            kecSelect.appendChild(opt);
+        });
+
+        // Zoom agar seluruh kecamatan terlihat
+        map.fitBounds(geoJsonKecLayer.getBounds());
+    }
+
+    // ==========================================
+    // INTERAKSI USER (Change Events)
+    // ==========================================
+
+    function handleKecamatanChange() {
+        const select = document.getElementById('select-kecamatan');
+        const desaSelect = document.getElementById('select-desa');
+        
+        currentState.kecId = select.value;
+        currentState.desaId = null; // Reset desa
+        desaSelect.innerHTML = '<option value="">-- Semua Desa --</option>';
+        desaSelect.disabled = (currentState.kecId === "");
+
+        if (currentState.kecId) {
+            // Filter Desa GeoJSON untuk isi Dropdown
+            const desaFeatures = geoJsonDesLayer.toGeoJSON().features.filter(f => f.properties.kec_id == currentState.kecId);
+            
+            desaFeatures.sort((a,b) => (a.properties.nama_desa || "").localeCompare(b.properties.nama_desa || ""))
+                         .forEach(f => {
+                            const opt = document.createElement('option');
+                            opt.value = f.properties.kel_id; // Sesuai request user: kel_id
+                            opt.innerText = f.properties.nama_desa || f.properties.name;
+                            desaSelect.appendChild(opt);
+                         });
+
+            // Zoom ke Kecamatan yang dipilih
+            const kecLayer = geoJsonKecLayer.getLayers().find(l => l.feature.properties.kec_id == currentState.kecId);
+            if (kecLayer) map.fitBounds(kecLayer.getBounds());
+        } else {
+            // Zoom kembali ke full view
+            map.fitBounds(geoJsonKecLayer.getBounds());
+        }
+
+        updateMapAndStats();
+    }
+
+    function handleDesaChange() {
+        currentState.desaId = document.getElementById('select-desa').value;
+        
+        if (currentState.desaId) {
+            // Zoom ke Desa yang dipilih
+            const desaLayer = geoJsonDesLayer.getLayers().find(l => l.feature.properties.kel_id == currentState.desaId);
+            if (desaLayer) map.fitBounds(desaLayer.getBounds().pad(0.1));
+        } else {
+            // Kembali zoom ke Kecamatan
+            if (currentState.kecId) {
+                const kecLayer = geoJsonKecLayer.getLayers().find(l => l.feature.properties.kec_id == currentState.kecId);
+                if (kecLayer) map.fitBounds(kecLayer.getBounds());
+            }
+        }
+        updateMapAndStats();
+    }
+
+    function resetMap() {
+        document.getElementById('select-kecamatan').value = "";
+        document.getElementById('select-desa').value = "";
+        document.getElementById('select-desa').disabled = true;
+        document.getElementById('select-desa').innerHTML = '<option value="">-- Pilih Kecamatan Dulu --</option>';
+        
+        currentState.kecId = null;
+        currentState.desaId = null;
+        
+        map.fitBounds(geoJsonKecLayer.getBounds());
+        
+        // Reset Highlight
+        geoJsonKecLayer.resetStyle();
+        geoJsonDesLayer.resetStyle();
+        geoJsonDesLayer.setStyle({ fillOpacity: 0, weight: 0 }); // Sembunyikan desa lagi
+        
+        updateMapAndStats();
+    }
+
+    // ==========================================
+    // LOGIKA HITUNG STATISTIK & STYLE PETA
+    // ==========================================
+
+    function updateMapAndStats() {
+        currentState.tahapan = document.getElementById('filter-tahapan').value;
+        
+        // 1. Filter Data GSS
+        const filteredData = rawDataGSS.filter(row => {
+            const matchJenis = row.jenis == currentState.jenis; // Asumsi kolom 'jenis' ada di GSS
+            const matchTahapan = row.tahapan == currentState.tahapan; // Asumsi kolom 'tahapan' ada di GSS
+            const matchKec = currentState.kecId ? row.kec_id == currentState.kecId : true;
+            const matchDesa = currentState.desaId ? row.kel_id == currentState.desaId : true;
+            
+            return matchJenis && matchTahapan && matchKec && matchDesa;
+        });
+
+        // 2. Hitung Statistik
+        let totalLk = 0, totalPr = 0, totalTPS = 0;
+        const uniqueDesa = new Set();
+
+        filteredData.forEach(row => {
+            const lk = parseInt(row.laki) || 0; // Asumsi kolom 'laki'
+            const pr = parseInt(row.perempuan) || 0; // Asumsi kolom 'perempuan'
+            
+            totalLk += lk;
+            totalPr += pr;
+            
+            // Hitung TPS (Asumsi setiap baris adalah 1 TPS, atau ada kolom tps_id)
+            // Jika data agregat per desa, logika ini berubah. Saya asumsikan per TPS.
+            if (row.tps || row.tps_id) totalTPS++; 
+
+            if (row.kel_id) uniqueDesa.add(row.kel_id);
+        });
+
+        // Update UI
+        animateValue("val-jml-desa", parseInt(document.getElementById("val-jml-desa").innerText), uniqueDesa.size, 500);
+        animateValue("val-jml-tps", parseInt(document.getElementById("val-jml-tps").innerText), totalTPS, 500);
+        animateValue("val-lk", parseInt(document.getElementById("val-lk").innerText), totalLk, 500);
+        animateValue("val-pr", parseInt(document.getElementById("val-pr").innerText), totalPr, 500);
+        animateValue("val-total", parseInt(document.getElementById("val-total").innerText), totalLk + totalPr, 500);
+
+        // 3. Highlight Peta
+        highlightPolygons();
+    }
+
+    function highlightPolygons() {
+        // Reset Style
+        geoJsonKecLayer.resetStyle();
+        geoJsonDesLayer.resetStyle();
+
+        // Style Default Desa (Sembunyi kecuali dipilih)
+        geoJsonDesLayer.setStyle({ fillOpacity: 0, color: 'transparent', weight: 0 });
+
+        if (currentState.desaId) {
+            // Jika Desa dipilih, highlight desa tersebut
+            geoJsonDesLayer.eachLayer(layer => {
+                if (layer.feature.properties.kel_id == currentState.desaId) {
+                    layer.setStyle({ color: '#C8102E', weight: 3, fillOpacity: 0.5, fillColor: '#ffcccc' });
+                    layer.bringToFront();
+                }
+            });
+        } else if (currentState.kecId) {
+            // Jika Kecamatan dipilih, highlight kec dan tunjukkan batas desa (tipis)
+            geoJsonKecLayer.eachLayer(layer => {
+                if (layer.feature.properties.kec_id == currentState.kecId) {
+                    layer.setStyle({ color: '#C8102E', weight: 4, fillOpacity: 0.1, fillColor: '#C8102E' });
+                } else {
+                    layer.setStyle({ fillOpacity: 0, color: '#999', weight: 1, dashArray: '5, 5' });
+                }
+            });
+
+            // Tampilkan batas desa di dalam kecamatan terpilih
+            geoJsonDesLayer.eachLayer(layer => {
+                if (layer.feature.properties.kec_id == currentState.kecId) {
+                    layer.setStyle({ color: '#555', weight: 1, fillOpacity: 0 });
+                    layer.on('mouseover', function() {
+                        this.setStyle({ fillOpacity: 0.3, fillColor: '#ffcccc', weight: 2 });
+                    });
+                    layer.on('mouseout', function() {
+                        this.setStyle({ color: '#555', weight: 1, fillOpacity: 0 });
+                    });
+                    layer.on('click', function() {
+                        document.getElementById('select-desa').value = this.feature.properties.kel_id;
+                        handleDesaChange();
+                    });
+                }
+            });
+        }
+    }
+
+    // Style Functions
+    function styleKecamatan(feature) {
         return {
-            fillColor: getColor(pemilih),
+            fillColor: "#ffffff",
             weight: 2,
             opacity: 1,
-            color: 'white',
+            color: "#666",
             dashArray: '3',
-            fillOpacity: 0.7
+            fillOpacity: 0.1
         };
     }
 
-    // Event Hover
-    function highlightFeature(e) {
-        let layer = e.target;
-        let props = layer.feature.properties;
-        let kode = props.KEC_ID; // SESUAIKAN
-        
-        // Gabungkan properti GeoJSON dengan Data Sheet
-        let displayProps = {
-            NAMA: props.NAMA_KEC || props.NAMA_DESA, // SESUAIKAN
-            PEMILIH: sheetData[kode] ? sheetData[kode].PEMILIH : 'N/A',
-            TPS: sheetData[kode] ? sheetData[kode].TPS : 'N/A'
+    function styleDesa(feature) {
+        return {
+            fillColor: "#ffffff",
+            weight: 1,
+            opacity: 1,
+            color: "transparent", // Default hidden
+            fillOpacity: 0
         };
-
-        layer.setStyle({ weight: 3, color: '#666', fillOpacity: 0.9 });
-        info.update(displayProps);
     }
 
-    function resetHighlight(e) {
-        geojsonLayer.resetStyle(e.target);
-        info.update();
-    }
-
-    // 4. FUNGSI LOAD PETA KECAMATAN (TAMPILAN AWAL)
-    function loadKecamatan() {
-        document.getElementById('btn-back').style.display = 'none';
-        document.getElementById('judul-peta').innerText = 'Peta Pemilih Lampung Timur (Klik Kecamatan untuk Detail Desa)';
+    function onEachFeatureKec(feature, layer) {
+        layer.on({
+            click: () => {
+                document.getElementById('select-kecamatan').value = feature.properties.kec_id;
+                handleKecamatanChange();
+            },
+            mouseover: function() {
+                if (!currentState.kecId) this.setStyle({ fillOpacity: 0.3, fillColor: '#eee' });
+            },
+            mouseout: function() {
+                if (!currentState.kecId) geoJsonKecLayer.resetStyle();
+            }
+        });
         
-        if(geojsonLayer) map.removeLayer(geojsonLayer);
-
-        fetch(GEOJSON_URL)
-            .then(response => response.json())
-            .then(data => {
-                // Filter hanya level Kecamatan (Asumsi GeoJSON punya properti 'level')
-                let kecGeo = { ...data, features: data.features.filter(f => f.properties.level === 'kecamatan') };
-                
-                geojsonLayer = L.geoJSON(kecGeo, {
-                    style: style,
-                    onEachFeature: function(feature, layer) {
-                        layer.on({
-                            mouseover: highlightFeature,
-                            mouseout: resetHighlight,
-                            click: loadDesa // Drill-down ke desa saat diklik
-                        });
-                    }
-                }).addTo(map);
-                
-                map.setView([-5.1, 105.6], 10); // Zoom out kembali
-            });
+        // Popup
+        const name = feature.properties.nama_kec || feature.properties.name;
+        layer.bindTooltip(name, { permanent: false, direction: "center" });
     }
 
-    // 5. FUNGSI DRILL-DOWN LOAD DESA
-    function loadDesa(e) {
-        let kecId = e.target.feature.properties.KEC_ID; // SESUAIKAN
-        let namaKec = e.target.feature.properties.NAMA_KEC; // SESUAIKAN
+    function onEachFeatureDesa(feature, layer) {
+        const name = feature.properties.nama_desa || feature.properties.name;
+        layer.bindTooltip(name, { permanent: false });
+    }
 
-        document.getElementById('btn-back').style.display = 'inline-block';
-        document.getElementById('judul-peta').innerText = 'Peta Desa - Kecamatan ' + namaKec;
-
-        if(geojsonLayer) map.removeLayer(geojsonLayer);
-
-        fetch(GEOJSON_URL)
-            .then(response => response.json())
-            .then(data => {
-                // Filter hanya desa di kecamatan tersebut (Asumsi ada properti parent_kec)
-                let desaGeo = { ...data, features: data.features.filter(f => f.properties.parent_kec === kecId) };
-                
-                geojsonLayer = L.geoJSON(desaGeo, {
-                    style: style,
-                    onEachFeature: function(feature, layer) {
-                        layer.on({
-                            mouseover: highlightFeature,
-                            mouseout: resetHighlight
-                        });
-                    }
-                }).addTo(map);
-
-                // Zoom ke area kecamatan yang diklik
-                map.fitBounds(e.target.getBounds());
-            });
+    // Helper: Animasi Angka
+    function animateValue(id, start, end, duration) {
+        if (start === end) return;
+        const obj = document.getElementById(id);
+        const range = end - start;
+        let current = start;
+        const increment = end > start ? Math.ceil(range / (duration / 20)) : Math.floor(range / (duration / 20));
+        const stepTime = Math.abs(Math.floor(duration / (range / increment)));
+        
+        const timer = setInterval(function() {
+            current += increment;
+            if ((increment > 0 && current >= end) || (increment < 0 && current <= end)) {
+                current = end;
+                clearInterval(timer);
+            }
+            obj.innerHTML = current.toLocaleString('id-ID');
+        }, Math.max(stepTime, 20)); // Min 20ms
     }
 
 </script>
