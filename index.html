@@ -10,6 +10,27 @@
         /* PENGATURAN TEMA LIGHT MODE KPU */
         body { background-color: #f4f6f9; color: #333333; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; height: 100vh; }
 
+        /* LOADING OVERLAY */
+        #loading-overlay {
+            position: fixed; inset: 0; background-color: #f4f6f9;
+            display: flex; justify-content: center; align-items: center;
+            z-index: 10000; transition: opacity 0.3s ease;
+        }
+        #loading-overlay.fade-out { opacity: 0; pointer-events: none; }
+
+        /* ANIMASI SPINNER */
+        .spinner { animation: rotator 1.4s linear infinite; }
+        @keyframes rotator { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .path {
+            stroke-dasharray: 187; stroke-dashoffset: 0; transform-origin: center;
+            animation: dash 1.4s ease-in-out infinite; stroke: #C8102E; /* Warna Merah KPU */
+        }
+        @keyframes dash {
+            0% { stroke-dashoffset: 187; }
+            50% { stroke-dashoffset: 46.75; transform: rotate(135deg); }
+            100% { stroke-dashoffset: 187; transform: rotate(360deg); }
+        }
+
         /* HALAMAN LOGIN */
         #login-screen { position: fixed; inset: 0; background: url('background.jpg') no-repeat center center fixed; background-size: cover; display: flex; justify-content: center; align-items: center; z-index: 9999; }
         #login-screen::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.6); z-index: 1; }
@@ -88,8 +109,15 @@
 </head>
 <body>
 
+<!-- LOADING SPINNER OVERLAY -->
+<div id="loading-overlay">
+   <svg class="spinner" width="65px" height="65px" viewBox="0 0 66 66" xmlns="http://www.w3.org/2000/svg">
+      <circle class="path" fill="none" stroke-width="6" stroke-linecap="round" cx="33" cy="33" r="30"></circle>
+   </svg>
+</div>
+
 <!-- HALAMAN LOGIN PASSWORD -->
-<div id="login-screen">
+<div id="login-screen" style="display: none;">
     <div class="login-box">
         <h3>LOGIN</h3>
         <p style="color: #666; font-size: 0.9rem;">Input User dan Password!</p>
@@ -103,7 +131,7 @@
     </div>
 </div>
 
-<div id="app-wrapper">
+<div id="app-wrapper" style="display: none;">
     <!-- SIDEBAR KIRI -->
     <aside id="sidebar">
         <div class="sidebar-header">
@@ -144,14 +172,13 @@
 
     <div id="sidebar-overlay" onclick="toggleSidebar()"></div>
 
-    <main id="main-content">
+    <main id="main-content" style="visibility: hidden;">
         <div class="topbar">
             <button class="btn btn-link text-dark d-md-none me-2 p-0" onclick="toggleSidebar()"><i class="fas fa-bars fa-lg"></i></button>
             <span class="topbar-title" id="topbar-title">Beranda</span>
             <small style="color: #888;">Komisi Pemilihan Umum Kab. Lampung Timur</small>
         </div>
 
-        <!-- Defaultnya display: none, akan diatur oleh JS -->
         <div id="dashboard-view">
             <div class="dashboard-content">
                 <div class="text-section">
@@ -174,20 +201,16 @@
     </main>
 </div>
 
-<!-- ANTI-FLICKER SCRIPT (PENTING!) -->
 <script>
-    // Cek otomatis sebelum render penuh
-    if (sessionStorage.getItem('isAuthenticated') === 'true') {
-        document.getElementById('login-screen').style.display = 'none';
-        document.getElementById('app-wrapper').style.display = 'flex';
-        // Sembunyikan area konten sesaat agar tidak kedip ke Beranda saat reload halaman lain
-        document.getElementById('main-content').style.visibility = 'hidden';
+    // 1. CEK SESSION SAAT PERTAMA KALI (SEBELUM RENDER) - MENCEGAH FLICKER
+    const isAuth = sessionStorage.getItem('isAuthenticated') === 'true';
+    if (isAuth) {
+        document.getElementById('app-wrapper').style.display = 'flex'; // Langsung tampilkan app wrapper
+    } else {
+        document.getElementById('login-screen').style.display = 'flex'; // Langsung tampilkan login
+        document.getElementById('loading-overlay').style.display = 'none'; // Matikan spinner kalau mau ke login
     }
-</script>
 
-<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-<script>
     // Toggle Password
     document.getElementById('toggle-password').addEventListener('click', function() {
         const passInput = document.getElementById('password-input');
@@ -295,13 +318,15 @@
             showDashboard(document.getElementById('menu-dashboard')); 
         }
 
-        // HAPUS SEMBUNYIANTI FLICKER: Setelah halaman yang benar diatur, tampilkan kontennya
+        // AKHIRI LOADING: Setelah semua halaman JS selesai diatur, matikan spinner & tampilkan konten
         document.getElementById('main-content').style.visibility = 'visible';
+        document.getElementById('loading-overlay').classList.add('fade-out');
+        setTimeout(() => { document.getElementById('loading-overlay').style.display = 'none'; }, 300);
     }
 
-    // CEK SESI SAAT PERTAMA KALI WEBSITE DIBUKA / DIREFRESH
+    // 2. TRIGGER INISIALISASI SAAT HALAMAN SELESAI DIMUAT (ONLOAD)
     window.onload = function() { 
-        if (sessionStorage.getItem('isAuthenticated') === 'true') { 
+        if (isAuth) { 
             initializeApp(); 
         } 
     };
