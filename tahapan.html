@@ -45,7 +45,7 @@
         thead th { 
             position: sticky; top: 0; z-index: 10; 
             background-color: #f8f9fa; color: #555; font-weight: 700; font-size: 12px; text-transform: uppercase;
-            padding: 12px 10px; border-bottom: 2px solid #C8102E; white-space: nowrap;
+            padding: 12px 10px; border-bottom: 2px solid #C8102E; white-space: nowrap; text-align: left; /* Header rata kiri */
         }
         
         tbody td { 
@@ -57,13 +57,21 @@
             position: sticky; bottom: 0; z-index: 10; 
             background-color: #f8f9fa; color: #333; font-weight: 800; font-size: 13px;
             padding: 12px 10px; border-top: 2px solid #C8102E; white-space: nowrap;
+            text-align: left !important; /* TOTAL rata kiri */
         }
 
-        /* PENGELOMPOKAN RATA KANAN/KIRI */
-        .col-no { width: 40px; text-align: center !important; }
-        .col-num { text-align: right !important; font-weight: 600; font-variant-numeric: tabular-nums; }
-        .col-name { text-align: left !important; }
+        /* Penyesuaian Kolom - PERBAIKAN RATANYA */
+        .col-no { width: 40px; text-align: center !important; } /* Hanya kolom No yang tetap tengah */
+        .col-num { 
+            text-align: left !important; /* DIPAKSA RATA KIRI SESUAI PERMINTAAN */
+            font-weight: 600; 
+            font-variant-numeric: tabular-nums; 
+        }
+        .col-name { 
+            text-align: left !important; 
+        }
 
+        /* Hilangkan elemen bawaan DataTables */
         .dataTables_length, .dataTables_info, .dataTables_paginate, .dataTables_filter { display: none !important; }
 
         @media (max-width: 768px) {
@@ -200,12 +208,9 @@
         $('#custom-search').val('');
 
         let heads = [], dataRows = [], foots = [];
-        // Daftar index kolom yang isinya TEKS (rata kiri). Selain itu otomatis RATA KANAN.
-        let textColumns = []; 
 
         if(type === 'kec') {
             heads = ['No', 'Kecamatan', 'Jml Desa', 'Jml TPS', 'Laki-Laki', 'Perempuan', 'Jumlah'];
-            textColumns = [1]; // Hanya kolom index 1 (Kecamatan) yang rata kiri
             let grouped = {};
             filteredData.forEach(row => {
                 let key = row['kode kec']; if(!key) return;
@@ -225,7 +230,6 @@
 
         } else if(type === 'desa') {
             heads = ['No', 'Kecamatan', 'Desa', 'Jml TPS', 'Laki-Laki', 'Perempuan', 'Jumlah'];
-            textColumns = [1, 2]; // Kolom Kecamatan & Desa rata kiri
             let grouped = {};
             filteredData.forEach(row => {
                 let key = row['kode desa']; if(!key) return;
@@ -244,7 +248,6 @@
 
         } else if(type === 'tps') {
             heads = ['No', 'Kecamatan', 'Desa', 'TPS', 'Laki-Laki', 'Perempuan', 'Jumlah'];
-            textColumns = [1, 2, 3]; // Kolom Kecamatan, Desa, & TPS rata kiri
             let no = 1, totLk=0, totPr=0, totJml=0;
             filteredData.forEach(row => {
                 dataRows.push([no++, row['kecamatan'], row['desa'], row['tps'], formatAngka(getNum(row['laki-laki'])), formatAngka(getNum(row['perempuan'])), formatAngka(getNum(row['jumlah']))]);
@@ -253,21 +256,15 @@
             foots = ['', '', '', 'TOTAL', formatAngka(totLk), formatAngka(totPr), formatAngka(totJml)];
         }
 
-        // Render HTML dengan logika RATA KANAN otomatis
-        let headHtml = '<tr>' + heads.map((h, idx) => {
-            let cls = textColumns.includes(idx) ? 'col-name' : (idx === 0 ? 'col-no' : 'col-num');
-            return `<th class="${cls}">${h}</th>`;
-        }).join('') + '</tr>';
-
+        let headHtml = '<tr>' + heads.map(h => `<th>${h}</th>`).join('') + '</tr>';
         let bodyHtml = dataRows.map(row => {
             return '<tr>' + row.map((cell, idx) => {
-                let cls = textColumns.includes(idx) ? 'col-name' : (idx === 0 ? 'col-no' : 'col-num');
+                let cls = idx === 0 ? 'col-no' : (idx >= 2 ? 'col-num' : 'col-name');
                 return `<td class="${cls}">${cell}</td>`;
             }).join('') + '</tr>';
         }).join('');
-
         let footHtml = '<tr>' + foots.map((f, idx) => {
-            let cls = textColumns.includes(idx) ? 'col-name' : (idx === 0 ? 'col-no' : 'col-num');
+            let cls = idx === 0 ? 'col-no' : (idx >= 2 ? 'col-num' : 'col-name');
             return `<th class="${cls}">${f}</th>`;
         }).join('') + '</tr>';
 
@@ -278,7 +275,7 @@
         dataTableInstance = $('#main-table').DataTable({
             destroy: true,
             paging: false,
-            scrollY: false,
+            scrollY: false, 
             scrollX: false,
             ordering: true,
             order: [[0, 'asc']],
