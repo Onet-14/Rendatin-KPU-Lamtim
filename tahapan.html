@@ -57,17 +57,11 @@
             background: #e7f3ff; padding: 10px 15px; border-radius: 8px; margin-bottom: 15px;
             color: #004085; font-weight: 600; display: flex; justify-content: space-between; align-items: center;
         }
-
-        /* Debug Box */
-        #debug-box { background: #fff3cd; color: #856404; padding: 10px; border-radius: 8px; margin-bottom: 15px; display: none; font-size: 12px; }
     </style>
 </head>
 <body>
 
 <h4 style="margin-bottom: 20px;"><i class="fas fa-list-ol"></i> Rekap Data Tahapan</h4>
-
-<!-- DEBUG BOX (Untuk cek jika data kosong) -->
-<div id="debug-box"></div>
 
 <!-- FILTER TAHAPAN -->
 <div class="filter-card">
@@ -80,47 +74,17 @@
 
 <!-- SUMMARY CARDS -->
 <div class="row" id="summary-cards">
-    <div class="col-lg-2 col-md-4 col-sm-6">
-        <div class="summary-card">
-            <div><div class="card-value" id="sum-kec">0</div><div class="card-label">Jml Kecamatan</div></div>
-            <div class="card-icon"><i class="fas fa-map"></i></div>
-        </div>
-    </div>
-    <div class="col-lg-2 col-md-4 col-sm-6">
-        <div class="summary-card">
-            <div><div class="card-value" id="sum-desa">0</div><div class="card-label">Jml Desa</div></div>
-            <div class="card-icon"><i class="fas fa-home"></i></div>
-        </div>
-    </div>
-    <div class="col-lg-2 col-md-4 col-sm-6">
-        <div class="summary-card">
-            <div><div class="card-value" id="sum-tps">0</div><div class="card-label">Jml TPS</div></div>
-            <div class="card-icon"><i class="fas fa-box"></i></div>
-        </div>
-    </div>
-    <div class="col-lg-2 col-md-4 col-sm-6">
-        <div class="summary-card" style="border-left-color: #4da6ff;">
-            <div><div class="card-value" id="sum-lk">0</div><div class="card-label">Pemilih Lk</div></div>
-            <div class="card-icon" style="color: #4da6ff;"><i class="fas fa-mars"></i></div>
-        </div>
-    </div>
-    <div class="col-lg-2 col-md-4 col-sm-6">
-        <div class="summary-card" style="border-left-color: #ff66b2;">
-            <div><div class="card-value" id="sum-pr">0</div><div class="card-label">Pemilih Pr</div></div>
-            <div class="card-icon" style="color: #ff66b2;"><i class="fas fa-venus"></i></div>
-        </div>
-    </div>
-    <div class="col-lg-2 col-md-4 col-sm-6">
-        <div class="summary-card" style="border-left-color: #C8102E;">
-            <div><div class="card-value" id="sum-total">0</div><div class="card-label">Total Pemilih</div></div>
-            <div class="card-icon" style="color: #C8102E;"><i class="fas fa-users"></i></div>
-        </div>
-    </div>
+    <div class="col-lg-2 col-md-4 col-sm-6"><div class="summary-card"><div><div class="card-value" id="sum-kec">0</div><div class="card-label">Jml Kecamatan</div></div><div class="card-icon"><i class="fas fa-map"></i></div></div></div>
+    <div class="col-lg-2 col-md-4 col-sm-6"><div class="summary-card"><div><div class="card-value" id="sum-desa">0</div><div class="card-label">Jml Desa</div></div><div class="card-icon"><i class="fas fa-home"></i></div></div></div>
+    <div class="col-lg-2 col-md-4 col-sm-6"><div class="summary-card"><div><div class="card-value" id="sum-tps">0</div><div class="card-label">Jml TPS</div></div><div class="card-icon"><i class="fas fa-box"></i></div></div></div>
+    <div class="col-lg-2 col-md-4 col-sm-6"><div class="summary-card" style="border-left-color: #4da6ff;"><div><div class="card-value" id="sum-lk">0</div><div class="card-label">Pemilih Lk</div></div><div class="card-icon" style="color: #4da6ff;"><i class="fas fa-mars"></i></div></div></div>
+    <div class="col-lg-2 col-md-4 col-sm-6"><div class="summary-card" style="border-left-color: #ff66b2;"><div><div class="card-value" id="sum-pr">0</div><div class="card-label">Pemilih Pr</div></div><div class="card-icon" style="color: #ff66b2;"><i class="fas fa-venus"></i></div></div></div>
+    <div class="col-lg-2 col-md-4 col-sm-6"><div class="summary-card" style="border-left-color: #C8102E;"><div><div class="card-value" id="sum-total">0</div><div class="card-label">Total Pemilih</div></div><div class="card-icon" style="color: #C8102E;"><i class="fas fa-users"></i></div></div></div>
 </div>
 
 <!-- TABBED TABLE -->
 <div class="table-card">
-    <ul class="nav nav-tabs mb-3" id="myTab" role="tablist">
+    <ul class="nav nav-tabs mb-3">
         <li class="nav-item"><button class="nav-link active" id="kec-tab-btn" onclick="switchTab('kec')" type="button">Rekap Kecamatan</button></li>
         <li class="nav-item"><button class="nav-link" id="desa-tab-btn" onclick="switchTab('desa')" type="button">Rekap Desa</button></li>
         <li class="nav-item"><button class="nav-link" id="tps-tab-btn" onclick="switchTab('tps')" type="button">Detail TPS</button></li>
@@ -131,25 +95,20 @@
         <button class="btn btn-sm btn-danger" onclick="resetDrill()"><i class="fas fa-times"></i> Tampilkan Semua</button>
     </div>
 
-    <table id="main-table" class="table table-striped table-bordered" style="width:100%">
-        <thead id="table-head"></thead>
-        <tbody id="table-body"></tbody>
-        <tfoot id="table-foot"></tfoot>
-    </table>
+    <!-- Kontainer Tabel Dinamis -->
+    <div id="table-container"></div>
 </div>
 
 <script>
-    // GANTI DENGAN LINK CSV ANDA
     const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSpHbswfamDpkWReHbBBYYWsc5Jq5KXz2SkwYwZarW7M-JlEB3DcUHagO0sVLAFCXU__bCk2V7qoJEp/pub?gid=0&single=true&output=csv';
 
     let rawData = [];
-    let filteredData = []; // Data setelah difilter
+    let filteredData = [];
     let dataTableInstance = null;
     let currentTab = 'kec';
     let activeFilterKec = null;
     let activeFilterDesa = null;
 
-    // Fungsi aman ubah teks menjadi Angka (Hapus titik ribuan dll)
     function getNum(val) {
         if (!val) return 0;
         let cleanVal = val.toString().replace(/\./g, '').replace(',', '.');
@@ -166,33 +125,19 @@
         header: true,
         skipEmptyLines: true,
         complete: function(results) {
-            // Normalisasi Header: Huruf kecil, hapus spasi berlebih
             rawData = results.data.map(row => {
                 let cleanRow = {};
                 Object.keys(row).forEach(key => {
-                    let cleanKey = key.trim().toLowerCase().replace(/\s+/g, ' '); // Hapus spasi ganda
+                    let cleanKey = key.trim().toLowerCase().replace(/\s+/g, ' ');
                     cleanRow[cleanKey] = row[key] ? row[key].trim() : "";
                 });
                 return cleanRow;
             });
-
-            // DEBUG: Cek kolom apa saja yang terbaca
-            if(rawData.length > 0) {
-                let detectedCols = Object.keys(rawData[0]).join(', ');
-                document.getElementById('debug-box').innerHTML = "<b>Detected Columns:</b> " + detectedCols + " | <b>Total Rows:</b> " + rawData.length;
-                document.getElementById('debug-box').style.display = 'block';
-            } else {
-                document.getElementById('debug-box').innerHTML = "DATA KOSONG! Pastikan link CSV benar dan Sheet sudah di-Publish.";
-                document.getElementById('debug-box').style.display = 'block';
-                return;
-            }
-
             populateFilters();
-            applyFilter(); // Langsung terapkan filter default
+            applyFilter();
         }
     });
 
-    // Isi Dropdown Filter
     function populateFilters() {
         let tahapanSet = new Set();
         rawData.forEach(row => {
@@ -202,12 +147,10 @@
         let select = document.getElementById('filter-tahapan');
         select.innerHTML = '<option value="all">Semua Tahapan</option>';
         
-        let sortedTahapan = Array.from(tahapanSet).sort();
-        sortedTahapan.forEach(t => {
+        Array.from(tahapanSet).sort().forEach(t => {
             let opt = document.createElement('option');
             opt.value = t;
             opt.text = t;
-            // Default Filter ke Pemilu 2024
             if(t.toLowerCase().includes('pemilu 2024') || t.toLowerCase().includes('pemilu2024')) {
                 opt.selected = true;
             }
@@ -215,36 +158,24 @@
         });
     }
 
-    // Terapkan Filter
     function applyFilter() {
         let selectedTahapan = document.getElementById('filter-tahapan').value;
-        
-        if(selectedTahapan === 'all') {
-            filteredData = rawData;
-        } else {
-            filteredData = rawData.filter(row => row['tahapan'] === selectedTahapan);
-        }
-
+        filteredData = (selectedTahapan === 'all') ? rawData : rawData.filter(row => row['tahapan'] === selectedTahapan);
         activeFilterKec = null;
         activeFilterDesa = null;
         document.getElementById('drill-info').style.display = 'none';
-
         calculateSummary();
         switchTab(currentTab);
     }
 
-    // Hitung Summary Card menggunakan filteredData
     function calculateSummary() {
-        let uniqueKec = new Set();
-        let uniqueDesa = new Set();
-        let uniqueTps = new Set();
+        let uniqueKec = new Set(), uniqueDesa = new Set(), uniqueTps = new Set();
         let totalLk = 0, totalPr = 0, totalAll = 0;
 
         filteredData.forEach(row => {
             if(row['kode kec']) uniqueKec.add(row['kode kec']);
             if(row['kode desa']) uniqueDesa.add(row['kode desa']);
             if(row['tps']) uniqueTps.add(row['tps']);
-            
             totalLk += getNum(row['laki-laki']);
             totalPr += getNum(row['perempuan']);
             totalAll += getNum(row['jumlah']);
@@ -256,12 +187,6 @@
         document.getElementById('sum-lk').innerText = formatAngka(totalLk);
         document.getElementById('sum-pr').innerText = formatAngka(totalPr);
         document.getElementById('sum-total').innerText = formatAngka(totalAll);
-    }
-
-    function initDataTable() {
-        dataTableInstance = $('#main-table').DataTable({
-            language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/id.json' }
-        });
     }
 
     function drillDown(targetTab, kodeKec, kodeDesa) {
@@ -286,25 +211,27 @@
 
     function switchTab(type) {
         currentTab = type;
-        if(dataTableInstance) dataTableInstance.clear().destroy(); 
+        
+        // Hancurkan DataTable lama jika ada
+        if(dataTableInstance) {
+            dataTableInstance.destroy(true);
+            dataTableInstance = null;
+        }
 
-        let heads = [];
-        let dataRows = [];
-        let foots = [];
+        let heads = [], dataRows = [], foots = [];
 
         if(type === 'kec') {
-            activeFilterKec = null;
-            activeFilterDesa = null;
+            activeFilterKec = null; activeFilterDesa = null;
             document.getElementById('drill-info').style.display = 'none';
 
             heads = ['No', 'Kode Kec', 'Kecamatan', 'Jml Desa', 'Jml TPS', 'Laki-Laki', 'Perempuan', 'Jumlah', 'Aksi'];
             let grouped = {};
 
             filteredData.forEach(row => {
-                let key = row['kode kec'];
+                let key = row['kode kec'] || row['kecamatan']; // Fallback jika kode kosong
                 if(!key) return;
                 if(!grouped[key]) {
-                    grouped[key] = { 'kec': row['kecamatan'], 'kode': key, 'desa': new Set(), 'tps': new Set(), 'lk': 0, 'pr': 0, 'jml': 0 };
+                    grouped[key] = { 'kec': row['kecamatan'], 'kode': row['kode kec'], 'desa': new Set(), 'tps': new Set(), 'lk': 0, 'pr': 0, 'jml': 0 };
                 }
                 if(row['kode desa']) grouped[key].desa.add(row['kode desa']);
                 if(row['tps']) grouped[key].tps.add(row['tps']);
@@ -313,8 +240,7 @@
                 grouped[key].jml += getNum(row['jumlah']);
             });
 
-            let no = 1;
-            let totLk=0, totPr=0, totJml=0;
+            let no = 1, totLk=0, totPr=0, totJml=0;
             Object.values(grouped).forEach(val => {
                 dataRows.push([
                     no++, val.kode, val.kec, val.desa.size, val.tps.size, 
@@ -330,12 +256,12 @@
             let grouped = {};
 
             filteredData.forEach(row => {
-                let key = row['kode desa'];
-                if(!key) return;
                 if(activeFilterKec && row['kode kec'] !== activeFilterKec) return;
+                let key = row['kode desa'] || row['desa']; // Fallback
+                if(!key) return;
 
                 if(!grouped[key]) {
-                    grouped[key] = { 'desa': row['desa'], 'kec': row['kecamatan'], 'kode': key, 'kodekec': row['kode kec'], 'tps': new Set(), 'lk': 0, 'pr': 0, 'jml': 0 };
+                    grouped[key] = { 'desa': row['desa'], 'kec': row['kecamatan'], 'kode': row['kode desa'], 'kodekec': row['kode kec'], 'tps': new Set(), 'lk': 0, 'pr': 0, 'jml': 0 };
                 }
                 if(row['tps']) grouped[key].tps.add(row['tps']);
                 grouped[key].lk += getNum(row['laki-laki']);
@@ -343,8 +269,7 @@
                 grouped[key].jml += getNum(row['jumlah']);
             });
 
-            let no = 1;
-            let totLk=0, totPr=0, totJml=0;
+            let no = 1, totLk=0, totPr=0, totJml=0;
             Object.values(grouped).forEach(val => {
                 dataRows.push([
                     no++, val.kode, val.desa, val.kec, val.tps.size, 
@@ -357,8 +282,7 @@
 
         } else if(type === 'tps') {
             heads = ['No', 'Kecamatan', 'Desa', 'TPS', 'Laki-Laki', 'Perempuan', 'Jumlah'];
-            let no = 1;
-            let totLk=0, totPr=0, totJml=0;
+            let no = 1, totLk=0, totPr=0, totJml=0;
 
             filteredData.forEach(row => {
                 if(activeFilterKec && row['kode kec'] !== activeFilterKec) return;
@@ -377,10 +301,16 @@
             foots = ['', '', '', 'TOTAL', formatAngka(totLk), formatAngka(totPr), formatAngka(totJml)];
         }
 
-        $('#table-head').html('<tr>' + heads.map(h => '<th>'+h+'</th>').join('') + '</tr>');
-        $('#table-foot').html('<tr>' + foots.map(f => '<th>'+f+'</th>').join('') + '</tr>');
+        // Bangun Ulang Tabel dari Nol di dalam DOM
+        let tableHtml = `<table id="dynamic-table" class="table table-striped table-bordered" style="width:100%">`;
+        tableHtml += `<thead><tr>` + heads.map(h => `<th>${h}</th>`).join('') + `</tr></thead>`;
+        tableHtml += `<tfoot><tr>` + foots.map(f => `<th>${f}</th>`).join('') + `</tr></tfoot>`;
+        tableHtml += `</table>`;
         
-        dataTableInstance = $('#main-table').DataTable({
+        document.getElementById('table-container').innerHTML = tableHtml;
+
+        // Inisialisasi DataTable Baru
+        dataTableInstance = $('#dynamic-table').DataTable({
             data: dataRows,
             language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/id.json' },
             ordering: true,
@@ -392,9 +322,6 @@
         document.querySelectorAll('.nav-link').forEach(btn => btn.classList.remove('active'));
         document.getElementById(type+'-tab-btn').classList.add('active');
     }
-    
-    // Init empty table on first load
-    $(document).ready(function() { initDataTable(); });
 </script>
 </body>
 </html>
