@@ -24,14 +24,9 @@
             display: flex; 
         }
 
-        /* FIX: Hapus efek kotak hitam/garis saat klik (Default Leaflet Focus) */
-        .leaflet-container path.leaflet-interactive {
-            outline: none;
-        }
-        .leaflet-container :focus {
-            outline: none;
-            box-shadow: none;
-        }
+        /* FIX: Hapus efek kotak hitam/garis saat klik */
+        .leaflet-container path.leaflet-interactive { outline: none; }
+        .leaflet-container :focus { outline: none; box-shadow: none; }
 
         /* LOADING OVERLAY */
         #loading-overlay {
@@ -156,6 +151,22 @@
             color: #a50d24;
         }
 
+        /* BUTTON STYLE IN POPUP */
+        .btn-popup-tps {
+            width: 100%;
+            background-color: #C8102E;
+            color: white;
+            border: none;
+            padding: 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background 0.2s;
+        }
+        .btn-popup-tps:hover { background-color: #a50d24; }
+        .btn-popup-tps:disabled { background-color: #ccc; cursor: not-allowed; }
+
         /* RESPONSIVE */
         @media (max-width: 768px) {
             body { flex-direction: column; overflow: auto; height: auto; }
@@ -201,8 +212,8 @@
         <ul style="margin-bottom: 0; padding-left: 20px; font-size: 0.8rem; margin-top: 5px; color: #555;">
             <li>Hover wilayah untuk label nama.</li>
             <li>Klik <strong>Kecamatan</strong> untuk masuk ke desa.</li>
-            <li>Klik <strong>Desa</strong> untuk melihat TPS.</li>
-            <li>Hover <strong>Icon TPS</strong> untuk info.</li>
+            <li>Klik <strong>Desa</strong> untuk memilih.</li>
+            <li>Tekan tombol <strong>Lihat TPS</strong> di popup.</li>
         </ul>
     </div>
 </aside>
@@ -230,7 +241,11 @@
     let currentCsvData = [];
     let rawDesaGeoJson = null; 
 
-    // --- FUNGSI WARNA MEJIKUHIBINU (RANDOM TAPI KONSISTEN) ---
+    // VARIABEL UNTUK MENYIMPAN DESA YANG SEDANG DIPILIH
+    let selectedDesaLayer = null;
+    let selectedDesaFeature = null;
+
+    // --- FUNGSI WARNA MEJIKUHIBINU ---
     function stringToColor(str) {
         let hash = 0;
         for (let i = 0; i < str.length; i++) {
@@ -241,13 +256,13 @@
     }
 
     function getFeatureColor(feature) {
-        // Gunakan ID atau Nama untuk generate warna agar warna tetap sama saat di-render ulang
         const id = feature.properties.kec_id || feature.properties.kel_id || feature.properties.name || Math.random().toString();
         return stringToColor(String(id));
     }
 
     function initMap() {
-        map = L.map('map', { zoomControl: false }).setView([-5.10, 105.40], 10);
+        // SESUAIKAN SKALA PETA SEPERTI GAMBAR (Zoom 9, Center sekitar Lampung Timur)
+        map = L.map('map', { zoomControl: false }).setView([-5.25, 105.35], 9);
         L.control.zoom({ position: 'topright' }).addTo(map);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -255,34 +270,30 @@
             maxZoom: 19
         }).addTo(map);
 
-        // --- LAYER KECAMATAN ---
         geoJsonLayerKec = L.geoJSON(null, {
             style: styleKecamatan,
             onEachFeature: onEachFeatureKecamatan
         }).addTo(map);
 
-        // --- LAYER DESA ---
         geoJsonLayerDesa = L.geoJSON(null, {
             style: styleDesa,
             onEachFeature: onEachFeatureDesa
         });
 
-        // --- LAYER TPS ---
         tpsMarkersLayer = L.layerGroup().addTo(map);
 
         loadGeoJsons();
     }
 
-    // --- STYLE: WARNA MEJIKUHIBINU TRANSPARAN 50% ---
+    // --- STYLE ---
     function styleKecamatan(feature) {
         const color = getFeatureColor(feature);
         return {
-            fillColor: color,          // Warna Isi (Mejikuhibinu)
-            weight: 2,                 // Tebal Garis
+            fillColor: color,
+            weight: 2,
             opacity: 1,
-            color: '#333333',          // Warna Garis Batas (Gelap agar terlihat jelas)
-            dashArray: '',             // Hilangkan garis putus-putus agar terlihat solid
-            fillOpacity: 0.5           // Transparansi 50%
+            color: '#333333',
+            fillOpacity: 0.5
         };
     }
 
@@ -292,18 +303,34 @@
             fillColor: color,
             weight: 1,
             opacity: 1,
-            color: '#555555',          // Garis batas desa sedikit lebih tipis/abu
-            fillOpacity: 0.5           // Transparansi 50%
+            color: '#555555',
+            fillOpacity: 0.5
         };
     }
 
-    // --- FUNGSI BANTUAN NAMA ---
+    // --- STYLE KHUSUS UNTUK DESA YANG DIPILIH & YANG TIDAK ---
+    const styleDesaSelected = {
+        weight: 3,
+        color: '#C8102E',
+        fillOpacity: 0.8,
+        fillColor: '#ffcccc' // Sedikit merah muda
+    };
+
+    const styleDesaDimmed = {
+        weight: 1,
+        color: '#cccccc',
+        fillOpacity: 0.05, // Sangat transparan
+        fillColor: '#f0f0f0'
+    };
+
+    // --- FUNGSI BANTUAN NAMA (DIPERBAIKI) ---
     function getFeatureName(feature, type) {
         const props = feature.properties;
         if (type === 'kecamatan') {
             return props.kecamatan || props.KECAMATAN || props.name || props.NAMA || "Kecamatan";
         } else {
-            return props.desa || props.DESA || props.name || props.NAMA_DESA || props.kelurahan || "Desa";
+            // Prioritas pencarian nama desa yang lebih lengkap agar tidak muncul "Desa" saja
+            return props.name || props.NAMA || props.desa || props.DESA || props.kelurahan || props.KELURAHAN || props.NAMA_DESA || "Desa (Tanpa Nama)";
         }
     }
 
@@ -336,7 +363,6 @@
         
         const dataInKec = activeData.filter(row => String(row['kode kec']).trim() === kecId);
 
-        // HEADER Label Tambah "Kecamatan"
         const headerTitle = `DATA KECAMATAN`;
 
         if (dataInKec.length === 0) {
@@ -375,37 +401,82 @@
     function drillDownToDesa(feature, layer) {
         if (!rawDesaGeoJson) return;
         const kecId = String(feature.properties.kec_id).trim();
+        
+        // Reset pilihan desa sebelumnya
+        selectedDesaLayer = null;
+        selectedDesaFeature = null;
+
         map.removeLayer(geoJsonLayerKec);
         const desaFeatures = rawDesaGeoJson.features.filter(f => String(f.properties.kec_id).trim() === kecId);
+        
         if (desaFeatures.length === 0) {
             alert("Data desa tidak ditemukan.");
             map.addLayer(geoJsonLayerKec);
             return;
         }
+        
         geoJsonLayerDesa.clearLayers();
         geoJsonLayerDesa.addData(desaFeatures);
         map.addLayer(geoJsonLayerDesa);
         map.fitBounds(geoJsonLayerDesa.getBounds(), { padding: [50, 50] });
+        
+        // Bersihkan marker TPS lama
+        tpsMarkersLayer.clearLayers();
     }
 
     // --- LOGIKA DESA ---
     function onEachFeatureDesa(feature, layer) {
         const name = getFeatureName(feature, 'desa');
-        layer.bindTooltip(name, { sticky: true, direction: 'top', className: 'custom-tooltip' });
+        
+        // PERBAIKI: Pastikan tooltip menggunakan nama variabel, bukan hardcode
+        layer.bindTooltip(name, { 
+            sticky: true, 
+            direction: 'top', 
+            className: 'custom-tooltip',
+            opacity: 0.9
+        });
 
         layer.on({
             mouseover: (e) => {
-                e.target.setStyle({ weight: 2, color: '#000000', fillOpacity: 0.7 });
+                // Jika layer ini yang sedang aktif, jangan ubah style
+                if (selectedDesaLayer !== e.target) {
+                    e.target.setStyle({ weight: 2, color: '#000000', fillOpacity: 0.6 });
+                }
             },
             mouseout: (e) => {
-                geoJsonLayerDesa.resetStyle(e.target);
+                // Kembalikan style sesuai status (Dipilih atau Tidak)
+                if (selectedDesaLayer === e.target) {
+                    e.target.setStyle(styleDesaSelected);
+                } else {
+                    e.target.setStyle(styleDesaDimmed);
+                }
             },
             click: (e) => {
-                showDesaPopup(feature, layer);
-                showTPSPoints(feature);
-                map.fitBounds(e.target.getBounds(), { padding: [30, 30], maxZoom: 16 });
+                highlightSelectedDesa(e.target, feature);
+                showDesaPopup(feature, e.target);
             }
         });
+    }
+
+    // --- FUNGSI HIGHLIGHT HANYA DESA YANG DIKLIK ---
+    function highlightSelectedDesa(clickedLayer, feature) {
+        // Simpan referensi
+        selectedDesaLayer = clickedLayer;
+        selectedDesaFeature = feature;
+
+        // Reset semua layer desa ke style "Dimmed"
+        geoJsonLayerDesa.eachLayer(function (layer) {
+            layer.setStyle(styleDesaDimmed);
+        });
+
+        // Terapkan style "Selected" ke layer yang diklik
+        clickedLayer.setStyle(styleDesaSelected);
+
+        // Bersihkan TPS jika ganti desa
+        tpsMarkersLayer.clearLayers();
+        
+        // Zoom pas ke desa yang diklik
+        map.fitBounds(clickedLayer.getBounds(), { padding: [50, 50], maxZoom: 16 });
     }
 
     function showDesaPopup(feature, layer) {
@@ -414,10 +485,11 @@
         const activeData = getActiveData();
         const dataInDesa = activeData.filter(row => String(row['kode desa']).trim() === kelId);
 
-        // Ambil nama Kecamatan dari data untuk label
         const kecNameFromData = dataInDesa.length > 0 ? dataInDesa[0].kecamatan : "-";
-        
         const headerTitle = `DATA DESA`;
+
+        // Cek apakah TPS sudah ditampilkan untuk mematikan tombol
+        const isTPSShown = tpsMarkersLayer.getLayers().length > 0 && selectedDesaLayer === layer;
 
         if (dataInDesa.length === 0) {
             const content = `
@@ -428,7 +500,6 @@
                     <div style="margin-top:10px;">Tidak ada data TPS.</div>
                 </div>`;
             layer.bindPopup(content).openPopup();
-            tpsMarkersLayer.clearLayers();
             return;
         }
 
@@ -436,6 +507,11 @@
         const totalPerempuan = dataInDesa.reduce((sum, item) => sum + parseInt(item['perempuan'] || 0), 0);
         const totalJumlah = totalLaki + totalPerempuan;
         const uniqueTPS = dataInDesa.length;
+
+        // TOMBOL LIHAT TPS
+        const btnHtml = isTPSShown 
+            ? `<div class="text-center mt-2"><small class="text-success fw-bold"><i class="fas fa-check-circle"></i> Titik TPS Ditampilkan</small></div>`
+            : `<button class="btn-popup-tps" onclick="triggerShowTPS()"><i class="fas fa-map-marker-alt"></i> LIHAT TITIK TPS</button>`;
 
         const content = `
             <div class="popup-header">${headerTitle}</div>
@@ -446,9 +522,21 @@
                 <div class="popup-row"><span class="popup-label">Laki-laki:</span> <span class="popup-val">${totalLaki.toLocaleString('id-ID')}</span></div>
                 <div class="popup-row"><span class="popup-label">Perempuan:</span> <span class="popup-val">${totalPerempuan.toLocaleString('id-ID')}</span></div>
                 <div class="popup-row total-bold"><span class="popup-label">Total:</span> <span class="popup-val">${totalJumlah.toLocaleString('id-ID')}</span></div>
+                ${btnHtml}
             </div>
         `;
         layer.bindPopup(content).openPopup();
+    }
+
+    // --- FUNGSI TRIGGER TOMBOL ---
+    window.triggerShowTPS = function() {
+        if (selectedDesaFeature) {
+            showTPSPoints(selectedDesaFeature);
+            // Refresh popup untuk memperbarui status tombol
+            if (selectedDesaLayer) {
+                showDesaPopup(selectedDesaFeature, selectedDesaLayer);
+            }
+        }
     }
 
     // --- LOGIKA TPS ---
@@ -471,12 +559,9 @@
             
             if (!isNaN(lat) && !isNaN(lng)) {
                 const marker = L.marker([lat, lng], { icon: tpsIcon });
-
-                // Tooltip otomatis
                 const tooltipText = `TPS ${row.tps} (Jml: ${row.jumlah})`;
                 marker.bindTooltip(tooltipText, { direction: 'top', offset: [0, -35], className: 'custom-tooltip' });
 
-                // Popup Detail (Lengkapi Label)
                 const popupContent = `
                     <div class="popup-header" style="font-size:0.9rem">DATA TPS ${row.tps}</div>
                     <div class="popup-body">
@@ -487,7 +572,6 @@
                         <div class="popup-row total-bold"><span class="popup-label">Total:</span> <span class="popup-val">${row.jumlah}</span></div>
                     </div>
                 `;
-                
                 marker.bindPopup(popupContent);
                 tpsMarkersLayer.addLayer(marker);
             }
@@ -495,10 +579,14 @@
     }
 
     function resetMap() {
-        if (map.hasLayer(geoJsonLayerDesa)) map.removeLayer(geoJsonLayerDesa);
+        selectedDesaLayer = null;
+        selectedDesaFeature = null;
         tpsMarkersLayer.clearLayers();
+        
+        if (map.hasLayer(geoJsonLayerDesa)) map.removeLayer(geoJsonLayerDesa);
         if (!map.hasLayer(geoJsonLayerKec)) map.addLayer(geoJsonLayerKec);
-        map.setView([-5.1400, 105.2500], 9);
+        
+        map.setView([-5.25, 105.35], 9); // Reset view ke posisi awal yang baru
         map.closePopup();
     }
 
@@ -527,6 +615,13 @@
         tahapanSelect.innerHTML = '<option value="">-- Pilih Tahapan --</option>';
         tahapanSelect.disabled = true;
         tpsMarkersLayer.clearLayers();
+        
+        // Reset pilihan desa visual
+        if (selectedDesaLayer) {
+             selectedDesaLayer.setStyle(styleDesa); // Reset style
+             selectedDesaLayer = null;
+        }
+
         currentCsvData = [];
 
         if (!jenis) return;
@@ -556,8 +651,11 @@
     }
 
     function updateMapData() {
-        if (map.hasLayer(geoJsonLayerDesa)) {
-            tpsMarkersLayer.clearLayers(); 
+        // Jika data ganti, sembunyikan TPS yang lama
+        tpsMarkersLayer.clearLayers();
+        // Jika sedang di mode desa, refresh popup agar tombol reset
+        if(selectedDesaLayer) {
+            showDesaPopup(selectedDesaFeature, selectedDesaLayer);
         }
     }
 
