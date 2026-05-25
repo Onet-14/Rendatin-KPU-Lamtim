@@ -309,7 +309,8 @@
     }
 
     function initMap() {
-        map = L.map('map', { zoomControl: false }).setView([-5.10, 105.40], 10);
+        // Posisi awal sementara, nanti di-override oleh fitBounds
+        map = L.map('map', { zoomControl: false }).setView([-5.10, 105.40], 9);
         L.control.zoom({ position: 'topright' }).addTo(map);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -396,7 +397,6 @@
 
     function onEachFeatureKecamatan(feature, layer) {
         const name = getFeatureName(feature, 'kecamatan');
-        
         layer.bindTooltip("DATA KECAMATAN: " + name, {
             sticky: true, direction: 'top', className: 'custom-tooltip'
         });
@@ -453,7 +453,7 @@
             </div>
         `;
         
-        activeKecContext = { feature, layer, content }; // Simpan content juga
+        activeKecContext = { feature, layer };
         layer.bindPopup(content).openPopup();
     }
 
@@ -466,6 +466,7 @@
     function drillDownToDesa(feature, layer) {
         if (!rawDesaGeoJson) return;
         const kecId = String(feature.properties.kec_id).trim();
+        const kecName = getFeatureName(feature, 'kecamatan');
         
         selectedDesaLayer = null;
         selectedDesaFeature = null;
@@ -487,15 +488,47 @@
         tpsMarkersLayer.clearLayers();
         document.getElementById('btn-back').style.display = 'block';
 
-        // --- PERBAIKAN: Munculkan Popup Ringkasan Kecamatan Saat Masuk Desa ---
-        // Agar user tahu data total desa/tps sebelum memilih desa spesifik
-        if (activeKecContext && activeKecContext.content) {
-            const center = map.getCenter();
-            L.popup()
-                .setLatLng(center)
-                .setContent(activeKecContext.content)
-                .openOn(map);
+        // --- POPUP OTOMATIS SAAT MASUK WILAYAH DESA ---
+        // Hitung ulang data ringkasan untuk popup ini
+        const activeData = getActiveData();
+        const dataInKec = activeData.filter(row => String(row['kode kec']).trim() === kecId);
+        const headerTitle = `DATA KECAMATAN`;
+
+        let content = '';
+        
+        if (dataInKec.length === 0) {
+            content = `
+                <div class="popup-header">${headerTitle}</div>
+                <div class="popup-body text-center text-muted">
+                    <div class="popup-row"><span class="popup-label">Kecamatan:</span> <span class="popup-val">${kecName}</span></div>
+                    <div style="margin-top:10px;">Tidak ada data.</div>
+                </div>`;
+        } else {
+            const totalLaki = dataInKec.reduce((sum, item) => sum + parseInt(item['laki-laki'] || 0), 0);
+            const totalPerempuan = dataInKec.reduce((sum, item) => sum + parseInt(item['perempuan'] || 0), 0);
+            const totalJumlah = totalLaki + totalPerempuan;
+            const uniqueDesa = [...new Set(dataInKec.map(item => item['kode desa']))].length;
+            const uniqueTPS = [...new Set(dataInKec.map(item => item.tps))].length;
+
+            content = `
+                <div class="popup-header">${headerTitle}</div>
+                <div class="popup-body">
+                    <div class="popup-row"><span class="popup-label">Kecamatan:</span> <span class="popup-val">${kecName}</span></div>
+                    <div class="popup-row"><span class="popup-label">Jml Desa:</span> <span class="popup-val">${uniqueDesa}</span></div>
+                    <div class="popup-row"><span class="popup-label">Jml TPS:</span> <span class="popup-val">${uniqueTPS}</span></div>
+                    <div class="popup-row"><span class="popup-label">Laki-laki:</span> <span class="popup-val">${totalLaki.toLocaleString('id-ID')}</span></div>
+                    <div class="popup-row"><span class="popup-label">Perempuan:</span> <span class="popup-val">${totalPerempuan.toLocaleString('id-ID')}</span></div>
+                    <div class="popup-row total-bold"><span class="popup-label">Total:</span> <span class="popup-val">${totalJumlah.toLocaleString('id-ID')}</span></div>
+                    <div class="text-center mt-2 text-muted" style="font-size:0.8em">Silakan pilih Desa di peta.</div>
+                </div>
+            `;
         }
+
+        // Buka popup di tengah peta
+        L.popup()
+            .setLatLng(map.getBounds().getCenter())
+            .setContent(content)
+            .openOn(map);
     }
 
     function onEachFeatureDesa(feature, layer) {
@@ -646,13 +679,8 @@
         if (map.hasLayer(geoJsonLayerDesa)) map.removeLayer(geoJsonLayerDesa);
         if (!map.hasLayer(geoJsonLayerKec)) map.addLayer(geoJsonLayerKec);
 
-        // PERBAIKAN: Fit bounds kecamatan saat kembali
+        // Sesuai permintaan: Samakan tampilannya seperti saat load awal
         map.fitBounds(geoJsonLayerKec.getBounds(), { padding: [50, 50] });
-        
-        // Opsional: Buka popup kecamatan yang sedang aktif kembali
-        if (activeKecContext && activeKecContext.layer) {
-             activeKecContext.layer.openPopup();
-        }
     }
 
     function resetMap() {
@@ -664,9 +692,8 @@
         if (map.hasLayer(geoJsonLayerDesa)) map.removeLayer(geoJsonLayerDesa);
         if (!map.hasLayer(geoJsonLayerKec)) map.addLayer(geoJsonLayerKec);
         
-        // PERBAIKAN: Gunakan fit bounds pada reset, bukan setView statis
-        map.fitBounds(geoJsonLayerKec.getBounds(), { padding: [50, 50] });
-        
+        // Gunakan fitBounds agar sesuai ukuran peta
+        map.fitBounds(geoJsonLayerKec.getBounds(), { padding: [20, 20] });
         map.closePopup();
         
         document.getElementById('jenis-select').value = 'pemutakhiran';
@@ -682,8 +709,8 @@
             geoJsonLayerKec.addData(dataKec);
             rawDesaGeoJson = dataDesa; 
             
-            // --- PERBAIKAN: TAMPILAN AWAL PAS DENGAN UKURAN KECAMATAN ---
-            map.fitBounds(geoJsonLayerKec.getBounds(), { padding: [50, 50] });
+            // --- SESUAI PERMINTAAN: Auto-fit bounds saat awal ---
+            map.fitBounds(geoJsonLayerKec.getBounds(), { padding: [20, 20] });
             
             const loader = document.getElementById('loading-overlay');
             loader.classList.add('fade-out');
