@@ -4,249 +4,308 @@
     <meta charset="UTF-8">
     <title>Data PDPB</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
-        body { padding: 25px; background-color: #f4f6f9; font-family: 'Segoe UI', sans-serif; font-size: 13px; }
-        h4 { color: #C8102E; font-weight: bold; }
+        html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; background-color: #f0f2f5; font-family: 'Segoe UI', sans-serif; font-size: 14px; color: #333; }
+        .page-container { display: flex; flex-direction: column; height: 100vh; padding: 20px; gap: 15px; }
+        .top-section { flex-shrink: 0; }
         
-        /* Styling Summary Cards */
-        .summary-card {
-            background: #ffffff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.07);
-            border-left: 5px solid #C8102E; display: flex; align-items: center; justify-content: space-between;
-            transition: transform 0.2s; margin-bottom: 20px;
-        }
-        .summary-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
-        .summary-card .card-icon { font-size: 2.5rem; color: #C8102E; opacity: 0.8; }
-        .summary-card .card-value { font-size: 1.8rem; font-weight: 800; color: #333; }
-        .summary-card .card-label { font-size: 0.85rem; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
-        
-        /* Styling Tabs */
-        .nav-tabs .nav-link { color: #555; font-weight: 600; border: none; border-bottom: 3px solid transparent; }
-        .nav-tabs .nav-link.active { color: #C8102E; border-bottom: 3px solid #C8102E; background: transparent; }
-        .nav-tabs .nav-link:hover { border-color: #C8102E; color: #C8102E; }
+        /* HEADER & FILTER */
+        .header-row { display: flex; justify-content: space-between; align-items: center; }
+        h4 { color: #C8102E; font-weight: 800; margin: 0; font-size: 1.3rem; }
+        .filter-group { display: flex; align-items: center; gap: 10px; background: #fff; padding: 8px 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .filter-group label { font-weight: 700; color: #555; font-size: 13px; }
+        .filter-group select { border: 1px solid #ddd; border-radius: 6px; padding: 5px 10px; font-weight: 600; font-size: 13px; color: #C8102E; cursor: pointer; }
+        .btn-lihat { background-color: #C8102E; color: #fff; border: none; border-radius: 6px; padding: 6px 15px; font-weight: 700; font-size: 13px; cursor: pointer; transition: 0.2s; }
+        .btn-lihat:hover { background-color: #a50d24; }
 
-        /* Styling Tabel Card */
-        .table-card { background: #ffffff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.07); }
-        table { font-size: 13px; }
-        .dataTables_wrapper .dataTables_filter input { border-radius: 8px; border: 1px solid #ccc; padding: 5px 10px; }
+        /* EMPTY STATE */
+        .empty-state { flex-grow: 1; display: flex; justify-content: center; align-items: center; background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); }
+        .empty-box { text-align: center; color: #888; }
+        .empty-box i { font-size: 4rem; color: #ccc; margin-bottom: 15px; }
+        .empty-box h5 { font-weight: 700; color: #555; }
+        .empty-box p { font-size: 13px; }
+
+        /* DATA AREA */
+        #data-area { display: none; flex-grow: 1; min-height: 0; display: flex; flex-direction: column; gap: 15px; }
+
+        /* SUMMARY CARDS */
+        .cards-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; flex-shrink: 0; }
+        .stat-card { background: #fff; border-radius: 10px; padding: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border-left: 4px solid #C8102E; }
+        .stat-card.blue { border-left-color: #4da6ff; }
+        .stat-card.pink { border-left-color: #ff66b2; }
+        .stat-info .val { font-size: 1.4rem; font-weight: 800; line-height: 1.2; }
+        .stat-info .lbl { font-size: 0.7rem; color: #888; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+        .stat-icon { font-size: 1.8rem; color: #ddd; }
+
+        /* TABLE SECTION */
+        .table-section { flex-grow: 1; min-height: 0; background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); display: flex; flex-direction: column; overflow: hidden; }
+        
+        .tab-search-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px 0 20px; flex-shrink: 0; }
+        .nav-tabs { border-bottom: 2px solid #eee; }
+        .nav-tabs .nav-link { border: none; color: #888; font-weight: 700; font-size: 13px; padding: 8px 15px; border-bottom: 3px solid transparent; transition: 0.2s; }
+        .nav-tabs .nav-link.active { color: #C8102E; border-bottom-color: #C8102E; background: transparent; }
+        .nav-tabs .nav-link:hover:not(.active) { color: #333; }
+        .search-box input { border: 1px solid #ddd; border-radius: 6px; padding: 5px 12px; font-size: 13px; width: 200px; }
+
+        .table-container { flex: 1; min-height: 0; overflow-y: auto; padding: 0 20px 20px 20px; }
+        table { width: 100% !important; border-collapse: collapse; }
+        thead th { position: sticky; top: 0; z-index: 10; background-color: #f8f9fa; color: #555; font-weight: 700; font-size: 12px; text-transform: uppercase; padding: 12px 10px; border-bottom: 2px solid #C8102E; white-space: nowrap; text-align: left; }
+        tbody td { padding: 10px; border-bottom: 1px solid #eee; font-size: 13px; white-space: nowrap; }
+        tbody tr:hover { background-color: #fdf2f2; }
+        tfoot th { position: sticky; bottom: 0; z-index: 10; background-color: #f8f9fa; color: #333; font-weight: 800; font-size: 13px; padding: 12px 10px; border-top: 2px solid #C8102E; white-space: nowrap; text-align: left !important; }
+
+        .col-no { width: 40px; text-align: center !important; }
+        .col-num { text-align: left !important; font-weight: 600; font-variant-numeric: tabular-nums; }
+        .col-name { text-align: left !important; }
+
+        .dataTables_length, .dataTables_info, .dataTables_paginate, .dataTables_filter { display: none !important; }
+
+        @media (max-width: 768px) { .cards-row { grid-template-columns: repeat(3, 1fr); } }
     </style>
 </head>
 <body>
 
-<h4 style="margin-bottom: 20px;"><i class="fas fa-list-ol"></i> Rekap Data Tahapan</h4>
+<div class="page-container">
+    <div class="top-section">
+        <div class="header-row">
+            <h4><i class="fas fa-user-check"></i> Rekap Data PDPB</h4>
+            <div class="filter-group">
+                <i class="fas fa-filter" style="color: #C8102E;"></i>
+                <label>Tahapan:</label>
+                <select id="filter-tahapan"></select>
+                <button class="btn-lihat" id="btn-lihat-rekap"><i class="fas fa-search"></i> Lihat Rekap</button>
+            </div>
+        </div>
+    </div>
 
-<!-- SUMMARY CARDS -->
-<div class="row" id="summary-cards">
-    <div class="col-lg-2 col-md-4 col-sm-6">
-        <div class="summary-card">
-            <div><div class="card-value" id="sum-kec">0</div><div class="card-label">Jml Kecamatan</div></div>
-            <div class="card-icon"><i class="fas fa-map"></i></div>
+    <div class="empty-state" id="empty-state">
+        <div class="empty-box">
+            <i class="fas fa-hand-pointer"></i>
+            <h5>Silakan Pilih Tahapan</h5>
+            <p>Pilih filter Tahapan di atas, lalu klik <b>Lihat Rekap</b> untuk memuat data PDPB.</p>
         </div>
     </div>
-    <div class="col-lg-2 col-md-4 col-sm-6">
-        <div class="summary-card">
-            <div><div class="card-value" id="sum-desa">0</div><div class="card-label">Jml Desa</div></div>
-            <div class="card-icon"><i class="fas fa-home"></i></div>
+
+    <div id="data-area">
+        <div class="cards-row">
+            <div class="stat-card"><div class="stat-info"><div class="val" id="sum-kec">0</div><div class="lbl">Jml Kecamatan</div></div><div class="stat-icon"><i class="fas fa-map"></i></div></div>
+            <div class="stat-card"><div class="stat-info"><div class="val" id="sum-desa">0</div><div class="lbl">Jml Desa</div></div><div class="stat-icon"><i class="fas fa-home"></i></div></div>
+            <div class="stat-card"><div class="stat-info"><div class="val" id="sum-tps">0</div><div class="lbl">Jml TPS</div></div><div class="stat-icon"><i class="fas fa-box"></i></div></div>
+            <div class="stat-card blue"><div class="stat-info"><div class="val" id="sum-lk">0</div><div class="lbl">Pemilih Laki-Laki</div></div><div class="stat-icon"><i class="fas fa-mars"></i></div></div>
+            <div class="stat-card pink"><div class="stat-info"><div class="val" id="sum-pr">0</div><div class="lbl">Pemilih Perempuan</div></div><div class="stat-icon"><i class="fas fa-venus"></i></div></div>
+            <div class="stat-card"><div class="stat-info"><div class="val" id="sum-total">0</div><div class="lbl">Total Pemilih</div></div><div class="stat-icon"><i class="fas fa-users"></i></div></div>
         </div>
-    </div>
-    <div class="col-lg-2 col-md-4 col-sm-6">
-        <div class="summary-card">
-            <div><div class="card-value" id="sum-tps">0</div><div class="card-label">Jml TPS</div></div>
-            <div class="card-icon"><i class="fas fa-box"></i></div>
-        </div>
-    </div>
-    <div class="col-lg-2 col-md-4 col-sm-6">
-        <div class="summary-card" style="border-left-color: #4da6ff;">
-            <div><div class="card-value" id="sum-lk">0</div><div class="card-label">Pemilih Lk</div></div>
-            <div class="card-icon" style="color: #4da6ff;"><i class="fas fa-mars"></i></div>
-        </div>
-    </div>
-    <div class="col-lg-2 col-md-4 col-sm-6">
-        <div class="summary-card" style="border-left-color: #ff66b2;">
-            <div><div class="card-value" id="sum-pr">0</div><div class="card-label">Pemilih Pr</div></div>
-            <div class="card-icon" style="color: #ff66b2;"><i class="fas fa-venus"></i></div>
-        </div>
-    </div>
-    <div class="col-lg-2 col-md-4 col-sm-6">
-        <div class="summary-card" style="border-left-color: #C8102E;">
-            <div><div class="card-value" id="sum-total">0</div><div class="card-label">Total Pemilih</div></div>
-            <div class="card-icon" style="color: #C8102E;"><i class="fas fa-users"></i></div>
+
+        <div class="table-section">
+            <div class="tab-search-row">
+                <ul class="nav nav-tabs" id="myTab">
+                    <li class="nav-item"><a class="nav-link active" id="kec-tab-btn" onclick="switchTab('kec')" href="#">Rekap Kecamatan</a></li>
+                    <li class="nav-item"><a class="nav-link" id="desa-tab-btn" onclick="switchTab('desa')" href="#">Rekap Desa</a></li>
+                    <li class="nav-item"><a class="nav-link" id="tps-tab-btn" onclick="switchTab('tps')" href="#">Detail TPS</a></li>
+                </ul>
+                <div class="search-box"><input type="text" id="custom-search" placeholder="Cari data..."></div>
+            </div>
+            <div class="table-container">
+                <table id="main-table" class="table">
+                    <thead id="table-head"></thead>
+                    <tbody id="table-body"></tbody>
+                    <tfoot id="table-foot"></tfoot>
+                </table>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- TABBED TABLE -->
-<div class="table-card">
-    <ul class="nav nav-tabs mb-3" id="myTab" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="kec-tab-btn" onclick="switchTab('kec')" type="button">Rekap Kecamatan</button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="desa-tab-btn" onclick="switchTab('desa')" type="button">Rekap Desa</button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="tps-tab-btn" onclick="switchTab('tps')" type="button">Detail TPS</button>
-        </li>
-    </ul>
-
-    <table id="main-table" class="table table-striped table-bordered" style="width:100%">
-        <thead id="table-head"></thead>
-        <tbody id="table-body"></tbody>
-        <tfoot id="table-foot"></tfoot>
-    </table>
-</div>
-
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script>
-    // GANTI DENGAN LINK CSV SHEET TAHAPAN ANDA
+    // LINK CSV PDPB
     const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSpHbswfamDpkWReHbBBYYWsc5Jq5KXz2SkwYwZarW7M-JlEB3DcUHagO0sVLAFCXU__bCk2V7qoJEp/pub?gid=135239502&single=true&output=csv';
 
     let rawData = [];
+    let filteredData = []; 
     let dataTableInstance = null;
     let currentTab = 'kec';
 
-    // Format Angka Ribuan
-    function formatAngka(angka) {
-        return new Intl.NumberFormat('id-ID').format(angka);
+    function getNum(val) {
+        if (!val) return 0;
+        let cleanVal = val.toString().replace(/\./g, '').replace(',', '.');
+        let num = parseInt(cleanVal);
+        return isNaN(num) ? 0 : num;
     }
 
-    // Proses Data dari CSV
+    function formatAngka(angka) { return new Intl.NumberFormat('id-ID').format(angka); }
+    function parseBackToNum(str) { if (!str) return 0; return parseInt(str.toString().replace(/\./g, '')) || 0; }
+
     Papa.parse(CSV_URL, {
         download: true,
         header: true,
         skipEmptyLines: true,
         complete: function(results) {
-            rawData = results.data;
-            calculateSummary();
-            initDataTable();
-            switchTab('kec'); // Load tab kecamatan pertama kali
+            rawData = results.data.map(row => {
+                let cleanRow = {};
+                Object.keys(row).forEach(key => {
+                    let cleanKey = key.trim().toLowerCase().replace(/\s+/g, ' ');
+                    cleanRow[cleanKey] = row[key] ? row[key].trim() : "";
+                });
+                return cleanRow;
+            });
+            populateFilters();
         }
     });
 
-    // Hitung Summary Card
-    function calculateSummary() {
-        let uniqueKec = new Set();
-        let uniqueDesa = new Set();
-        let uniqueTps = new Set();
-        let totalLk = 0, totalPr = 0, totalAll = 0;
+    function populateFilters() {
+        let tahapanSet = new Set();
+        rawData.forEach(row => { if(row['tahapan']) tahapanSet.add(row['tahapan']); });
+        const customOrder = ['PEMILU 2019', 'PILKADA 2020', 'PEMILU 2024', 'PILKADA 2024'];
+        let select = document.getElementById('filter-tahapan');
+        select.innerHTML = '';
+        customOrder.forEach(t => {
+            if (tahapanSet.has(t)) {
+                let opt = document.createElement('option');
+                opt.value = t; opt.text = t;
+                if (t === 'PEMILU 2024') opt.selected = true;
+                select.appendChild(opt);
+            }
+        });
+    }
 
-        rawData.forEach(row => {
+    document.getElementById('btn-lihat-rekap').addEventListener('click', function() {
+        document.getElementById('empty-state').style.display = 'none';
+        document.getElementById('data-area').style.display = 'flex';
+        applyFilter();
+    });
+
+    function applyFilter() {
+        let selectedTahapan = document.getElementById('filter-tahapan').value;
+        filteredData = rawData.filter(row => row['tahapan'] === selectedTahapan);
+        calculateSummary();
+        switchTab(currentTab);
+    }
+
+    function calculateSummary() {
+        let uniqueKec = new Set(), uniqueDesa = new Set();
+        let totalLk = 0, totalPr = 0, totalAll = 0, totalTps = 0;
+        filteredData.forEach(row => {
             if(row['kode kec']) uniqueKec.add(row['kode kec']);
             if(row['kode desa']) uniqueDesa.add(row['kode desa']);
-            if(row['tps']) uniqueTps.add(row['tps']);
-            
-            totalLk += parseInt(row['laki-laki']) || 0;
-            totalPr += parseInt(row['perempuan']) || 0;
-            totalAll += parseInt(row['jumlah']) || 0;
+            totalLk += getNum(row['laki-laki']);
+            totalPr += getNum(row['perempuan']);
+            totalAll += getNum(row['jumlah']);
+            totalTps++;
         });
-
         document.getElementById('sum-kec').innerText = formatAngka(uniqueKec.size);
         document.getElementById('sum-desa').innerText = formatAngka(uniqueDesa.size);
-        document.getElementById('sum-tps').innerText = formatAngka(uniqueTps.size);
+        document.getElementById('sum-tps').innerText = formatAngka(totalTps);
         document.getElementById('sum-lk').innerText = formatAngka(totalLk);
         document.getElementById('sum-pr').innerText = formatAngka(totalPr);
         document.getElementById('sum-total').innerText = formatAngka(totalAll);
     }
 
-    // Inisialisasi DataTable
-    function initDataTable() {
-        dataTableInstance = $('#main-table').DataTable({
-            language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/id.json' },
-            ordering: true,
-            pageLength: 10
+    function updateFooterOnSearch() {
+        if (!dataTableInstance) return;
+        var api = dataTableInstance;
+        let numericCols = [];
+        if (currentTab === 'kec') numericCols = [2, 3, 4, 5, 6]; 
+        if (currentTab === 'desa') numericCols = [3, 4, 5, 6];    
+        if (currentTab === 'tps') numericCols = [4, 5, 6];        
+
+        let totals = {};
+        numericCols.forEach(i => totals[i] = 0);
+
+        api.rows({ search: 'applied' }).every(function() {
+            let data = this.data();
+            numericCols.forEach(i => { totals[i] += parseBackToNum(data[i]); });
+        });
+
+        $(api.table().footer()).find('th').each(function(index) {
+            if (numericCols.includes(index)) {
+                $(this).html('<strong>' + formatAngka(totals[index]) + '</strong>');
+            }
         });
     }
 
-    // Fungsi Ganti Tab (Kec / Desa / TPS)
     function switchTab(type) {
         currentTab = type;
-        dataTableInstance.clear().destroy(); // Hancurkan dulu datatable agar bisa ganti header
+        if(dataTableInstance) { dataTableInstance.destroy(); dataTableInstance = null; }
+        $('#custom-search').val('');
 
-        let heads = [];
-        let dataRows = [];
-        let foots = [];
+        let heads = [], dataRows = [], foots = [];
 
         if(type === 'kec') {
-            heads = ['No', 'Kode Kec', 'Kecamatan', 'Jml Desa', 'Jml TPS', 'Laki-Laki', 'Perempuan', 'Jumlah'];
+            heads = ['No', 'Kecamatan', 'Jml Desa', 'Jml TPS', 'Laki-Laki', 'Perempuan', 'Jumlah'];
             let grouped = {};
-
-            rawData.forEach(row => {
-                let key = row['kode kec'];
-                if(!grouped[key]) {
-                    grouped[key] = { 'kec': row['kecamatan'], 'kode': key, 'desa': new Set(), 'tps': new Set(), 'lk': 0, 'pr': 0, 'jml': 0 };
-                }
+            filteredData.forEach(row => {
+                let key = row['kode kec']; if(!key) return;
+                if(!grouped[key]) grouped[key] = { 'kec': row['kecamatan'], 'desa': new Set(), 'tpsCount': 0, 'lk': 0, 'pr': 0, 'jml': 0 };
                 if(row['kode desa']) grouped[key].desa.add(row['kode desa']);
-                if(row['tps']) grouped[key].tps.add(row['tps']);
-                grouped[key].lk += parseInt(row['laki-laki']) || 0;
-                grouped[key].pr += parseInt(row['perempuan']) || 0;
-                grouped[key].jml += parseInt(row['jumlah']) || 0;
+                grouped[key].tpsCount++;
+                grouped[key].lk += getNum(row['laki-laki']);
+                grouped[key].pr += getNum(row['perempuan']);
+                grouped[key].jml += getNum(row['jumlah']);
             });
-
-            let no = 1;
-            let totLk=0, totPr=0, totJml=0;
+            let no = 1, totLk=0, totPr=0, totJml=0, totTps=0, totDesa=0;
             Object.values(grouped).forEach(val => {
-                dataRows.push([no++, val.kode, val.kec, val.desa.size, val.tps.size, formatAngka(val.lk), formatAngka(val.pr), formatAngka(val.jml)]);
-                totLk += val.lk; totPr += val.pr; totJml += val.jml;
+                dataRows.push([no++, val.kec, val.desa.size, formatAngka(val.tpsCount), formatAngka(val.lk), formatAngka(val.pr), formatAngka(val.jml)]);
+                totLk += val.lk; totPr += val.pr; totJml += val.jml; totTps += val.tpsCount;
+                totDesa += val.desa.size;
             });
-            foots = ['', '', 'TOTAL', '', '', formatAngka(totLk), formatAngka(totPr), formatAngka(totJml)];
+            foots = ['', '<strong>TOTAL</strong>', '<strong>' + formatAngka(totDesa) + '</strong>', '<strong>' + formatAngka(totTps) + '</strong>', '<strong>' + formatAngka(totLk) + '</strong>', '<strong>' + formatAngka(totPr) + '</strong>', '<strong>' + formatAngka(totJml) + '</strong>'];
 
         } else if(type === 'desa') {
-            heads = ['No', 'Kode Desa', 'Desa', 'Kecamatan', 'Jml TPS', 'Laki-Laki', 'Perempuan', 'Jumlah'];
+            heads = ['No', 'Kecamatan', 'Desa', 'Jml TPS', 'Laki-Laki', 'Perempuan', 'Jumlah'];
             let grouped = {};
-
-            rawData.forEach(row => {
-                let key = row['kode desa'];
-                if(!grouped[key]) {
-                    grouped[key] = { 'desa': row['desa'], 'kec': row['kecamatan'], 'kode': key, 'tps': new Set(), 'lk': 0, 'pr': 0, 'jml': 0 };
-                }
-                if(row['tps']) grouped[key].tps.add(row['tps']);
-                grouped[key].lk += parseInt(row['laki-laki']) || 0;
-                grouped[key].pr += parseInt(row['perempuan']) || 0;
-                grouped[key].jml += parseInt(row['jumlah']) || 0;
+            filteredData.forEach(row => {
+                let key = row['kode desa']; if(!key) return;
+                if(!grouped[key]) grouped[key] = { 'desa': row['desa'], 'kec': row['kecamatan'], 'tpsCount': 0, 'lk': 0, 'pr': 0, 'jml': 0 };
+                grouped[key].tpsCount++;
+                grouped[key].lk += getNum(row['laki-laki']);
+                grouped[key].pr += getNum(row['perempuan']);
+                grouped[key].jml += getNum(row['jumlah']);
             });
-
-            let no = 1;
-            let totLk=0, totPr=0, totJml=0;
+            let no = 1, totLk=0, totPr=0, totJml=0, totTps=0;
             Object.values(grouped).forEach(val => {
-                dataRows.push([no++, val.kode, val.desa, val.kec, val.tps.size, formatAngka(val.lk), formatAngka(val.pr), formatAngka(val.jml)]);
-                totLk += val.lk; totPr += val.pr; totJml += val.jml;
+                dataRows.push([no++, val.kec, val.desa, formatAngka(val.tpsCount), formatAngka(val.lk), formatAngka(val.pr), formatAngka(val.jml)]);
+                totLk += val.lk; totPr += val.pr; totJml += val.jml; totTps += val.tpsCount;
             });
-            foots = ['', '', 'TOTAL', '', '', formatAngka(totLk), formatAngka(totPr), formatAngka(totJml)];
+            foots = ['', '<strong>TOTAL</strong>', '', '<strong>' + formatAngka(totTps) + '</strong>', '<strong>' + formatAngka(totLk) + '</strong>', '<strong>' + formatAngka(totPr) + '</strong>', '<strong>' + formatAngka(totJml) + '</strong>'];
 
         } else if(type === 'tps') {
             heads = ['No', 'Kecamatan', 'Desa', 'TPS', 'Laki-Laki', 'Perempuan', 'Jumlah'];
-            let no = 1;
-            let totLk=0, totPr=0, totJml=0;
-
-            rawData.forEach(row => {
-                dataRows.push([no++, row['kecamatan'], row['desa'], row['tps'], formatAngka(parseInt(row['laki-laki'])||0), formatAngka(parseInt(row['perempuan'])||0), formatAngka(parseInt(row['jumlah'])||0)]);
-                totLk += parseInt(row['laki-laki'])||0;
-                totPr += parseInt(row['perempuan'])||0;
-                totJml += parseInt(row['jumlah'])||0;
+            let no = 1, totLk=0, totPr=0, totJml=0;
+            filteredData.forEach(row => {
+                dataRows.push([no++, row['kecamatan'], row['desa'], row['tps'], formatAngka(getNum(row['laki-laki'])), formatAngka(getNum(row['perempuan'])), formatAngka(getNum(row['jumlah']))]);
+                totLk += getNum(row['laki-laki']); totPr += getNum(row['perempuan']); totJml += getNum(row['jumlah']);
             });
-            foots = ['', '', '', 'TOTAL', formatAngka(totLk), formatAngka(totPr), formatAngka(totJml)];
+            foots = ['', '', '', '<strong>TOTAL</strong>', '<strong>' + formatAngka(totLk) + '</strong>', '<strong>' + formatAngka(totPr) + '</strong>', '<strong>' + formatAngka(totJml) + '</strong>'];
         }
 
-        // Update Header
-        $('#table-head').html('<tr>' + heads.map(h => '<th>'+h+'</th>').join('') + '</tr>');
-        // Update Footer
-        $('#table-foot').html('<tr>' + foots.map(f => '<th>'+f+'</th>').join('') + '</tr>');
+        let headHtml = '<tr>' + heads.map(h => `<th>${h}</th>`).join('') + '</tr>';
+        let bodyHtml = dataRows.map(row => {
+            return '<tr>' + row.map((cell, idx) => {
+                let cls = idx === 0 ? 'col-no' : (idx >= 2 ? 'col-num' : 'col-name');
+                return `<td class="${cls}">${cell}</td>`;
+            }).join('') + '</tr>';
+        }).join('');
+        let footHtml = '<tr>' + foots.map((f, idx) => {
+            let cls = idx === 0 ? 'col-no' : (idx >= 2 ? 'col-num' : 'col-name');
+            return `<th class="${cls}">${f}</th>`;
+        }).join('') + '</tr>';
+
+        $('#table-head').html(headHtml);
+        $('#table-body').html(bodyHtml);
+        $('#table-foot').html(footHtml);
         
-        // Re-init DataTable
         dataTableInstance = $('#main-table').DataTable({
-            data: dataRows,
-            language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/id.json' },
-            ordering: true,
-            pageLength: 10,
-            order: [[0, 'asc']]
+            destroy: true, paging: false, scrollY: false, scrollX: false, ordering: true, order: [[0, 'asc']], autoWidth: false,
+            language: { search: "", infoEmpty: "", info: "" },
+            drawCallback: function(settings) { updateFooterOnSearch(); }
         });
 
-        // Styling Tab Aktif
+        $('#custom-search').off('keyup').on('keyup', function() { dataTableInstance.search(this.value).draw(); });
+
         document.querySelectorAll('.nav-link').forEach(btn => btn.classList.remove('active'));
         document.getElementById(type+'-tab-btn').classList.add('active');
     }
