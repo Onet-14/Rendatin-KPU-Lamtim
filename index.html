@@ -51,6 +51,28 @@
         .login-box button { background-color: #C8102E; border-color: #C8102E; color: white; width: 100%; }
         .login-box button:hover { background-color: #a50d24; border-color: #a50d24; }
 
+        /* Styling untuk Wrapper Input Password dengan Ikon Mata */
+        .password-wrapper {
+            position: relative;
+            margin-bottom: 15px;
+        }
+        .password-wrapper input {
+            margin-bottom: 0 !important; /* Hapus margin bawaan agar rapi */
+            padding-right: 45px; /* Buat ruang untuk ikon mata di kanan */
+        }
+        .toggle-password {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #888888;
+            font-size: 1.1rem;
+        }
+        .toggle-password:hover {
+            color: #C8102E;
+        }
+
         /* LAYOUT UTAMA */
         #app-wrapper {
             display: none; 
@@ -141,7 +163,13 @@
         <h3>LOGIN</h3>
         <p style="color: #666; font-size: 0.9rem;">Input User dan Password!</p>
         <input type="text" id="user-input" class="form-control" placeholder="Username...">
-        <input type="password" id="password-input" class="form-control" placeholder="Password...">
+        
+        <!-- INPUT PASSWORD DENGAN IKON MATA -->
+        <div class="password-wrapper">
+            <input type="password" id="password-input" class="form-control" placeholder="Password...">
+            <i class="fas fa-eye toggle-password" id="toggle-password"></i>
+        </div>
+        
         <button class="btn btn-primary" onclick="checkCredentials()">Login</button>
         <p id="error-msg" style="color: red; display: none; margin-top: 10px; font-size: 0.9rem;">User atau Password salah!</p>
     </div>
@@ -202,6 +230,22 @@
 </div>
 
 <script>
+    // --- FUNGSI TOGGLE MATA PASSWORD ---
+    document.getElementById('toggle-password').addEventListener('click', function() {
+        const passInput = document.getElementById('password-input');
+        const icon = this;
+        
+        if (passInput.type === 'password') {
+            passInput.type = 'text'; // Tampilkan password
+            icon.classList.remove('fa-eye'); // Ganti ikon menjadi mata coret
+            icon.classList.add('fa-eye-slash');
+        } else {
+            passInput.type = 'password'; // Sembunyikan password
+            icon.classList.remove('fa-eye-slash'); // Ganti ikon menjadi mata biasa
+            icon.classList.add('fa-eye');
+        }
+    });
+
     // --- FUNGSI PASSWORD & SESI MENGGUNAKAN FILE JSON ---
     async function checkCredentials() {
         const userInput = document.getElementById('user-input').value;
