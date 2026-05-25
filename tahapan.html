@@ -35,14 +35,13 @@
 
         table { font-size: 13px; }
         .dataTables_wrapper .dataTables_filter input { border-radius: 8px; border: 1px solid #ccc; padding: 5px 10px; }
-        .dataTables_wrapper .dataTables_info { padding-top: 10px; }
         .dataTables_scrollBody { border-top: 1px solid #ddd !important; }
     </style>
 </head>
 <body>
 
 <div class="page-container">
-    <!-- TOP SECTION (TIDAK IKUT SCROLL) -->
+    <!-- TOP SECTION -->
     <div class="top-section">
         <h4><i class="fas fa-list-ol"></i> Rekap Data Tahapan</h4>
         
@@ -121,7 +120,7 @@
 
         const customOrder = ['PEMILU 2019', 'PILKADA 2020', 'PEMILU 2024', 'PILKADA 2024'];
         let select = document.getElementById('filter-tahapan');
-        select.innerHTML = ''; 
+        select.innerHTML = '';
         
         customOrder.forEach(t => {
             if (tahapanSet.has(t)) {
@@ -150,7 +149,7 @@
             totalLk += getNum(row['laki-laki']);
             totalPr += getNum(row['perempuan']);
             totalAll += getNum(row['jumlah']);
-            totalTps++; 
+            totalTps++;
         });
 
         document.getElementById('sum-kec').innerText = formatAngka(uniqueKec.size);
@@ -168,7 +167,7 @@
         let heads = [], dataRows = [], foots = [];
 
         if(type === 'kec') {
-            // HAPUS KODE KEC
+            // Dihilangkan: Kode Kec
             heads = ['No', 'Kecamatan', 'Jml Desa', 'Jml TPS', 'Laki-Laki', 'Perempuan', 'Jumlah'];
             let grouped = {};
 
@@ -176,7 +175,7 @@
                 let key = row['kode kec']; if(!key) return;
                 if(!grouped[key]) grouped[key] = { 'kec': row['kecamatan'], 'desa': new Set(), 'tpsCount': 0, 'lk': 0, 'pr': 0, 'jml': 0 };
                 if(row['kode desa']) grouped[key].desa.add(row['kode desa']);
-                grouped[key].tpsCount++; 
+                grouped[key].tpsCount++;
                 grouped[key].lk += getNum(row['laki-laki']);
                 grouped[key].pr += getNum(row['perempuan']);
                 grouped[key].jml += getNum(row['jumlah']);
@@ -190,14 +189,14 @@
             foots = ['', 'TOTAL', '', formatAngka(totTps), formatAngka(totLk), formatAngka(totPr), formatAngka(totJml)];
 
         } else if(type === 'desa') {
-            // HAPUS KODE DESA
-            heads = ['No', 'Desa', 'Kecamatan', 'Jml TPS', 'Laki-Laki', 'Perempuan', 'Jumlah'];
+            // Dihilangkan: Kode Desa. Urutan: Kecamatan, Desa, dll.
+            heads = ['No', 'Kecamatan', 'Desa', 'Jml TPS', 'Laki-Laki', 'Perempuan', 'Jumlah'];
             let grouped = {};
 
             filteredData.forEach(row => {
                 let key = row['kode desa']; if(!key) return;
                 if(!grouped[key]) grouped[key] = { 'desa': row['desa'], 'kec': row['kecamatan'], 'tpsCount': 0, 'lk': 0, 'pr': 0, 'jml': 0 };
-                grouped[key].tpsCount++; 
+                grouped[key].tpsCount++;
                 grouped[key].lk += getNum(row['laki-laki']);
                 grouped[key].pr += getNum(row['perempuan']);
                 grouped[key].jml += getNum(row['jumlah']);
@@ -205,7 +204,7 @@
 
             let no = 1, totLk=0, totPr=0, totJml=0, totTps=0;
             Object.values(grouped).forEach(val => {
-                dataRows.push([no++, val.desa, val.kec, formatAngka(val.tpsCount), formatAngka(val.lk), formatAngka(val.pr), formatAngka(val.jml)]);
+                dataRows.push([no++, val.kec, val.desa, formatAngka(val.tpsCount), formatAngka(val.lk), formatAngka(val.pr), formatAngka(val.jml)]);
                 totLk += val.lk; totPr += val.pr; totJml += val.jml; totTps += val.tpsCount;
             });
             foots = ['', 'TOTAL', '', formatAngka(totTps), formatAngka(totLk), formatAngka(totPr), formatAngka(totJml)];
@@ -229,10 +228,10 @@
             destroy: true,
             language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/id.json' },
             ordering: true,
-            pageLength: 999, 
-            scrollY: 'calc(100vh - 380px)', 
+            pageLength: 999,
+            scrollY: 'calc(100vh - 380px)',
             scrollCollapse: true,
-            paging: false, 
+            paging: false,
             order: [[0, 'asc']]
         });
 
