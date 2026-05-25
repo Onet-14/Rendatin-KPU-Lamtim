@@ -83,7 +83,7 @@
         <div class="empty-box">
             <i class="fas fa-hand-pointer"></i>
             <h5>Silakan Pilih Tahapan</h5>
-            <p>Pilih filter Tahapan di atas, lalu klik <b>Lihat Rekap</b> untuk memuat data PDPB.</p>
+            <p>Pilih filter Triwulan di atas, lalu klik <b>Lihat Rekap</b> untuk memuat data PDPB.</p>
         </div>
     </div>
 
@@ -121,7 +121,6 @@
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script>
-    // LINK CSV PDPB
     const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSpHbswfamDpkWReHbBBYYWsc5Jq5KXz2SkwYwZarW7M-JlEB3DcUHagO0sVLAFCXU__bCk2V7qoJEp/pub?gid=135239502&single=true&output=csv';
 
     let rawData = [];
@@ -159,14 +158,28 @@
     function populateFilters() {
         let tahapanSet = new Set();
         rawData.forEach(row => { if(row['tahapan']) tahapanSet.add(row['tahapan']); });
-        const customOrder = ['PEMILU 2019', 'PILKADA 2020', 'PEMILU 2024', 'PILKADA 2024'];
+        
+        // URUTAN FILTER KUSTOM UNTUK PDPB (SESUAI DATA SHEET)
+        const customOrder = [
+            'PDPB TRIWULAN II 2025',
+            'PDPB TRIWULAN III 2025',
+            'PDPB TRIWULAN IV 2025',
+            'PDPB TRIWULAN I 2026',
+            'PDPB TRIWULAN II 2026',
+            'PDPB TRIWULAN III 2026',
+            'PDPB TRIWULAN IV 2026',
+            'PDPB TRIWULAN I 2027',
+            'PDPB TRIWULAN II 2027'
+        ];
+        
         let select = document.getElementById('filter-tahapan');
         select.innerHTML = '';
         customOrder.forEach(t => {
             if (tahapanSet.has(t)) {
                 let opt = document.createElement('option');
                 opt.value = t; opt.text = t;
-                if (t === 'PEMILU 2024') opt.selected = true;
+                // Default langsung ke triwulan pertama
+                if (t === 'PDPB TRIWULAN II 2025') opt.selected = true; 
                 select.appendChild(opt);
             }
         });
