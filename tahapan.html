@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Data Tahapan</title>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <style>
+        body { padding: 20px; background-color: #f4f6f9; font-family: 'Segoe UI', sans-serif; font-size: 13px; }
+        .card { box-shadow: 0 4px 15px rgba(0,0,0,0.07); border: none; border-radius: 12px; padding: 20px; background: #fff; }
+        table { font-size: 13px; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h4 style="color: #C8102E; font-weight: bold; margin-bottom: 20px;">Rekapitulasi Data Pemilih - Tahapan</h4>
+    <table id="tabel-tahapan" class="table table-striped table-bordered" style="width:100%">
+        <thead>
+            <tr>
+                <th>Tahapan</th>
+                <th>Kode Kec</th>
+                <th>Kecamatan</th>
+                <th>Kode Desa</th>
+                <th>Desa</th>
+                <th>TPS</th>
+                <th>Laki-Laki</th>
+                <th>Perempuan</th>
+                <th>Jumlah</th>
+                <th>Longitude</th>
+                <th>Latitude</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+<script>
+    // GANTI DENGAN LINK CSV SHEET TAHAPAN ANDA
+    const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSpHbswfamDpkWReHbBBYYWsc5Jq5KXz2SkwYwZarW7M-JlEB3DcUHagO0sVLAFCXU__bCk2V7qoJEp/pub?gid=0&single=true&output=csv';
+
+    $(document).ready(function() {
+        $('#tabel-tahapan').DataTable({
+            ajax: {
+                url: CSV_URL,
+                dataType: 'text',
+                dataSrc: function(csvText) {
+                    let parsed = Papa.parse(csvText, { header: true, skipEmptyLines: true });
+                    return parsed.data;
+                }
+            },
+            columns: [
+                { data: 'tahapan' },
+                { data: 'kode kec' },
+                { data: 'kecamatan' },
+                { data: 'kode desa' },
+                { data: 'desa' },
+                { data: 'tps' },
+                { data: 'laki-laki' },
+                { data: 'perempuan' },
+                { data: 'jumlah' },
+                { data: 'longitude' },
+                { data: 'latitude' }
+            ],
+            language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/id.json' }
+        });
+    });
+</script>
+</body>
+</html>
