@@ -83,11 +83,11 @@
         .map-wrapper { flex: 1; position: relative; height: 100%; }
         #map { width: 100%; height: 100%; background-color: #e5e9ec; z-index: 1; }
 
-        /* TOMBOL KEMBALI (CUSTOM) */
+        /* TOMBOL KEMBALI */
         .btn-back-control {
             position: absolute;
             top: 10px;
-            right: 50px; /* Sedikit ke kiri dari tombol zoom */
+            right: 50px;
             z-index: 1000;
             background-color: #ffffff;
             border: 2px solid #C8102E;
@@ -98,7 +98,7 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
             font-weight: 700;
             font-size: 0.9rem;
-            display: none; /* Default hidden */
+            display: none;
             transition: all 0.2s;
         }
         .btn-back-control:hover {
@@ -194,7 +194,7 @@
             body { flex-direction: column; overflow: auto; height: auto; }
             .filter-panel { width: 100%; height: auto; border-right: none; border-bottom: 1px solid #dee2e6; }
             .map-wrapper { height: 60vh; width: 100%; }
-            .btn-back-control { top: 80px; right: 10px; } /* Geser tombol back di mobile */
+            .btn-back-control { top: 80px; right: 10px; }
         }
     </style>
 </head>
@@ -211,9 +211,10 @@
         
         <div class="mb-3">
             <label class="form-label">Jenis Data</label>
+            <!-- DEFAULT VALUE DISET KE 'pemutakhiran' -->
             <select id="jenis-select" class="form-select" onchange="changeJenis()">
                 <option value="">-- Pilih Jenis --</option>
-                <option value="pemutakhiran">Rekap Pemutakhiran</option>
+                <option value="pemutakhiran" selected>Rekap Pemutakhiran</option>
                 <option value="pdpb">Rekap PDPB</option>
             </select>
         </div>
@@ -288,7 +289,6 @@
     }
 
     function initMap() {
-        // POSISI AWAL: [-5.1197475,105.4140884], Zoom 10
         map = L.map('map', { zoomControl: false }).setView([-5.10, 105.40], 10);
         L.control.zoom({ position: 'topright' }).addTo(map);
 
@@ -312,15 +312,13 @@
         loadGeoJsons();
     }
 
-    // --- STYLE FUNCTIONS (GARIS BATAS PUTIH) ---
-
     function styleKecamatan(feature) {
         const color = getFeatureColor(feature);
         return {
             fillColor: color,
             weight: 2,
             opacity: 1,
-            color: '#ffffff', // Ganti ke Putih
+            color: '#ffffff',
             fillOpacity: 0.5
         };
     }
@@ -331,33 +329,31 @@
             fillColor: color,
             weight: 1,
             opacity: 1,
-            color: '#ffffff', // Ganti ke Putih
+            color: '#ffffff',
             fillOpacity: 0.5
         };
     }
 
     const styleDesaSelected = {
         weight: 3,
-        color: '#ffffff', // Ganti ke Putih
+        color: '#ffffff',
         fillOpacity: 0.9,
         fillColor: '#ffcccc'
     };
 
     const styleDesaDimmed = {
         weight: 1,
-        color: '#ffffff', // Ganti ke Putih
+        color: '#ffffff',
         fillOpacity: 0.7, 
         fillColor: '#d3d3d3' 
     };
     
     const styleDesaHover = {
         weight: 2,
-        color: '#ffffff', // Ganti ke Putih
+        color: '#ffffff',
         fillOpacity: 0.6,
         dashArray: '3, 3'
     };
-
-    // --- LOGIKA ---
 
     function getFeatureName(feature, type) {
         const props = feature.properties;
@@ -384,7 +380,10 @@
             sticky: true, direction: 'top', className: 'custom-tooltip'
         });
         layer.on({
-            mouseover: (e) => { e.target.setStyle({ weight: 3, color: '#000000', fillOpacity: 0.7 }); },
+            mouseover: (e) => { 
+                // PERBAIKAN: Warna hover diubah jadi PUTIH sesuai permintaan
+                e.target.setStyle({ weight: 3, color: '#ffffff', fillOpacity: 0.7 }); 
+            },
             mouseout: (e) => { geoJsonLayerKec.resetStyle(e.target); },
             click: (e) => {
                 showKecamatanPopup(feature, layer);
@@ -440,7 +439,7 @@
         selectedDesaFeature = null;
 
         map.removeLayer(geoJsonLayerKec);
-        const desaFeatures = rawDesaGeoJson.features.filter(f => String(f.properties.kec_id).trim() === kecId);
+        const desaFeatures = rawDesaGeoJSON.features.filter(f => String(f.properties.kec_id).trim() === kecId);
         
         if (desaFeatures.length === 0) {
             alert("Data desa tidak ditemukan (ID tidak cocok).");
@@ -455,7 +454,6 @@
         
         tpsMarkersLayer.clearLayers();
         
-        // Tampilkan Tombol Kembali
         document.getElementById('btn-back').style.display = 'block';
     }
 
@@ -598,28 +596,20 @@
         });
     }
 
-    // --- TOMBOL KEMBALI ---
     function goBackToKecamatan() {
-        // Sembunyikan tombol kembali
         document.getElementById('btn-back').style.display = 'none';
-        
-        // Reset pilihan
         selectedDesaLayer = null;
         selectedDesaFeature = null;
         tpsMarkersLayer.clearLayers();
 
-        // Hapus layer desa, tampilkan kecamatan
         if (map.hasLayer(geoJsonLayerDesa)) map.removeLayer(geoJsonLayerDesa);
         if (!map.hasLayer(geoJsonLayerKec)) map.addLayer(geoJsonLayerKec);
 
-        // Zoom ke batas Kecamatan agar terlihat wilayahnya
         map.fitBounds(geoJsonLayerKec.getBounds(), { padding: [50, 50] });
     }
 
     function resetMap() {
-        // Sembunyikan tombol kembali
         document.getElementById('btn-back').style.display = 'none';
-
         selectedDesaLayer = null;
         selectedDesaFeature = null;
         tpsMarkersLayer.clearLayers();
@@ -627,9 +617,13 @@
         if (map.hasLayer(geoJsonLayerDesa)) map.removeLayer(geoJsonLayerDesa);
         if (!map.hasLayer(geoJsonLayerKec)) map.addLayer(geoJsonLayerKec);
         
-        // Reset view ke koordinat awal yang baru
         map.setView([-5.10, 105.40], 10);
         map.closePopup();
+        
+        // Reset dropdowns to default
+        document.getElementById('jenis-select').value = 'pemutakhiran';
+        // Trigger load again to reset tahapan
+        changeJenis();
     }
 
     function loadGeoJsons() {
@@ -639,11 +633,16 @@
             fetch(URLS.geojson_desa).then(res => { if(!res.ok) throw new Error("GeoJSON Desa Error"); return res.json(); })
         ]).then(([dataKec, dataDesa]) => {
             geoJsonLayerKec.addData(dataKec);
-            rawDesaGeoJson = dataDesa; 
+            rawDesaGeoJSON = dataDesa; 
             
             const loader = document.getElementById('loading-overlay');
             loader.classList.add('fade-out');
             setTimeout(() => { loader.style.display = 'none'; }, 500);
+
+            // --- AUTO LOAD DEFAULT DATA ---
+            // Karena HTML sudah set value="pemutakhiran", kita trigger changeJenis()
+            changeJenis();
+
         }).catch(err => {
             document.getElementById('loading-msg').innerHTML = `<span style="color:red">Error: ${err.message}</span>`;
         });
@@ -654,7 +653,8 @@
         const tahapanSelect = document.getElementById('tahapan-select');
         const loader = document.getElementById('loading-overlay');
         
-        tahapanSelect.innerHTML = '<option value="">-- Pilih Tahapan --</option>';
+        // Reset state
+        tahapanSelect.innerHTML = '<option value="">-- Pilih Tahapan Dulu --</option>';
         tahapanSelect.disabled = true;
         tpsMarkersLayer.clearLayers();
         
@@ -667,7 +667,12 @@
 
         if (!jenis) return;
 
-        loader.style.display = 'flex'; loader.style.opacity = '0.9';
+        // Tampilkan loading jika tidak ada data (hindari flash saat pertama kali load)
+        if(loader.style.display === 'none') {
+            loader.style.display = 'flex'; 
+            loader.style.opacity = '0.8';
+        }
+        
         document.getElementById('loading-msg').innerText = "Mengunduh Data CSV...";
 
         Papa.parse(URLS[jenis], {
@@ -686,14 +691,30 @@
                 const tahapanList = Array.from(tahapanSet).sort();
 
                 tahapanSelect.innerHTML = '<option value="">-- Pilih Tahapan --</option>';
+                let foundDefault = false;
+                
                 tahapanList.forEach(t => {
                     const option = document.createElement('option');
-                    option.value = t; option.textContent = t;
+                    option.value = t; 
+                    option.textContent = t;
+                    
+                    // --- SET DEFAULT TAHAPAN "PEMILU 2024" ---
+                    // Cek exact match atau substring
+                    if (t.toLowerCase() === "pemilu 2024" || t.toLowerCase().includes("pemilu 2024")) {
+                        option.selected = true;
+                        foundDefault = true;
+                    }
+                    
                     tahapanSelect.appendChild(option);
                 });
                 
                 tahapanSelect.disabled = false;
                 loader.style.display = 'none';
+
+                // Trigger update map jika default tahapan ditemukan
+                if (foundDefault) {
+                    updateMapData();
+                }
             },
             error: function(err) { alert("Gagal muat CSV"); loader.style.display = 'none'; }
         });
