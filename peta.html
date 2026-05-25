@@ -323,12 +323,11 @@
             weight: 1,
             opacity: 1,
             color: '#ffffff',
-            fillOpacity: 0.6, // Sedikit lebih pekat agar mudah diklik
-            cursor: 'pointer' // Pastikan kursor berubah menjadi tangan
+            fillOpacity: 0.6,
+            cursor: 'pointer'
         };
     }
     
-    // Style saat desa diklik (Sorot)
     const styleDesaSelected = {
         weight: 3,
         color: '#ffffff',
@@ -455,15 +454,13 @@
 
         layer.on({
             mouseover: (e) => {
-                // Efek hover sederhana
                 e.target.setStyle({ weight: 2, color: '#ffffff', fillOpacity: 0.8 });
             },
             mouseout: (e) => {
-                // Reset ke style default
                 geoJsonLayerDesa.resetStyle(e.target);
             },
             click: (e) => {
-                // FIX: Bring layer to depan agar pasti bisa diklik
+                // Pastikan layer diangkat ke paling depan agar klik terbaca
                 e.target.bringToFront();
                 highlightSelectedDesa(e.target, feature);
             }
@@ -474,17 +471,16 @@
         selectedDesaLayer = clickedLayer;
         selectedDesaFeature = feature;
 
-        // 1. Highlight visual desa yang diklik
+        // Highlight visual
         clickedLayer.setStyle(styleDesaSelected);
         
-        // 2. Hapus TPS lama jika ada (pindah desa)
+        // Bersihkan TPS lama
         tpsMarkersLayer.clearLayers();
 
-        // 3. Munculkan Popup Data (Belum zoom in)
+        // Munculkan Popup Data
         showDesaPopup(feature, clickedLayer);
 
-        // 4. PERUBAHAN ALUR: JANGAN ZOOM SEKARANG. Zoom dilakukan saat klik tombol TPS.
-        // Ini sesuai permintaan: "Klik Desa -> Masih muncul semua peta... -> Tombol Lihat TPS -> Baru Zoom"
+        // JANGAN ZOOM DI SINI (Sesuai alur: Zoom dilakukan saat klik tombol TPS)
     }
 
     function showDesaPopup(feature, layer) {
@@ -496,6 +492,7 @@
         const kecNameFromData = dataInDesa.length > 0 ? dataInDesa[0].kecamatan : "-";
         const headerTitle = `DATA DESA`;
 
+        // Cek apakah TPS sudah ditampilkan (logic ini hanya berjalan jika popup dibuka ulang, bukan via update)
         const isTPSShown = tpsMarkersLayer.getLayers().length > 0 && selectedDesaLayer === layer;
 
         if (dataInDesa.length === 0) {
@@ -515,9 +512,10 @@
         const totalJumlah = totalLaki + totalPerempuan;
         const uniqueTPS = dataInDesa.length;
 
+        // TOMBOL DENGAN ID KHUSUS
         const btnHtml = isTPSShown 
-            ? `<div class="text-center mt-2"><small class="text-success fw-bold"><i class="fas fa-check-circle"></i> Titik TPS Ditampilkan</small></div>`
-            : `<button class="btn-popup-tps" onclick="triggerShowTPS()"><i class="fas fa-map-marker-alt"></i> LIHAT TITIK TPS</button>`;
+            ? `<div id="btn-show-tps-action" class="text-center mt-2 text-success fw-bold"><i class="fas fa-check-circle"></i> Titik TPS Ditampilkan</div>`
+            : `<button id="btn-show-tps-action" class="btn-popup-tps" onclick="triggerShowTPS()"><i class="fas fa-map-marker-alt"></i> LIHAT TITIK TPS</button>`;
 
         const content = `
             <div class="popup-header">${headerTitle}</div>
@@ -534,16 +532,23 @@
         layer.bindPopup(content).openPopup();
     }
 
+    // --- PERBAIKAN: FUNGSI TRIGGER TPS ---
     window.triggerShowTPS = function() {
         if (selectedDesaLayer && selectedDesaFeature) {
-            // 1. Zoom In hanya ke desa yang dipilih
+            // 1. Zoom In sesuai alur
             map.fitBounds(selectedDesaLayer.getBounds(), { padding: 20, maxZoom: 16 });
             
-            // 2. Munculkan TPS Points
+            // 2. Munculkan Titik TPS
             showTPSPoints(selectedDesaFeature);
             
-            // 3. Refresh Popup agar tombol berubah jadi "Titik TPS Ditampilkan"
-            showDesaPopup(selectedDesaFeature, selectedDesaLayer);
+            // 3. Update Tampilan Tombol TANPA MEMBUNUH POPUP (Solusi Bug Tidak Bisa Klik)
+            const btn = document.getElementById('btn-show-tps-action');
+            if (btn) {
+                btn.innerHTML = `<i class="fas fa-check-circle"></i> Titik TPS Ditampilkan`;
+                btn.className = "text-center mt-2 text-success fw-bold";
+                // Hilangkan event listener onclick agar tombol tidak bisa diklik dua kali
+                btn.onclick = null; 
+            }
         }
     }
 
@@ -586,16 +591,13 @@
     }
 
     function resetMap() {
-        // Reset state
         selectedDesaLayer = null;
         selectedDesaFeature = null;
         tpsMarkersLayer.clearLayers();
         
-        // Reset layers
         if (map.hasLayer(geoJsonLayerDesa)) map.removeLayer(geoJsonLayerDesa);
         if (!map.hasLayer(geoJsonLayerKec)) map.addLayer(geoJsonLayerKec);
         
-        // Reset view ke tampilan awal (Start)
         map.fitBounds(geoJsonLayerKec.getBounds(), { padding: [20, 20] });
         map.closePopup();
         
@@ -612,7 +614,6 @@
             geoJsonLayerKec.addData(dataKec);
             rawDesaGeoJson = dataDesa; 
             
-            // Tampilan Awal (Start)
             map.fitBounds(geoJsonLayerKec.getBounds(), { padding: [20, 20] });
             
             const loader = document.getElementById('loading-overlay');
@@ -704,6 +705,7 @@
         });
 
         if(selectedDesaLayer) {
+            // Jika ada desa yang dipilih sebelum ganti filter, refresh popup-nya
             showDesaPopup(selectedDesaFeature, selectedDesaLayer);
         }
     }
