@@ -8,130 +8,63 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* PENGATURAN TEMA LIGHT MODE KPU */
-        body {
-            background-color: #f4f6f9;
-            color: #333333;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            overflow: hidden;
-            height: 100vh;
-        }
+        body { background-color: #f4f6f9; color: #333333; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; height: 100vh; }
 
-        /* HALAMAN KUNCI PASSWORD */
-        #login-screen {
-            position: fixed;
-            inset: 0;
-            background: url('background.jpg') no-repeat center center fixed;
-            background-size: cover;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-        }
-
-        #login-screen::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.6); 
-            z-index: 1;
-        }
-
-        .login-box {
-            background: #ffffff;
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
-            text-align: center;
-            width: 350px;
-            position: relative;
-            z-index: 2;
-        }
+        /* HALAMAN LOGIN */
+        #login-screen { position: fixed; inset: 0; background: url('background.jpg') no-repeat center center fixed; background-size: cover; display: flex; justify-content: center; align-items: center; z-index: 9999; }
+        #login-screen::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.6); z-index: 1; }
+        .login-box { background: #ffffff; padding: 40px; border-radius: 15px; box-shadow: 0 15px 30px rgba(0,0,0,0.3); text-align: center; width: 350px; position: relative; z-index: 2; }
         .login-box h3 { color: #C8102E; font-weight: bold; margin-bottom: 20px; }
         .login-box input { margin-bottom: 15px; }
         .login-box button { background-color: #C8102E; border-color: #C8102E; color: white; width: 100%; }
         .login-box button:hover { background-color: #a50d24; border-color: #a50d24; }
-
-        /* Styling untuk Wrapper Input Password dengan Ikon Mata */
-        .password-wrapper {
-            position: relative;
-            margin-bottom: 15px;
-        }
-        .password-wrapper input {
-            margin-bottom: 0 !important; /* Hapus margin bawaan agar rapi */
-            padding-right: 45px; /* Buat ruang untuk ikon mata di kanan */
-        }
-        .toggle-password {
-            position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            cursor: pointer;
-            color: #888888;
-            font-size: 1.1rem;
-        }
-        .toggle-password:hover {
-            color: #C8102E;
-        }
+        .password-wrapper { position: relative; margin-bottom: 15px; }
+        .password-wrapper input { margin-bottom: 0 !important; padding-right: 45px; }
+        .toggle-password { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #888; font-size: 1.1rem; }
+        .toggle-password:hover { color: #C8102E; }
 
         /* LAYOUT UTAMA */
-        #app-wrapper {
-            display: none; 
-            height: 100vh;
-            width: 100vw;
-        }
+        #app-wrapper { display: none; height: 100vh; width: 100vw; }
 
-        /* === SIDEBAR KIRI === */
-        #sidebar {
-            width: 280px; min-width: 280px; background-color: #ffffff;
-            border-right: 1px solid #e0e0e0; display: flex; flex-direction: column;
-            transition: transform 0.3s ease; z-index: 1000; box-shadow: 2px 0 10px rgba(0,0,0,0.05);
-        }
-
+        /* SIDEBAR KIRI */
+        #sidebar { width: 280px; min-width: 280px; background-color: #ffffff; border-right: 1px solid #e0e0e0; display: flex; flex-direction: column; transition: transform 0.3s ease; z-index: 1000; box-shadow: 2px 0 10px rgba(0,0,0,0.05); }
         .sidebar-header { padding: 20px; border-bottom: 1px solid #e0e0e0; display: flex; align-items: center; gap: 12px; }
         .sidebar-header img { height: 45px; }
         .sidebar-title { color: #C8102E; font-weight: 800; font-size: 1.2rem; letter-spacing: 0.5px; }
-
         .sidebar-menu { flex: 1; padding: 15px 10px; overflow-y: auto; }
         
-        .menu-item {
-            display: flex; align-items: center; padding: 14px 15px; border-radius: 8px;
-            color: #555555; text-decoration: none; margin-bottom: 4px;
-            transition: all 0.2s ease; cursor: pointer; font-weight: 500;
-        }
+        .menu-item { display: flex; align-items: center; padding: 14px 15px; border-radius: 8px; color: #555555; text-decoration: none; margin-bottom: 4px; transition: all 0.2s ease; cursor: pointer; font-weight: 500; }
         .menu-item i { margin-right: 15px; font-size: 1.1rem; width: 20px; text-align: center; }
         .menu-item:hover { background-color: #fff5f5; color: #C8102E; }
         .menu-item.active { background-color: #C8102E; color: #ffffff; box-shadow: 0 4px 10px rgba(200, 16, 46, 0.3); }
+        
+        /* Styling Submenu */
+        .toggle-arrow { margin-left: auto; font-size: 0.8rem; transition: transform 0.3s ease; }
+        .menu-group.open .toggle-arrow { transform: rotate(180deg); }
+        .sub-menu { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-in-out; background: #fdfdfd; border-radius: 0 0 8px 8px; }
+        .menu-group.open .sub-menu { max-height: 200px; }
+        .sub-item { display: block; padding: 10px 15px 10px 50px; color: #666; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; text-decoration: none; border-left: 3px solid transparent; }
+        .sub-item:hover { color: #C8102E; background: #fff5f5; border-left-color: #C8102E; }
+        .sub-item.active { color: #C8102E; font-weight: 600; border-left-color: #C8102E; }
 
         .menu-logout { color: #d90429 !important; margin-top: auto; border-top: 1px solid #e0e0e0; border-radius: 0 !important; padding-top: 20px !important; }
         .menu-logout:hover { background-color: #fff0f0 !important; }
-
         .sidebar-footer { padding: 20px; border-top: 1px solid #e0e0e0; font-size: 0.8rem; color: #999999; text-align: center; font-style: italic; }
 
-        /* === AREA KONTEN KANAN === */
+        /* AREA KONTEN KANAN */
         #main-content { flex: 1; display: flex; flex-direction: column; background-color: #f4f6f9; overflow: hidden; }
-        .topbar {
-            background-color: #ffffff; padding: 15px 25px; border-bottom: 1px solid #e0e0e0;
-            display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 5px rgba(0,0,0,0.03);
-        }
+        .topbar { background-color: #ffffff; padding: 15px 25px; border-bottom: 1px solid #e0e0e0; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
         .topbar-title { font-weight: 700; color: #333333; }
 
-        /* === PEMBATAS STANDAR LOOKER STUDIO === */
+        /* FRAME LOOKER / HTML */
         #iframe-wrapper { flex: 1; padding: 25px; background-color: #f4f6f9; display: none; justify-content: center; overflow: hidden; }
-        #iframe-container {
-            width: 100%; max-width: 1500px; height: 100%; background-color: #ffffff;
-            border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.07); overflow: hidden; display: flex;
-        }
+        #iframe-container { width: 100%; max-width: 1500px; height: 100%; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.07); overflow: hidden; display: flex; }
         #content-frame { flex: 1; border: none; }
 
-        /* === HALAMAN DASHBOARD === */
-        #dashboard-view {
-            height: 100%; display: flex; align-items: center; justify-content: center;
-            background: linear-gradient(135deg, #8a0b1a 0%, #C8102E 60%, #e6334a 100%);
-            padding: 40px; position: relative; overflow: hidden;
-        }
+        /* DASHBOARD */
+        #dashboard-view { height: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #8a0b1a 0%, #C8102E 60%, #e6334a 100%); padding: 40px; position: relative; overflow: hidden; }
         #dashboard-view::before { content: ''; position: absolute; top: -100px; right: -100px; width: 400px; height: 400px; background: rgba(255,255,255,0.1); border-radius: 50%; }
         #dashboard-view::after { content: ''; position: absolute; bottom: -150px; left: -100px; width: 500px; height: 500px; background: rgba(255,255,255,0.05); border-radius: 50%; }
-
         .dashboard-content { display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 1000px; z-index: 10; }
         .text-section { flex: 1; color: #ffffff; text-shadow: 0 2px 10px rgba(0,0,0,0.3); }
         .text-section h1 { font-size: 5rem; font-weight: 900; margin-bottom: 10px; letter-spacing: 2px; line-height: 1; }
@@ -140,7 +73,7 @@
         .logo-section { flex: 0 0 250px; display: flex; justify-content: center; align-items: center; margin-left: 60px; }
         .logo-section img { max-width: 100%; height: auto; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.4)); }
 
-        /* === RESPONSIVE MOBILE === */
+        /* RESPONSIVE MOBILE */
         #sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 999; display: none; }
         @media (max-width: 768px) {
             #sidebar { position: fixed; left: 0; top: 0; bottom: 0; transform: translateX(-100%); box-shadow: 5px 0 15px rgba(0,0,0,0.1); }
@@ -163,13 +96,10 @@
         <h3>LOGIN</h3>
         <p style="color: #666; font-size: 0.9rem;">Input User dan Password!</p>
         <input type="text" id="user-input" class="form-control" placeholder="Username...">
-        
-        <!-- INPUT PASSWORD DENGAN IKON MATA -->
         <div class="password-wrapper">
             <input type="password" id="password-input" class="form-control" placeholder="Password...">
             <i class="fas fa-eye toggle-password" id="toggle-password"></i>
         </div>
-        
         <button class="btn btn-primary" onclick="checkCredentials()">Login</button>
         <p id="error-msg" style="color: red; display: none; margin-top: 10px; font-size: 0.9rem;">User atau Password salah!</p>
     </div>
@@ -185,15 +115,24 @@
 
         <div class="sidebar-menu">
             <div id="menu-dashboard" class="menu-item active" onclick="showDashboard(this)"><i class="fas fa-home"></i> Beranda</div>
-            <div style="height: 15px;"></div>
-            <div id="menu-rekap" class="menu-item" onclick="loadPage('https://datastudio.google.com/embed/reporting/d0fa9b9b-66e0-4f99-9c7d-d24b8662ed04/page/gb4UF', this, 'menu-rekap')"><i class="fas fa-clipboard-list"></i> <span>Riwayat Pemutakhiran</span></div>
-            <div id="menu-peta" class="menu-item" onclick="loadPage('https://datastudio.google.com/embed/reporting/5eb3909f-faf9-4773-97ed-c04df6c208e8/page/p_4xo5e60psd', this, 'menu-peta')"><i class="fas fa-map-marked-alt"></i> <span>Peta Data Pemilih</span></div>
-            <div id="menu-pdp" class="menu-item" onclick="loadPage('https://datastudio.google.com/embed/reporting/1f5360c7-f8b9-4fc7-bb98-044e9c5b3e42/page/gb4UF', this, 'menu-pdp')"><i class="fas fa-sync-alt"></i> <span>Riwayat DPB</span></div>
+            <div style="height: 10px;"></div>
+
+            <!-- MENU REKAPITULASI DENGAN SUBMENU -->
+            <div class="menu-group open">
+                <div class="menu-item" onclick="toggleSubMenu(this)">
+                    <i class="fas fa-database"></i> 
+                    <span>Rekapitulasi Data Pemilih</span>
+                    <i class="fas fa-chevron-down toggle-arrow"></i>
+                </div>
+                <div class="sub-menu">
+                    <div class="sub-item" onclick="loadPage('tahapan.html', this, 'sub-tahapan')">Tahapan</div>
+                    <div class="sub-item" onclick="loadPage('pdpb.html', this, 'sub-pdpb')">PDPB</div>
+                    <div class="sub-item" onclick="loadPage('peta.html', this, 'sub-peta')">Peta Data Pemilih</div>
+                </div>
+            </div>
             
-            <!-- TOMBOL KELUAR -->
             <div class="menu-item menu-logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></div>
         </div>
-
         <div class="sidebar-footer">Crafted by Onet14</div>
     </aside>
 
@@ -225,145 +164,87 @@
                 <iframe id="content-frame" sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
             </div>
         </div>
-
     </main>
 </div>
 
 <script>
-    // --- FUNGSI TOGGLE MATA PASSWORD ---
+    // Toggle Password Mata
     document.getElementById('toggle-password').addEventListener('click', function() {
         const passInput = document.getElementById('password-input');
         const icon = this;
-        
-        if (passInput.type === 'password') {
-            passInput.type = 'text'; // Tampilkan password
-            icon.classList.remove('fa-eye'); // Ganti ikon menjadi mata coret
-            icon.classList.add('fa-eye-slash');
-        } else {
-            passInput.type = 'password'; // Sembunyikan password
-            icon.classList.remove('fa-eye-slash'); // Ganti ikon menjadi mata biasa
-            icon.classList.add('fa-eye');
-        }
+        if (passInput.type === 'password') { passInput.type = 'text'; icon.classList.remove('fa-eye'); icon.classList.add('fa-eye-slash'); } 
+        else { passInput.type = 'password'; icon.classList.remove('fa-eye-slash'); icon.classList.add('fa-eye'); }
     });
 
-    // --- FUNGSI PASSWORD & SESI MENGGUNAKAN FILE JSON ---
+    // Login JSON
     async function checkCredentials() {
         const userInput = document.getElementById('user-input').value;
         const passInput = document.getElementById('password-input').value;
         const errorMsg = document.getElementById('error-msg');
-
         try {
-            // Mengambil data dari file users.json
             const response = await fetch('users.json');
             if (!response.ok) throw new Error('File users.json tidak ditemukan');
-            
             const usersList = await response.json();
-
-            // Cek apakah user dan password cocok dengan data di JSON
             const isAuthenticated = usersList.some(u => u.user === userInput && u.password === passInput);
-
             if (isAuthenticated) {
-                sessionStorage.setItem('isAuthenticated', 'true');
-                sessionStorage.setItem('currentUser', userInput);
-                sessionStorage.setItem('currentPage', 'dashboard');
-                sessionStorage.setItem('activeMenuId', 'menu-dashboard');
+                sessionStorage.setItem('isAuthenticated', 'true'); sessionStorage.setItem('currentUser', userInput);
+                sessionStorage.setItem('currentPage', 'dashboard'); sessionStorage.setItem('activeMenuId', 'menu-dashboard');
                 initializeApp();
-            } else {
-                errorMsg.style.display = 'block';
-                document.getElementById('password-input').value = '';
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            errorMsg.innerText = "Sistem login error! Cek file users.json.";
-            errorMsg.style.display = 'block';
-        }
+            } else { errorMsg.style.display = 'block'; document.getElementById('password-input').value = ''; }
+        } catch (error) { errorMsg.innerText = "Sistem login error!"; errorMsg.style.display = 'block'; }
     }
 
-    // Event listener tekan Enter
-    document.getElementById("password-input").addEventListener("keypress", function(event) {
-        if (event.key === "Enter") { event.preventDefault(); checkCredentials(); }
-    });
-    document.getElementById("user-input").addEventListener("keypress", function(event) {
-        if (event.key === "Enter") { event.preventDefault(); document.getElementById('password-input').focus(); }
-    });
+    document.getElementById("password-input").addEventListener("keypress", function(event) { if (event.key === "Enter") { event.preventDefault(); checkCredentials(); } });
+    document.getElementById("user-input").addEventListener("keypress", function(event) { if (event.key === "Enter") { event.preventDefault(); document.getElementById('password-input').focus(); } });
 
-    // --- FUNGSI LOGOUT ---
     function logout() {
-        sessionStorage.clear();
-        document.getElementById('app-wrapper').style.display = 'none';
-        document.getElementById('login-screen').style.display = 'flex';
-        document.getElementById('user-input').value = '';
-        document.getElementById('password-input').value = '';
-        document.getElementById('error-msg').style.display = 'none';
-        document.getElementById('content-frame').src = ''; 
+        sessionStorage.clear(); document.getElementById('app-wrapper').style.display = 'none'; document.getElementById('login-screen').style.display = 'flex';
+        document.getElementById('user-input').value = ''; document.getElementById('password-input').value = ''; document.getElementById('error-msg').style.display = 'none'; document.getElementById('content-frame').src = ''; 
     }
 
-    // --- FUNGSI NAVIGASI ---
+    // Navigasi & Submenu
+    function toggleSubMenu(element) {
+        const menuGroup = element.parentElement;
+        const isOpening = !menuGroup.classList.contains('open');
+        document.querySelectorAll('.menu-group.open').forEach(openGroup => { if (openGroup !== menuGroup) openGroup.classList.remove('open'); });
+        if (isOpening) menuGroup.classList.add('open'); else menuGroup.classList.remove('open');
+    }
+
     function loadPage(pageUrl, element, menuId) {
         document.getElementById('dashboard-view').style.display = 'none';
         document.getElementById('iframe-wrapper').style.display = 'flex';
         document.getElementById('content-frame').src = pageUrl;
-        
-        let titleText = element.querySelector('span') ? element.querySelector('span').innerText.trim() : element.innerText.trim();
+        let titleText = element.innerText.trim();
         document.getElementById('topbar-title').innerText = titleText;
-        
-        document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.menu-item, .sub-item').forEach(el => el.classList.remove('active'));
         element.classList.add('active');
-
-        sessionStorage.setItem('currentPage', pageUrl);
-        sessionStorage.setItem('activeMenuId', menuId);
-
+        // Aktifkan juga parent menu-nya
+        const parentGroup = element.closest('.menu-group');
+        if (parentGroup) parentGroup.querySelector('.menu-item').classList.add('active');
+        sessionStorage.setItem('currentPage', pageUrl); sessionStorage.setItem('activeMenuId', menuId);
         if(window.innerWidth < 768) { toggleSidebar(); }
     }
 
     function showDashboard(element) {
-        document.getElementById('iframe-wrapper').style.display = 'none';
-        document.getElementById('content-frame').src = '';
-        document.getElementById('dashboard-view').style.display = 'flex';
-        
-        document.getElementById('topbar-title').innerText = 'Beranda';
-        
-        document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
-        element.classList.add('active');
-
-        sessionStorage.setItem('currentPage', 'dashboard');
-        sessionStorage.setItem('activeMenuId', 'menu-dashboard');
-
+        document.getElementById('iframe-wrapper').style.display = 'none'; document.getElementById('content-frame').src = '';
+        document.getElementById('dashboard-view').style.display = 'flex'; document.getElementById('topbar-title').innerText = 'Beranda';
+        document.querySelectorAll('.menu-item, .sub-item').forEach(el => el.classList.remove('active')); element.classList.add('active');
+        sessionStorage.setItem('currentPage', 'dashboard'); sessionStorage.setItem('activeMenuId', 'menu-dashboard');
         if(window.innerWidth < 768) { toggleSidebar(); }
     }
 
-    function toggleSidebar() {
-        document.getElementById('sidebar').classList.toggle('open');
-        document.getElementById('sidebar-overlay').classList.toggle('open');
-    }
+    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebar-overlay').classList.toggle('open'); }
 
-    // --- FUNGSI INISIALISASI SAAT REFRESH ---
     function initializeApp() {
-        document.getElementById('login-screen').style.display = 'none';
-        document.getElementById('app-wrapper').style.display = 'flex';
-
-        let currentPage = sessionStorage.getItem('currentPage');
-        let activeMenuId = sessionStorage.getItem('activeMenuId');
-
+        document.getElementById('login-screen').style.display = 'none'; document.getElementById('app-wrapper').style.display = 'flex';
+        let currentPage = sessionStorage.getItem('currentPage'); let activeMenuId = sessionStorage.getItem('activeMenuId');
         if (currentPage && currentPage !== 'dashboard' && activeMenuId) {
             let element = document.getElementById(activeMenuId);
-            if(element) {
-                loadPage(currentPage, element, activeMenuId);
-            } else {
-                showDashboard(document.getElementById('menu-dashboard'));
-            }
-        } else {
-            showDashboard(document.getElementById('menu-dashboard'));
-        }
+            if(element) { loadPage(currentPage, element, activeMenuId); } else { showDashboard(document.getElementById('menu-dashboard')); }
+        } else { showDashboard(document.getElementById('menu-dashboard')); }
     }
 
-    // CEK SESI SAAT PERTAMA KALI WEBSITE DIBUKA / DIREFRESH
-    window.onload = function() {
-        if (sessionStorage.getItem('isAuthenticated') === 'true') {
-            initializeApp();
-        }
-    };
+    window.onload = function() { if (sessionStorage.getItem('isAuthenticated') === 'true') { initializeApp(); } };
 </script>
-
 </body>
 </html>
