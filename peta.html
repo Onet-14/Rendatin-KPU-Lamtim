@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Peta Data Pemilih - KPU Lamtim</title>
     
-    <!-- Bootstrap CSS (Sama dengan parent) -->
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Leaflet CSS (Peta) -->
+    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 
     <style>
@@ -19,21 +19,21 @@
             background-color: #f4f6f9; 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             height: 100vh; 
-            overflow: hidden; /* Mencegah double scroll */
+            overflow: hidden;
             display: flex; 
             flex-direction: column;
         }
 
-        /* LOADING SPINNER */
+        /* LOADING OVERLAY */
         #loading-overlay {
-            position: fixed; inset: 0; background-color: rgba(244, 246, 249, 0.9);
+            position: fixed; inset: 0; background-color: rgba(244, 246, 249, 0.95);
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             z-index: 5000; transition: opacity 0.3s ease;
         }
         .spinner-grow { color: #C8102E; width: 3rem; height: 3rem; }
         .loading-text { margin-top: 15px; color: #555; font-weight: 600; }
 
-        /* LAYOUT */
+        /* LAYOUT UTAMA */
         #app-container { display: flex; height: 100%; width: 100%; }
         
         /* SIDEBAR FILTER */
@@ -58,30 +58,45 @@
         .form-select { border-radius: 8px; border-color: #ddd; padding: 10px; }
         .form-select:focus { border-color: #C8102E; box-shadow: 0 0 0 0.2rem rgba(200, 16, 46, 0.15); }
         
+        /* RESET BUTTON */
+        .btn-reset {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .btn-reset:hover { background-color: #5a6268; color: white; transform: translateY(-1px); }
+
         .info-card {
             background: #f8f9fa; border-left: 4px solid #C8102E; padding: 15px; border-radius: 6px;
-            font-size: 0.9rem; color: #444; margin-top: auto;
+            font-size: 0.85rem; color: #444; margin-top: auto;
         }
 
         /* MAP AREA */
         .map-wrapper { flex: 1; position: relative; }
         #map { width: 100%; height: 100%; background-color: #e5e9ec; }
 
-        /* CUSTOM POPUP STYLE */
+        /* CUSTOM POPUP */
         .leaflet-popup-content-wrapper {
             border-radius: 8px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            padding: 5px; /* Extra padding for cleaner look */
         }
+        .leaflet-popup-content { margin: 10px; }
         .popup-header {
             font-weight: 700; color: #C8102E; border-bottom: 1px solid #eee;
-            padding-bottom: 5px; margin-bottom: 5px; font-size: 1.1em;
+            padding-bottom: 5px; margin-bottom: 8px; font-size: 1.1em; text-align: center;
         }
-        .popup-row { display: flex; justify-content: space-between; margin-bottom: 3px; font-size: 0.9rem; }
+        .popup-row { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 0.9rem; }
         .popup-label { color: #666; }
         .popup-val { font-weight: 600; color: #333; }
-        .total-bold { border-top: 1px dashed #ccc; padding-top: 3px; margin-top: 5px; font-weight: 800; color: #C8102E !important; }
+        .total-bold { border-top: 1px dashed #ccc; padding-top: 5px; margin-top: 8px; font-weight: 800; color: #C8102E !important; font-size: 1rem; }
 
-        /* Responsive Mobile */
+        /* RESPONSIVE */
         @media (max-width: 768px) {
             #app-container { flex-direction: column; }
             .filter-panel { width: 100%; height: auto; max-height: 40vh; border-right: none; border-bottom: 1px solid #e0e0e0; }
@@ -90,16 +105,14 @@
 </head>
 <body>
 
-<!-- LOADING OVERLAY -->
+<!-- LOADING -->
 <div id="loading-overlay">
-    <div class="spinner-grow text-danger" role="status">
-        <span class="visually-hidden">Loading...</span>
-    </div>
-    <div class="loading-text">Memuat Data Spasial & Pemilih...</div>
+    <div class="spinner-grow text-danger" role="status"><span class="visually-hidden">Loading...</span></div>
+    <div class="loading-text" id="loading-msg">Memuat Data Spasial & Pemilih...</div>
 </div>
 
 <div id="app-container">
-    <!-- FILTER PANEL (KIRI) -->
+    <!-- SIDEBAR -->
     <aside class="filter-panel">
         <div class="filter-section">
             <h5><i class="fas fa-filter"></i> Filter Data</h5>
@@ -119,18 +132,24 @@
                     <option value="">-- Pilih Tahapan Dulu --</option>
                 </select>
             </div>
+
+            <button class="btn btn-reset" onclick="resetMap()">
+                <i class="fas fa-sync-alt"></i> Reset Peta
+            </button>
         </div>
 
         <div class="info-card">
             <small><i class="fas fa-info-circle"></i> <strong>Panduan:</strong></small><br>
-            <ul style="margin-bottom: 0; padding-left: 20px; font-size: 0.85rem;">
-                <li>Klik wilayah <strong>Kecamatan</strong> untuk melihat ringkasan.</li>
-                <li>Klik wilayah <strong>Desa</strong> (setelah zoom) untuk melihat detail TPS.</li>
+            <ul style="margin-bottom: 0; padding-left: 20px; font-size: 0.8rem; margin-top: 5px;">
+                <li>Pilih Jenis & Tahapan terlebih dahulu.</li>
+                <li>Klik <strong>Kecamatan</strong> untuk masuk ke peta Desa.</li>
+                <li>Klik <strong>Desa</strong> untuk melihat titik TPS.</li>
+                <li>Gunakan tombol <strong>Reset</strong> untuk kembali ke tampilan awal.</li>
             </ul>
         </div>
     </aside>
 
-    <!-- PETA (KANAN) -->
+    <!-- PETA -->
     <div class="map-wrapper">
         <div id="map"></div>
     </div>
@@ -138,62 +157,63 @@
 
 <!-- SCRIPTS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-<!-- PapaParse untuk CSV -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
 <script>
-    // --- KONFIGURASI URL DATA ---
+    // --- KONFIGURASI ---
     const URLS = {
         pemutakhiran: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSpHbswfamDpkWReHbBBYYWsc5Jq5KXz2SkwYwZarW7M-JlEB3DcUHagO0sVLAFCXU__bCk2V7qoJEp/pub?gid=0&single=true&output=csv',
         pdpb: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSpHbswfamDpkWReHbBBYYWsc5Jq5KXz2SkwYwZarW7M-JlEB3DcUHagO0sVLAFCXU__bCk2V7qoJEp/pub?gid=135239502&single=true&output=csv',
-        geojson_kec: './kecamatan.geojson', // Pastikan file ini ada di GitHub Anda
-        geojson_desa: './desa.geojson'      // Pastikan file ini ada di GitHub Anda
+        geojson_kec: './kecamatan.geojson',
+        geojson_desa: './desa.geojson'
     };
 
-    // --- GLOBAL VARIABLES ---
+    // --- VARIABLES ---
     let map;
     let geoJsonLayerKec;
     let geoJsonLayerDesa;
     let tpsMarkersLayer;
     let currentCsvData = [];
     
-    // --- INISIALISASI PETA ---
+    // Menyimpan data mentah GeoJSON Desa untuk filter
+    let rawDesaGeoJson = null; 
+
+    // --- INISIALISASI ---
     function initMap() {
-        // Koordinat tengah awal (Lampung Timur perkiraan)
+        // Set posisi awal (Lampung Timur)
         map = L.map('map').setView([-5.1400, 105.2500], 9);
 
-        // Tile Layer (OpenStreetMap)
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap contributors',
             maxZoom: 19
         }).addTo(map);
 
-        // Layer Groups
+        // Layer Kecamatan (Ditampilkan Awal)
         geoJsonLayerKec = L.geoJSON(null, {
             style: styleKecamatan,
             onEachFeature: onEachFeatureKecamatan
         }).addTo(map);
 
+        // Layer Desa (Disiapkan tapi belum ditambahkan ke peta)
         geoJsonLayerDesa = L.geoJSON(null, {
             style: styleDesa,
             onEachFeature: onEachFeatureDesa
-        }).addTo(map);
+        });
 
+        // Layer TPS
         tpsMarkersLayer = L.layerGroup().addTo(map);
 
-        // Muat GeoJSON
         loadGeoJsons();
     }
 
-    // --- STYLE PETA ---
+    // --- STYLE ---
     function styleKecamatan() {
         return {
             fillColor: '#ffffff',
             weight: 2,
             opacity: 1,
-            color: '#C8102E', // Warna Merah KPU
+            color: '#C8102E',
             dashArray: '3',
             fillOpacity: 0.1
         };
@@ -203,284 +223,48 @@
         return {
             fillColor: '#f0f0f0',
             weight: 1,
-            opacity: 0.8,
-            color: '#666',
-            fillOpacity: 0.2
+            opacity: 1,
+            color: '#444',
+            fillOpacity: 0.3
         };
     }
 
-    function highlightFeature(e) {
-        var layer = e.target;
-        layer.setStyle({
-            weight: 3,
-            color: '#C8102E',
-            dashArray: '',
-            fillOpacity: 0.4
-        });
-        layer.bringToFront();
-    }
-
-    function resetHighlight(e) {
-        // Reset style berdasarkan apakah itu kec atau desa
-        if (e.target.feature.geometry.type === 'Polygon') { 
-            // Sederhana: kita asumsikan reset ke style standar
-            // Idealnya cek properti layer, tapi ini cukup untuk demo
-            geoJsonLayerDesa.resetStyle(e.target);
-            geoJsonLayerKec.resetStyle(e.target);
+    // --- FUNGSI BANTUAN NAMA (MENGATASI UNDEFINED) ---
+    function getFeatureName(feature, type) {
+        const props = feature.properties;
+        if (type === 'kecamatan') {
+            return props.kecamatan || props.KECAMATAN || props.name || props.NAMA || "Kecamatan (Tidak ada nama)";
+        } else {
+            // Mencoba beberapa kemungkinan nama properti desa
+            return props.desa || props.DESA || props.name || props.NAMA_DESA || props.kelurahan || props.KELURAHAN || "Desa (Nama tidak ditemukan)";
         }
     }
 
     // --- LOGIKA KECAMATAN ---
     function onEachFeatureKecamatan(feature, layer) {
         layer.on({
-            mouseover: highlightFeature,
-            mouseout: resetHighlight,
+            mouseover: (e) => {
+                e.target.setStyle({ weight: 3, color: '#C8102E', fillOpacity: 0.3 });
+            },
+            mouseout: (e) => {
+                geoJsonLayerKec.resetStyle(e.target);
+            },
             click: (e) => {
-                zoomToFeature(e);
-                showKecamatanPopup(feature, layer);
+                // LOGIKA BARU: Klik Kecamatan -> Tampilkan Desa, Hilangkan Kecamatan
+                drillDownToDesa(feature, layer);
             }
         });
     }
 
     function showKecamatanPopup(feature, layer) {
-        const kecId = String(feature.properties.kec_id).trim(); // Pastikan String
-        const kecName = feature.properties.kecamatan || feature.properties.name || "Nama Kecamatan";
-
-        // Filter data CSV berdasarkan Kode Kecamatan
-        const dataInKec = currentCsvData.filter(row => String(row['kode kec']).trim() === kecId);
-
-        if (dataInKec.length === 0) {
-            layer.bindPopup(`<div class='popup-header'>${kecName}</div><div class='popup-row'>Data tidak ditemukan untuk filter ini.</div>`).openPopup();
-            return;
-        }
-
-        // Agregasi Data
-        const totalLaki = dataInKec.reduce((sum, item) => sum + parseInt(item['laki-laki'] || 0), 0);
-        const totalPerempuan = dataInKec.reduce((sum, item) => sum + parseInt(item['perempuan'] || 0), 0);
-        const totalJumlah = totalLaki + totalPerempuan;
-        
-        // Hitung unik Desa dan TPS
-        const uniqueDesa = [...new Set(dataInKec.map(item => item['kode desa']))].length;
-        const uniqueTPS = [...new Set(dataInKec.map(item => item.tps))].length;
-
-        const popupContent = `
-            <div class='popup-header'>${kecName}</div>
-            <div class='popup-row'><span class='popup-label'>Jml Desa:</span> <span class='popup-val'>${uniqueDesa}</span></div>
-            <div class='popup-row'><span class='popup-label'>Jml TPS:</span> <span class='popup-val'>${uniqueTPS}</span></div>
-            <div class='popup-row'><span class='popup-label'>Laki-laki:</span> <span class='popup-val'>${totalLaki.toLocaleString('id-ID')}</span></div>
-            <div class='popup-row'><span class='popup-label'>Perempuan:</span> <span class='popup-val'>${totalPerempuan.toLocaleString('id-ID')}</span></div>
-            <div class='popup-row total-bold'><span class='popup-label'>Total Pemilih:</span> <span class='popup-val'>${totalJumlah.toLocaleString('id-ID')}</span></div>
-        `;
-
-        layer.bindPopup(popupContent).openPopup();
-    }
-
-    // --- LOGIKA DESA ---
-    function onEachFeatureDesa(feature, layer) {
-        layer.on({
-            mouseover: highlightFeature,
-            mouseout: resetHighlight,
-            click: (e) => {
-                zoomToFeature(e);
-                showDesaPopup(feature, layer);
-                showTPSPoints(feature); // Tampilkan titik TPS saat desa diklik
-            }
-        });
-    }
-
-    function showDesaPopup(feature, layer) {
-        const kelId = String(feature.properties.kel_id).trim();
-        const desaName = feature.properties.desa || feature.properties.name || "Nama Desa";
-
-        // Filter data CSV berdasarkan Kode Desa
-        const dataInDesa = currentCsvData.filter(row => String(row['kode desa']).trim() === kelId);
-
-        if (dataInDesa.length === 0) {
-            layer.bindPopup(`<div class='popup-header'>${desaName}</div><div class='popup-row'>Tidak ada data TPS.</div>`).openPopup();
-            tpsMarkersLayer.clearLayers();
-            return;
-        }
-
-        const totalLaki = dataInDesa.reduce((sum, item) => sum + parseInt(item['laki-laki'] || 0), 0);
-        const totalPerempuan = dataInDesa.reduce((sum, item) => sum + parseInt(item['perempuan'] || 0), 0);
-        const totalJumlah = totalLaki + totalPerempuan;
-        const uniqueTPS = dataInDesa.length;
-
-        const popupContent = `
-            <div class='popup-header'>Desa ${desaName}</div>
-            <div class='popup-row'><span class='popup-label'>Jml TPS:</span> <span class='popup-val'>${uniqueTPS}</span></div>
-            <div class='popup-row'><span class='popup-label'>Laki-laki:</span> <span class='popup-val'>${totalLaki.toLocaleString('id-ID')}</span></div>
-            <div class='popup-row'><span class='popup-label'>Perempuan:</span> <span class='popup-val'>${totalPerempuan.toLocaleString('id-ID')}</span></div>
-            <div class='popup-row total-bold'><span class='popup-label'>Total Pemilih:</span> <span class='popup-val'>${totalJumlah.toLocaleString('id-ID')}</span></div>
-        `;
-
-        layer.bindPopup(popupContent).openPopup();
-    }
-
-    function showTPSPoints(feature) {
-        tpsMarkersLayer.clearLayers();
-        const kelId = String(feature.properties.kel_id).trim();
-        
-        // Ambil data TPS untuk desa ini
-        const tpsData = currentCsvData.filter(row => String(row['kode desa']).trim() === kelId);
-
-        tpsData.forEach(row => {
-            const lat = parseFloat(row.latitude);
-            const lng = parseFloat(row.longitude);
-            
-            if (!isNaN(lat) && !isNaN(lng)) {
-                const marker = L.circleMarker([lat, lng], {
-                    radius: 5,
-                    fillColor: "#004aad",
-                    color: "#fff",
-                    weight: 1,
-                    opacity: 1,
-                    fillOpacity: 0.8
-                });
-
-                const tpsPopup = `
-                    <div class='popup-header'>TPS ${row.tps}</div>
-                    <div class='popup-row'><span class='popup-label'>Kec:</span> <span class='popup-val'>${row.kecamatan}</span></div>
-                    <div class='popup-row'><span class='popup-label'>Desa:</span> <span class='popup-val'>${row.desa}</span></div>
-                    <div class='popup-row'><span class='popup-label'>Laki-laki:</span> <span class='popup-val'>${row['laki-laki']}</span></div>
-                    <div class='popup-row'><span class='popup-label'>Perempuan:</span> <span class='popup-val'>${row['perempuan']}</span></div>
-                    <div class='popup-row total-bold'><span class='popup-label'>Total:</span> <span class='popup-val'>${row.jumlah}</span></div>
-                `;
-
-                marker.bindPopup(tpsPopup);
-                tpsMarkersLayer.addLayer(marker);
-            }
-        });
-    }
-
-    function zoomToFeature(e) {
-        map.fitBounds(e.target.getBounds());
-    }
-
-    // --- MANAJEMEN DATA & FETCHING ---
-
-    function loadGeoJsons() {
-        Promise.all([
-            fetch(URLS.geojson_kec).then(res => {
-                if(!res.ok) throw new Error("Gagal muat GeoJSON Kecamatan");
-                return res.json();
-            }),
-            fetch(URLS.geojson_desa).then(res => {
-                if(!res.ok) throw new Error("Gagal muat GeoJSON Desa");
-                return res.json();
-            })
-        ]).then(([dataKec, dataDesa]) => {
-            geoJsonLayerKec.addData(dataKec);
-            geoJsonLayerDesa.addData(dataDesa);
-            
-            // Sembunyikan Loading
-            document.getElementById('loading-overlay').classList.add('fade-out');
-            setTimeout(() => {
-                document.getElementById('loading-overlay').style.display = 'none';
-            }, 500);
-            
-        }).catch(err => {
-            console.error(err);
-            document.querySelector('.loading-text').innerHTML = `<span style="color:red">Error: ${err.message}<br>Pastikan file geojson ada di folder GitHub.</span>`;
-        });
-    }
-
-    function changeJenis() {
-        const jenis = document.getElementById('jenis-select').value;
-        const tahapanSelect = document.getElementById('tahapan-select');
-        
-        tahapanSelect.innerHTML = '<option value="">-- Memuat Tahapan --</option>';
-        tahapanSelect.disabled = true;
-        tpsMarkersLayer.clearLayers();
-        currentCsvData = []; // Reset data
-
-        if (!jenis) return;
-
-        // Tampilkan loading kecil di text
-        const originalText = document.querySelector('.loading-text').innerText;
-        const loader = document.getElementById('loading-overlay');
-        loader.style.display = 'flex'; 
-        loader.style.opacity = '0.8';
-        document.querySelector('.loading-text').innerText = "Mengunduh Data CSV...";
-
-        // Fetch CSV berdasarkan Jenis
-        Papa.parse(URLS[jenis], {
-            download: true,
-            header: true,
-            complete: function(results) {
-                currentCsvData = results.data.filter(row => row['kode kec']); // Hapus baris kosong
-                
-                // Ambil Unik Tahapan
-                const tahapanSet = new Set(currentCsvData.map(row => row.tahapan).filter(t => t));
-                const tahapanList = Array.from(tahapanSet).sort();
-
-                // Update Dropdown Tahapan
-                tahapanSelect.innerHTML = '<option value="">-- Pilih Tahapan --</option>';
-                tahapanList.forEach(t => {
-                    const option = document.createElement('option');
-                    option.value = t;
-                    option.textContent = t;
-                    tahapanSelect.appendChild(option);
-                });
-                
-                tahapanSelect.disabled = false;
-                
-                // Sembunyikan loading
-                loader.style.display = 'none';
-            },
-            error: function(err) {
-                alert("Gagal memuat data CSV. Cek koneksi internet.");
-                loader.style.display = 'none';
-            }
-        });
-    }
-
-    function updateMapData() {
-        // Fungsi ini dipanggil saat Tahapan berubah
-        // Di sini kita bisa menambahkan logika filter visual jika diperlukan
-        // Namun karena popup kita hitung real-time dari currentCsvData, 
-        // kita hanya perlu memfilter currentCsvData berdasarkan tahapan.
-        
-        const selectedTahapan = document.getElementById('tahapan-select').value;
-        
-        // Filter data global berdasarkan tahapan yang dipilih
-        // Kita perlu me-reload data mentah dari URL lagi atau simpan semua data di memori?
-        // Solusi efisien: Simpan *semua* data per jenis di variabel terpisah, 
-        // tapi untuk simplifikasi kode ini, kita parse ulang atau filter data hasil parse terakhir.
-        
-        // Mari kita perbaiki logika: 'changeJenis' mengunduh SEMUA data jenis tersebut.
-        // 'updateMapData' hanya memfilter apa yang dipakai untuk popup/marker.
-        
-        // Kita tidak mengubah currentCsvData utama agar user bisa ganti tahapan cepat tanpa download ulang.
-        // Tapi kita perlu tahu tahapan aktif saat ini saat nge-click popup.
-    }
-
-    // Override Popup Logic untuk membaca Tahapan Aktif
-    // Kita modifikasi fungsi filter di dalam popup sedikit.
-    const originalShowKecPopup = showKecamatanPopup;
-    const originalShowDesaPopup = showDesaPopup;
-
-    // Modifikasi fungsi filter agar membaca dropdown tahapan
-    function getActiveData() {
-        const tahapan = document.getElementById('tahapan-select').value;
-        if (!tahapan) return [];
-        return currentCsvData.filter(row => row.tahapan === tahapan);
-    }
-
-    // Redefine functions to use filtered data
-    showKecamatanPopup = function(feature, layer) {
-        const activeData = getActiveData();
-        if (activeData.length === 0) {
-            layer.bindPopup("Pilih Tahapan terlebih dahulu!").openPopup();
-            return;
-        }
-
         const kecId = String(feature.properties.kec_id).trim();
-        const kecName = feature.properties.kecamatan || feature.properties.name;
+        const kecName = getFeatureName(feature, 'kecamatan');
+        const activeData = getActiveData();
+        
         const dataInKec = activeData.filter(row => String(row['kode kec']).trim() === kecId);
 
         if (dataInKec.length === 0) {
-            layer.bindPopup(`<div class='popup-header'>${kecName}</div><div>Tidak ada data pada tahapan ini.</div>`).openPopup();
+            layer.bindPopup(`<div class='popup-header'>${kecName}</div><div class='text-center text-muted'>Tidak ada data pada tahapan ini.</div>`).openPopup();
             return;
         }
 
@@ -497,18 +281,77 @@
             <div class='popup-row'><span class='popup-label'>Laki-laki:</span> <span class='popup-val'>${totalLaki.toLocaleString('id-ID')}</span></div>
             <div class='popup-row'><span class='popup-label'>Perempuan:</span> <span class='popup-val'>${totalPerempuan.toLocaleString('id-ID')}</span></div>
             <div class='popup-row total-bold'><span class='popup-label'>Total:</span> <span class='popup-val'>${totalJumlah.toLocaleString('id-ID')}</span></div>
+            <div class='text-center mt-2'><small class='text-muted'>Klik untuk lihat detail desa</small></div>
         `;
         layer.bindPopup(popupContent).openPopup();
     }
 
-    showDesaPopup = function(feature, layer) {
-        const activeData = getActiveData();
+    // --- LOGIKA DRILL DOWN (KEC -> DESA) ---
+    function drillDownToDesa(feature, layer) {
+        if (!rawDesaGeoJson) {
+            alert("Data peta desa belum dimuat. Mohon tunggu sebentar.");
+            return;
+        }
+
+        const kecId = String(feature.properties.kec_id).trim();
+        const kecName = getFeatureName(feature, 'kecamatan');
+
+        // 1. Hapus layer Kecamatan
+        map.removeLayer(geoJsonLayerKec);
+        
+        // 2. Filter Desa berdasarkan kec_id dari GeoJSON Desa
+        // Asumsi: desa.geojson punya properti 'kec_id' yang sama dengan kecamatan.geojson
+        const desaFeatures = rawDesaGeoJson.features.filter(f => String(f.properties.kec_id).trim() === kecId);
+
+        if (desaFeatures.length === 0) {
+            alert("Tidak ditemukan data desa untuk Kecamatan ini (ID tidak cocok).");
+            // Kembalikan layer kecamatan jika gagal
+            map.addLayer(geoJsonLayerKec);
+            return;
+        }
+
+        // 3. Bersihkan layer lama dan isi dengan desa baru
+        geoJsonLayerDesa.clearLayers();
+        geoJsonLayerDesa.addData(desaFeatures);
+        
+        // 4. Tambahkan layer desa ke peta
+        map.addLayer(geoJsonLayerDesa);
+
+        // 5. Zoom ke batas desa (padding 50px agar pas)
+        const bounds = geoJsonLayerDesa.getBounds();
+        map.fitBounds(bounds, { padding: [50, 50], animate: true });
+
+        // 6. Tampilkan info toast atau popup kecil di tengah (opsional)
+        // Kita biarkan user klik desa untuk detail
+    }
+
+    // --- LOGIKA DESA ---
+    function onEachFeatureDesa(feature, layer) {
+        layer.on({
+            mouseover: (e) => {
+                e.target.setStyle({ weight: 2, color: '#004aad', fillOpacity: 0.5 });
+            },
+            mouseout: (e) => {
+                geoJsonLayerDesa.resetStyle(e.target);
+            },
+            click: (e) => {
+                showDesaPopup(feature, layer);
+                showTPSPoints(feature);
+                
+                // Zoom ke desa yang diklik dengan padding
+                map.fitBounds(e.target.getBounds(), { padding: [30, 30], maxZoom: 15, animate: true });
+            }
+        });
+    }
+
+    function showDesaPopup(feature, layer) {
         const kelId = String(feature.properties.kel_id).trim();
-        const desaName = feature.properties.desa || feature.properties.name;
+        const desaName = getFeatureName(feature, 'desa');
+        const activeData = getActiveData();
         const dataInDesa = activeData.filter(row => String(row['kode desa']).trim() === kelId);
 
         if (dataInDesa.length === 0) {
-            layer.bindPopup(`<div class='popup-header'>${desaName}</div><div>Tidak ada data.</div>`).openPopup();
+            layer.bindPopup(`<div class='popup-header'>${desaName}</div><div class='text-center text-muted'>Data TPS kosong.</div>`).openPopup();
             tpsMarkersLayer.clearLayers();
             return;
         }
@@ -527,9 +370,8 @@
         `;
         layer.bindPopup(popupContent).openPopup();
     }
-    
-    // Redefine showTPSPoints juga
-    showTPSPoints = function(feature) {
+
+    function showTPSPoints(feature) {
         tpsMarkersLayer.clearLayers();
         const activeData = getActiveData();
         const kelId = String(feature.properties.kel_id).trim();
@@ -540,12 +382,10 @@
             const lng = parseFloat(row.longitude);
             if (!isNaN(lat) && !isNaN(lng)) {
                 const marker = L.circleMarker([lat, lng], {
-                    radius: 5, fillColor: "#004aad", color: "#fff", weight: 1, opacity: 1, fillOpacity: 0.8
+                    radius: 5, fillColor: "#C8102E", color: "#fff", weight: 1, opacity: 1, fillOpacity: 0.9
                 });
                 marker.bindPopup(`
-                    <div class='popup-header'>TPS ${row.tps}</div>
-                    <div class='popup-row'><span class='popup-label'>Kec:</span> <span class='popup-val'>${row.kecamatan}</span></div>
-                    <div class='popup-row'><span class='popup-label'>Desa:</span> <span class='popup-val'>${row.desa}</span></div>
+                    <div class='popup-header' style='font-size:0.9rem'>TPS ${row.tps}</div>
                     <div class='popup-row'><span class='popup-label'>Laki-laki:</span> <span class='popup-val'>${row['laki-laki']}</span></div>
                     <div class='popup-row'><span class='popup-label'>Perempuan:</span> <span class='popup-val'>${row['perempuan']}</span></div>
                     <div class='popup-row total-bold'><span class='popup-label'>Total:</span> <span class='popup-val'>${row.jumlah}</span></div>
@@ -555,7 +395,116 @@
         });
     }
 
-    // Jalankan saat load
+    // --- TOMBOL RESET ---
+    function resetMap() {
+        // 1. Hapus layer Desa jika ada
+        if (map.hasLayer(geoJsonLayerDesa)) {
+            map.removeLayer(geoJsonLayerDesa);
+        }
+        
+        // 2. Hapus TPS markers
+        tpsMarkersLayer.clearLayers();
+
+        // 3. Tampilkan kembali layer Kecamatan
+        if (!map.hasLayer(geoJsonLayerKec)) {
+            map.addLayer(geoJsonLayerKec);
+        }
+
+        // 4. Reset Zoom ke posisi awal
+        map.setView([-5.1400, 105.2500], 9);
+        
+        // 5. Tutup semua popup
+        map.closePopup();
+    }
+
+    // --- DATA LOGIC (LOADING & FILTERING) ---
+    
+    function loadGeoJsons() {
+        document.getElementById('loading-msg').innerText = "Memuat Peta Wilayah...";
+        Promise.all([
+            fetch(URLS.geojson_kec).then(res => {
+                if(!res.ok) throw new Error("Gagal muat Kecamatan");
+                return res.json();
+            }),
+            fetch(URLS.geojson_desa).then(res => {
+                if(!res.ok) throw new Error("Gagal muat Desa");
+                return res.json();
+            })
+        ]).then(([dataKec, dataDesa]) => {
+            geoJsonLayerKec.addData(dataKec);
+            // SIMPAN data desa ke variabel global, JANGAN dimasukkan ke peta dulu
+            rawDesaGeoJson = dataDesa; 
+            
+            document.getElementById('loading-overlay').classList.add('fade-out');
+            setTimeout(() => { document.getElementById('loading-overlay').style.display = 'none'; }, 500);
+            
+        }).catch(err => {
+            console.error(err);
+            document.getElementById('loading-msg').innerHTML = `<span style="color:red">Error: ${err.message}<br>Pastikan file .geojson ada di GitHub.</span>`;
+        });
+    }
+
+    function changeJenis() {
+        const jenis = document.getElementById('jenis-select').value;
+        const tahapanSelect = document.getElementById('tahapan-select');
+        const loader = document.getElementById('loading-overlay');
+        
+        tahapanSelect.innerHTML = '<option value="">-- Pilih Tahapan --</option>';
+        tahapanSelect.disabled = true;
+        tpsMarkersLayer.clearLayers();
+        currentCsvData = [];
+
+        if (!jenis) return;
+
+        loader.style.display = 'flex'; 
+        loader.style.opacity = '0.8';
+        document.getElementById('loading-msg').innerText = "Mengunduh Data CSV...";
+
+        Papa.parse(URLS[jenis], {
+            download: true,
+            header: true,
+            complete: function(results) {
+                currentCsvData = results.data.filter(row => row['kode kec']);
+                
+                const tahapanSet = new Set(currentCsvData.map(row => row.tahapan).filter(t => t));
+                const tahapanList = Array.from(tahapanSet).sort();
+
+                tahapanSelect.innerHTML = '<option value="">-- Pilih Tahapan --</option>';
+                tahapanList.forEach(t => {
+                    const option = document.createElement('option');
+                    option.value = t;
+                    option.textContent = t;
+                    tahapanSelect.appendChild(option);
+                });
+                
+                tahapanSelect.disabled = false;
+                loader.style.display = 'none';
+            },
+            error: function(err) {
+                alert("Gagal memuat data CSV.");
+                loader.style.display = 'none';
+            }
+        });
+    }
+
+    function updateMapData() {
+        // Fungsi ini dipanggil saat user ganti tahapan
+        // Kita refresh tampilan peta (popup/marker) dengan data baru
+        if (map.hasLayer(geoJsonLayerDesa)) {
+            // Jika sedang lihat desa, refresh TPS
+            // Ini sedikit kompleks karena kita harus tahu desa mana yg aktif, 
+            // tapi untuk simplifikasi, kita biarkan user klik desa lagi untuk update TPS
+            // ATAU kita bisa clear TPS dulu agar user refresh klik.
+            tpsMarkersLayer.clearLayers();
+        }
+    }
+
+    function getActiveData() {
+        const tahapan = document.getElementById('tahapan-select').value;
+        if (!tahapan) return [];
+        return currentCsvData.filter(row => row.tahapan === tahapan);
+    }
+
     window.onload = initMap;
 
 </script>
