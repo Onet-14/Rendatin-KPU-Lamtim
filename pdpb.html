@@ -155,7 +155,7 @@
         }
     });
 
-    function populateFilters() {
+        function populateFilters() {
         let tahapanSet = new Set();
         rawData.forEach(row => { if(row['tahapan']) tahapanSet.add(row['tahapan']); });
         
@@ -174,14 +174,28 @@
         
         let select = document.getElementById('filter-tahapan');
         select.innerHTML = '';
+        
+        let addedItems = new Set();
+
+        // 1. Tampilkan dulu yang ada di customOrder (agar urutannya rapi kronologis)
         customOrder.forEach(t => {
             if (tahapanSet.has(t)) {
                 let opt = document.createElement('option');
                 opt.value = t; opt.text = t;
-                // Default langsung ke triwulan pertama
                 if (t === 'PDPB TRIWULAN II 2025') opt.selected = true; 
                 select.appendChild(opt);
+                addedItems.add(t); // Tandai sudah dimasukkan
             }
+        });
+
+        // 2. Cari data di Spreadsheet yang BELUM ADA di customOrder (Data Baru)
+        // Akan otomatis dimasukkan ke bagian bawah dropdown
+        let remainingItems = Array.from(tahapanSet).filter(t => !addedItems.has(t)).sort();
+        
+        remainingItems.forEach(t => {
+            let opt = document.createElement('option');
+            opt.value = t; opt.text = t;
+            select.appendChild(opt);
         });
     }
 
