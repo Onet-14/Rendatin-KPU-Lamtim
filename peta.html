@@ -232,14 +232,12 @@
         <ul style="margin-bottom: 0; padding-left: 20px; font-size: 0.8rem; margin-top: 5px; color: #555;">
             <li>Hover untuk melihat Label Data.</li>
             <li>Klik wilayah untuk melihat Data.</li>
-            <li>Tekan tombol di Popup untuk aksi.</li>
-            <li>Gunakan tombol Reset untuk kembali.</li>
+            <li>Tekan tombol di Popup untuk Zoom & Lihat TPS.</li>
         </ul>
     </div>
 </aside>
 
 <div class="map-wrapper">
-    <!-- TOMBOL KEMBALI DIHAPUS SESUAI PERMINTAAN -->
     <div id="map"></div>
 </div>
 
@@ -325,9 +323,18 @@
             weight: 1,
             opacity: 1,
             color: '#ffffff',
-            fillOpacity: 0.5
+            fillOpacity: 0.6, // Sedikit lebih pekat agar mudah diklik
+            cursor: 'pointer' // Pastikan kursor berubah menjadi tangan
         };
     }
+    
+    // Style saat desa diklik (Sorot)
+    const styleDesaSelected = {
+        weight: 3,
+        color: '#ffffff',
+        fillOpacity: 0.9,
+        fillColor: '#ffcccc'
+    };
 
     function getFeatureName(feature, type) {
         const props = feature.properties;
@@ -438,7 +445,6 @@
         map.fitBounds(geoJsonLayerDesa.getBounds(), { padding: [50, 50] });
         
         tpsMarkersLayer.clearLayers();
-        // TOMBOL KEMBALI DIHAPUS
     }
 
     function onEachFeatureDesa(feature, layer) {
@@ -449,14 +455,16 @@
 
         layer.on({
             mouseover: (e) => {
-                // Opsional: efek hover tetap ada
-                e.target.setStyle({ weight: 2, color: '#ffffff', fillOpacity: 0.6 });
+                // Efek hover sederhana
+                e.target.setStyle({ weight: 2, color: '#ffffff', fillOpacity: 0.8 });
             },
             mouseout: (e) => {
-                // Reset style
+                // Reset ke style default
                 geoJsonLayerDesa.resetStyle(e.target);
             },
             click: (e) => {
+                // FIX: Bring layer to depan agar pasti bisa diklik
+                e.target.bringToFront();
                 highlightSelectedDesa(e.target, feature);
             }
         });
@@ -466,15 +474,17 @@
         selectedDesaLayer = clickedLayer;
         selectedDesaFeature = feature;
 
-        // --- ALUR BARU: ZOOM SANGAT DEKAT ---
-        // Menggunakan maxZoom: 16 agar hanya desa yang diklik yang terlihat (tetangga hilang)
-        map.fitBounds(clickedLayer.getBounds(), { padding: 20, maxZoom: 16 });
+        // 1. Highlight visual desa yang diklik
+        clickedLayer.setStyle(styleDesaSelected);
         
-        // Bersihkan marker TPS lama jika ada
+        // 2. Hapus TPS lama jika ada (pindah desa)
         tpsMarkersLayer.clearLayers();
 
-        // Munculkan Popup Data
+        // 3. Munculkan Popup Data (Belum zoom in)
         showDesaPopup(feature, clickedLayer);
+
+        // 4. PERUBAHAN ALUR: JANGAN ZOOM SEKARANG. Zoom dilakukan saat klik tombol TPS.
+        // Ini sesuai permintaan: "Klik Desa -> Masih muncul semua peta... -> Tombol Lihat TPS -> Baru Zoom"
     }
 
     function showDesaPopup(feature, layer) {
@@ -525,11 +535,15 @@
     }
 
     window.triggerShowTPS = function() {
-        if (selectedDesaFeature) {
+        if (selectedDesaLayer && selectedDesaFeature) {
+            // 1. Zoom In hanya ke desa yang dipilih
+            map.fitBounds(selectedDesaLayer.getBounds(), { padding: 20, maxZoom: 16 });
+            
+            // 2. Munculkan TPS Points
             showTPSPoints(selectedDesaFeature);
-            if (selectedDesaLayer) {
-                showDesaPopup(selectedDesaFeature, selectedDesaLayer);
-            }
+            
+            // 3. Refresh Popup agar tombol berubah jadi "Titik TPS Ditampilkan"
+            showDesaPopup(selectedDesaFeature, selectedDesaLayer);
         }
     }
 
