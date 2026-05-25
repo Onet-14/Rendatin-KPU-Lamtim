@@ -83,29 +83,6 @@
         .map-wrapper { flex: 1; position: relative; height: 100%; }
         #map { width: 100%; height: 100%; background-color: #e5e9ec; z-index: 1; }
 
-        /* TOMBOL KEMBALI */
-        .btn-back-control {
-            position: absolute;
-            top: 10px;
-            right: 50px;
-            z-index: 1000;
-            background-color: #ffffff;
-            border: 2px solid #C8102E;
-            color: #C8102E;
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            font-weight: 700;
-            font-size: 0.9rem;
-            display: none;
-            transition: all 0.2s;
-        }
-        .btn-back-control:hover {
-            background-color: #C8102E;
-            color: #ffffff;
-        }
-
         /* CUSTOM TOOLTIP STYLE */
         .custom-tooltip {
             background: #C8102E;
@@ -215,7 +192,6 @@
             body { flex-direction: column; overflow: auto; height: auto; }
             .filter-panel { width: 100%; height: auto; border-right: none; border-bottom: 1px solid #dee2e6; }
             .map-wrapper { height: 60vh; width: 100%; }
-            .btn-back-control { top: 80px; right: 10px; }
         }
     </style>
 </head>
@@ -257,14 +233,13 @@
             <li>Hover untuk melihat Label Data.</li>
             <li>Klik wilayah untuk melihat Data.</li>
             <li>Tekan tombol di Popup untuk aksi.</li>
+            <li>Gunakan tombol Reset untuk kembali.</li>
         </ul>
     </div>
 </aside>
 
 <div class="map-wrapper">
-    <button id="btn-back" class="btn-back-control" onclick="goBackToKecamatan()">
-        <i class="fas fa-arrow-left"></i> KEMBALI
-    </button>
+    <!-- TOMBOL KEMBALI DIHAPUS SESUAI PERMINTAAN -->
     <div id="map"></div>
 </div>
 
@@ -309,7 +284,6 @@
     }
 
     function initMap() {
-        // Posisi awal sementara, nanti di-override oleh fitBounds
         map = L.map('map', { zoomControl: false }).setView([-5.10, 105.40], 9);
         L.control.zoom({ position: 'topright' }).addTo(map);
 
@@ -354,27 +328,6 @@
             fillOpacity: 0.5
         };
     }
-
-    const styleDesaSelected = {
-        weight: 3,
-        color: '#ffffff',
-        fillOpacity: 0.9,
-        fillColor: '#ffcccc'
-    };
-
-    const styleDesaDimmed = {
-        weight: 1,
-        color: '#ffffff',
-        fillOpacity: 0.7, 
-        fillColor: '#d3d3d3' 
-    };
-    
-    const styleDesaHover = {
-        weight: 2,
-        color: '#ffffff',
-        fillOpacity: 0.6,
-        dashArray: '3, 3'
-    };
 
     function getFeatureName(feature, type) {
         const props = feature.properties;
@@ -485,7 +438,7 @@
         map.fitBounds(geoJsonLayerDesa.getBounds(), { padding: [50, 50] });
         
         tpsMarkersLayer.clearLayers();
-        document.getElementById('btn-back').style.display = 'block';
+        // TOMBOL KEMBALI DIHAPUS
     }
 
     function onEachFeatureDesa(feature, layer) {
@@ -496,26 +449,15 @@
 
         layer.on({
             mouseover: (e) => {
-                if (selectedDesaLayer && selectedDesaLayer !== e.target) {
-                    e.target.setStyle(styleDesaHover);
-                } else if (!selectedDesaLayer) {
-                    e.target.setStyle(styleDesaHover);
-                }
+                // Opsional: efek hover tetap ada
+                e.target.setStyle({ weight: 2, color: '#ffffff', fillOpacity: 0.6 });
             },
             mouseout: (e) => {
-                if (selectedDesaLayer) {
-                    if (selectedDesaLayer === e.target) {
-                        e.target.setStyle(styleDesaSelected);
-                    } else {
-                        e.target.setStyle(styleDesaDimmed);
-                    }
-                } else {
-                    geoJsonLayerDesa.resetStyle(e.target);
-                }
+                // Reset style
+                geoJsonLayerDesa.resetStyle(e.target);
             },
             click: (e) => {
                 highlightSelectedDesa(e.target, feature);
-                showDesaPopup(feature, e.target);
             }
         });
     }
@@ -524,13 +466,15 @@
         selectedDesaLayer = clickedLayer;
         selectedDesaFeature = feature;
 
-        geoJsonLayerDesa.eachLayer(function (layer) {
-            layer.setStyle(styleDesaDimmed);
-        });
-
-        clickedLayer.setStyle(styleDesaSelected);
+        // --- ALUR BARU: ZOOM SANGAT DEKAT ---
+        // Menggunakan maxZoom: 16 agar hanya desa yang diklik yang terlihat (tetangga hilang)
+        map.fitBounds(clickedLayer.getBounds(), { padding: 20, maxZoom: 16 });
+        
+        // Bersihkan marker TPS lama jika ada
         tpsMarkersLayer.clearLayers();
-        map.fitBounds(clickedLayer.getBounds(), { padding: [50, 50], maxZoom: 16 });
+
+        // Munculkan Popup Data
+        showDesaPopup(feature, clickedLayer);
     }
 
     function showDesaPopup(feature, layer) {
@@ -627,29 +571,17 @@
         });
     }
 
-    function goBackToKecamatan() {
-        document.getElementById('btn-back').style.display = 'none';
-        selectedDesaLayer = null;
-        selectedDesaFeature = null;
-        tpsMarkersLayer.clearLayers();
-
-        if (map.hasLayer(geoJsonLayerDesa)) map.removeLayer(geoJsonLayerDesa);
-        if (!map.hasLayer(geoJsonLayerKec)) map.addLayer(geoJsonLayerKec);
-
-        // --- PERBAIKAN SKALA: SAMAKAN DENGAN TAMPILAN AWAL (Padding 20, 20) ---
-        map.fitBounds(geoJsonLayerKec.getBounds(), { padding: [20, 20] });
-    }
-
     function resetMap() {
-        document.getElementById('btn-back').style.display = 'none';
+        // Reset state
         selectedDesaLayer = null;
         selectedDesaFeature = null;
         tpsMarkersLayer.clearLayers();
         
+        // Reset layers
         if (map.hasLayer(geoJsonLayerDesa)) map.removeLayer(geoJsonLayerDesa);
         if (!map.hasLayer(geoJsonLayerKec)) map.addLayer(geoJsonLayerKec);
         
-        // Reset ke tampilan awal yang pas
+        // Reset view ke tampilan awal (Start)
         map.fitBounds(geoJsonLayerKec.getBounds(), { padding: [20, 20] });
         map.closePopup();
         
@@ -666,7 +598,7 @@
             geoJsonLayerKec.addData(dataKec);
             rawDesaGeoJson = dataDesa; 
             
-            // --- TAMPILAN AWAL: Padding 20, 20 ---
+            // Tampilan Awal (Start)
             map.fitBounds(geoJsonLayerKec.getBounds(), { padding: [20, 20] });
             
             const loader = document.getElementById('loading-overlay');
