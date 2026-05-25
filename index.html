@@ -43,8 +43,7 @@
         .menu-group.open .toggle-arrow { transform: rotate(180deg); }
         .sub-menu { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-in-out; background: #fdfdfd; border-radius: 0 0 8px 8px; }
         .menu-group.open .sub-menu { max-height: 200px; }
-        .sub-item { display: flex; align-items: center; padding: 10px 15px 10px 50px; color: #666; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; text-decoration: none; border-left: 3px solid transparent; }
-        .sub-item i { margin-right: 10px; font-size: 0.85rem; width: 15px; text-align: center; }
+        .sub-item { display: block; padding: 10px 15px 10px 50px; color: #666; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; text-decoration: none; border-left: 3px solid transparent; }
         .sub-item:hover { color: #C8102E; background: #fff5f5; border-left-color: #C8102E; }
         .sub-item.active { color: #C8102E; font-weight: 600; border-left-color: #C8102E; }
 
@@ -115,7 +114,6 @@
         </div>
 
         <div class="sidebar-menu">
-            <!-- Menu Beranda -->
             <div id="menu-dashboard" class="menu-item active" onclick="showDashboard(this)">
                 <i class="fas fa-home"></i> Beranda
             </div>
@@ -124,21 +122,17 @@
             <!-- MENU REKAPITULASI DENGAN SUBMENU -->
             <div class="menu-group">
                 <div class="menu-item" onclick="toggleSubMenu(this)">
-                    <i class="fas fa-clipboard-list"></i> 
+                    <i class="fas fa-database"></i> 
                     <span>Rekapitulasi Data Pemilih</span>
                     <i class="fas fa-chevron-down toggle-arrow"></i>
                 </div>
                 <div class="sub-menu">
-                    <div class="sub-item" onclick="loadPage('tahapan.html', this, 'sub-tahapan')">
-                        <i class="fas fa-list-ol"></i> Tahapan
-                    </div>
-                    <div class="sub-item" onclick="loadPage('pdpb.html', this, 'sub-pdpb')">
-                        <i class="fas fa-user-check"></i> PDPB
-                    </div>
+                    <div class="sub-item" id="sub-tahapan" onclick="loadPage('tahapan.html', this, 'sub-tahapan')">Tahapan</div>
+                    <div class="sub-item" id="sub-pdpb" onclick="loadPage('pdpb.html', this, 'sub-pdpb')">PDPB</div>
                 </div>
             </div>
-
-            <!-- MENU PETA (MENU UTAMA, BUKAN SUBMENU) -->
+            
+            <!-- MENU PETA -->
             <div id="menu-peta" class="menu-item" onclick="loadPage('peta.html', this, 'menu-peta')">
                 <i class="fas fa-map-marked-alt"></i> 
                 <span>Peta Data Pemilih</span>
@@ -184,6 +178,17 @@
     </main>
 </div>
 
+<!-- ANTI-FLASH LOGIN SCRIPT -->
+<script>
+    // Cek otomatis sebelum render penuh, mencegah muncul login sesaat saat F5
+    if (sessionStorage.getItem('isAuthenticated') === 'true') {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('app-wrapper').style.display = 'flex';
+    }
+</script>
+
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script>
     // Toggle Password Mata
     document.getElementById('toggle-password').addEventListener('click', function() {
@@ -204,8 +209,11 @@
             const usersList = await response.json();
             const isAuthenticated = usersList.some(u => u.user === userInput && u.password === passInput);
             if (isAuthenticated) {
-                sessionStorage.setItem('isAuthenticated', 'true'); sessionStorage.setItem('currentUser', userInput);
-                sessionStorage.setItem('currentPage', 'dashboard'); sessionStorage.setItem('activeMenuId', 'menu-dashboard');
+                sessionStorage.setItem('isAuthenticated', 'true'); 
+                sessionStorage.setItem('currentUser', userInput);
+                // Saat login pertama, arahkan ke dashboard
+                sessionStorage.setItem('currentPage', 'dashboard'); 
+                sessionStorage.setItem('activeMenuId', 'menu-dashboard');
                 initializeApp();
             } else { errorMsg.style.display = 'block'; document.getElementById('password-input').value = ''; }
         } catch (error) { errorMsg.innerText = "Sistem login error!"; errorMsg.style.display = 'block'; }
@@ -215,8 +223,13 @@
     document.getElementById("user-input").addEventListener("keypress", function(event) { if (event.key === "Enter") { event.preventDefault(); document.getElementById('password-input').focus(); } });
 
     function logout() {
-        sessionStorage.clear(); document.getElementById('app-wrapper').style.display = 'none'; document.getElementById('login-screen').style.display = 'flex';
-        document.getElementById('user-input').value = ''; document.getElementById('password-input').value = ''; document.getElementById('error-msg').style.display = 'none'; document.getElementById('content-frame').src = ''; 
+        sessionStorage.clear(); 
+        document.getElementById('app-wrapper').style.display = 'none'; 
+        document.getElementById('login-screen').style.display = 'flex';
+        document.getElementById('user-input').value = ''; 
+        document.getElementById('password-input').value = ''; 
+        document.getElementById('error-msg').style.display = 'none'; 
+        document.getElementById('content-frame').src = ''; 
     }
 
     // Navigasi & Submenu
@@ -238,15 +251,16 @@
         document.querySelectorAll('.menu-item, .sub-item').forEach(el => el.classList.remove('active'));
         element.classList.add('active');
         
-        // Jika yang diklik adalah sub-item, aktifkan juga parent menu-nya
         const parentGroup = element.closest('.menu-group');
         if (parentGroup) {
             parentGroup.querySelector('.menu-item').classList.add('active');
-            parentGroup.classList.add('open'); // Pastikan submenu terbuka
+            parentGroup.classList.add('open');
         }
         
+        // PENTING: Simpan state agar F5 tidak hilang
         sessionStorage.setItem('currentPage', pageUrl); 
         sessionStorage.setItem('activeMenuId', menuId);
+
         if(window.innerWidth < 768) { toggleSidebar(); }
     }
 
@@ -255,25 +269,45 @@
         document.getElementById('content-frame').src = '';
         document.getElementById('dashboard-view').style.display = 'flex'; 
         document.getElementById('topbar-title').innerText = 'Beranda';
+        
         document.querySelectorAll('.menu-item, .sub-item').forEach(el => el.classList.remove('active')); 
         element.classList.add('active');
+        
+        // PENTING: Simpan state agar F5 tidak hilang
         sessionStorage.setItem('currentPage', 'dashboard'); 
         sessionStorage.setItem('activeMenuId', 'menu-dashboard');
+
         if(window.innerWidth < 768) { toggleSidebar(); }
     }
 
     function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebar-overlay').classList.toggle('open'); }
 
+    // FUNGSI INISIALISASI SAAT REFRESH
     function initializeApp() {
-        document.getElementById('login-screen').style.display = 'none'; document.getElementById('app-wrapper').style.display = 'flex';
-        let currentPage = sessionStorage.getItem('currentPage'); let activeMenuId = sessionStorage.getItem('activeMenuId');
+        document.getElementById('login-screen').style.display = 'none'; 
+        document.getElementById('app-wrapper').style.display = 'flex';
+
+        let currentPage = sessionStorage.getItem('currentPage'); 
+        let activeMenuId = sessionStorage.getItem('activeMenuId');
+
         if (currentPage && currentPage !== 'dashboard' && activeMenuId) {
             let element = document.getElementById(activeMenuId);
-            if(element) { loadPage(currentPage, element, activeMenuId); } else { showDashboard(document.getElementById('menu-dashboard')); }
-        } else { showDashboard(document.getElementById('menu-dashboard')); }
+            if(element) { 
+                loadPage(currentPage, element, activeMenuId); 
+            } else { 
+                showDashboard(document.getElementById('menu-dashboard')); 
+            }
+        } else { 
+            showDashboard(document.getElementById('menu-dashboard')); 
+        }
     }
 
-    window.onload = function() { if (sessionStorage.getItem('isAuthenticated') === 'true') { initializeApp(); } };
+    // CEK SESI SAAT PERTAMA KALI WEBSITE DIBUKA / DIREFRESH
+    window.onload = function() { 
+        if (sessionStorage.getItem('isAuthenticated') === 'true') { 
+            initializeApp(); 
+        } 
+    };
 </script>
 </body>
 </html>
