@@ -108,14 +108,15 @@
 
         /* CUSTOM TOOLTIP STYLE */
         .custom-tooltip {
-            background: rgba(255, 255, 255, 0.95);
-            border: 1px solid #C8102E;
-            color: #333;
+            background: #C8102E; /* Background Merah KPU */
+            color: #ffffff;
+            border: none;
             font-weight: 700;
             font-size: 12px;
-            padding: 4px 8px;
+            padding: 6px 10px;
             border-radius: 4px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            white-space: nowrap;
         }
         .leaflet-tooltip-top:before { border-top-color: #C8102E; }
 
@@ -126,20 +127,20 @@
             padding: 0;
             overflow: hidden;
         }
-        .leaflet-popup-content { margin: 0; min-width: 220px; }
+        .leaflet-popup-content { margin: 0; min-width: 240px; }
         
         .popup-header {
             background-color: #C8102E;
             color: #ffffff;
-            padding: 10px 15px;
+            padding: 12px 15px;
             font-weight: 700;
-            font-size: 1rem;
+            font-size: 1.1rem;
             text-align: center;
             margin: 0;
         }
         .popup-body { padding: 15px; }
         
-        .popup-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.9rem; border-bottom: 1px dotted #eee; padding-bottom: 2px; }
+        .popup-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.95rem; border-bottom: 1px dotted #eee; padding-bottom: 2px; }
         .popup-row:last-child { border-bottom: none; }
         .popup-label { color: #666; font-weight: 600; width: 40%; }
         .popup-val { font-weight: 600; color: #333; width: 60%; text-align: right;}
@@ -156,16 +157,16 @@
         /* STYLE UNTUK TOMBOL DI POPUP */
         .btn-popup-action {
             width: 100%;
-            background-color: transparent;
+            background-color: #ffffff;
             color: #C8102E;
             border: 2px solid #C8102E;
-            padding: 8px;
-            border-radius: 4px;
+            padding: 10px;
+            border-radius: 6px;
             font-weight: 700;
             cursor: pointer;
-            margin-top: 10px;
+            margin-top: 15px;
             transition: all 0.2s;
-            font-size: 0.9rem;
+            font-size: 1rem;
         }
         .btn-popup-action:hover {
             background-color: #C8102E;
@@ -198,12 +199,13 @@
             background-color: #C8102E;
             color: white;
             border: none;
-            padding: 8px;
-            border-radius: 4px;
-            font-weight: 600;
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: 700;
             cursor: pointer;
-            margin-top: 10px;
+            margin-top: 15px;
             transition: background 0.2s;
+            font-size: 1rem;
         }
         .btn-popup-tps:hover { background-color: #a50d24; }
         .btn-popup-tps:disabled { background-color: #ccc; cursor: not-allowed; }
@@ -252,10 +254,9 @@
     <div class="info-card">
         <small><i class="fas fa-info-circle"></i> <strong>Panduan:</strong></small><br>
         <ul style="margin-bottom: 0; padding-left: 20px; font-size: 0.8rem; margin-top: 5px; color: #555;">
-            <li>Hover wilayah untuk label nama.</li>
-            <li>Klik <strong>Kecamatan</strong> atau tombol di popup.</li>
-            <li>Klik <strong>Desa</strong> untuk memilih.</li>
-            <li>Gunakan tombol <strong>Kembali</strong> di atas peta.</li>
+            <li>Hover untuk melihat Label Data.</li>
+            <li>Klik wilayah untuk melihat Data.</li>
+            <li>Tekan tombol di Popup untuk aksi.</li>
         </ul>
     </div>
 </aside>
@@ -397,9 +398,12 @@
 
     function onEachFeatureKecamatan(feature, layer) {
         const name = getFeatureName(feature, 'kecamatan');
-        layer.bindTooltip(name, {
+        
+        // TOOLTIP OTOMATIS: "DATA KECAMATAN: [Nama]"
+        layer.bindTooltip("DATA KECAMATAN: " + name, {
             sticky: true, direction: 'top', className: 'custom-tooltip'
         });
+
         layer.on({
             mouseover: (e) => { 
                 e.target.setStyle({ weight: 3, color: '#ffffff', fillOpacity: 0.7 }); 
@@ -407,8 +411,7 @@
             mouseout: (e) => { geoJsonLayerKec.resetStyle(e.target); },
             click: (e) => {
                 showKecamatanPopup(feature, layer);
-                // Drill down otomatis saat klik peta
-                drillDownToDesa(feature, layer);
+                // DIHAPUS: drillDownToDesa otomatis. User harus klik tombol.
             }
         });
     }
@@ -420,8 +423,6 @@
         const dataInKec = activeData.filter(row => String(row['kode kec']).trim() === kecId);
         const headerTitle = `DATA KECAMATAN`;
 
-        // --- PERBAIKAN: Ganti teks jadi TOMBOL ---
-        // Kita gunakan fungsi triggerDrillDownFromPopup()
         const actionBtn = `<button class="btn-popup-action" onclick="triggerDrillDownFromPopup()">
                                 <i class="fas fa-search-location"></i> MASUK KE PETA DESA
                             </button>`;
@@ -456,13 +457,10 @@
             </div>
         `;
         
-        // Simpan konteks sekarang agar tombol bisa mengaksesnya
         activeKecContext = { feature, layer };
-        
         layer.bindPopup(content).openPopup();
     }
 
-    // Fungsi Global untuk tombol di Popup
     window.triggerDrillDownFromPopup = function() {
         if (activeKecContext) {
             drillDownToDesa(activeKecContext.feature, activeKecContext.layer);
@@ -477,7 +475,6 @@
         selectedDesaFeature = null;
 
         map.removeLayer(geoJsonLayerKec);
-        // PERBAIKAN TYPO: rawDesaGeoJSON -> rawDesaGeoJson
         const desaFeatures = rawDesaGeoJson.features.filter(f => String(f.properties.kec_id).trim() === kecId);
         
         if (desaFeatures.length === 0) {
@@ -492,14 +489,15 @@
         map.fitBounds(geoJsonLayerDesa.getBounds(), { padding: [50, 50] });
         
         tpsMarkersLayer.clearLayers();
-        
         document.getElementById('btn-back').style.display = 'block';
     }
 
     function onEachFeatureDesa(feature, layer) {
         const name = getFeatureName(feature, 'desa');
-        layer.bindTooltip(name, { 
-            sticky: true, direction: 'top', className: 'custom-tooltip', opacity: 0.9
+        
+        // TOOLTIP OTOMATIS: "DATA DESA: [Nama]"
+        layer.bindTooltip("DATA DESA: " + name, { 
+            sticky: true, direction: 'top', className: 'custom-tooltip'
         });
 
         layer.on({
