@@ -486,9 +486,6 @@
         
         tpsMarkersLayer.clearLayers();
         document.getElementById('btn-back').style.display = 'block';
-
-        // --- DIHAPUS: POPUP OTOMATIS SAAT MASUK WILAYAH DESA ---
-        // User meminta popup ini tidak muncul. User harus klik desa dulu.
     }
 
     function onEachFeatureDesa(feature, layer) {
@@ -564,7 +561,6 @@
         const totalJumlah = totalLaki + totalPerempuan;
         const uniqueTPS = dataInDesa.length;
 
-        // Tombol Lihat TPS
         const btnHtml = isTPSShown 
             ? `<div class="text-center mt-2"><small class="text-success fw-bold"><i class="fas fa-check-circle"></i> Titik TPS Ditampilkan</small></div>`
             : `<button class="btn-popup-tps" onclick="triggerShowTPS()"><i class="fas fa-map-marker-alt"></i> LIHAT TITIK TPS</button>`;
@@ -640,7 +636,8 @@
         if (map.hasLayer(geoJsonLayerDesa)) map.removeLayer(geoJsonLayerDesa);
         if (!map.hasLayer(geoJsonLayerKec)) map.addLayer(geoJsonLayerKec);
 
-        map.fitBounds(geoJsonLayerKec.getBounds(), { padding: [50, 50] });
+        // --- PERBAIKAN SKALA: SAMAKAN DENGAN TAMPILAN AWAL (Padding 20, 20) ---
+        map.fitBounds(geoJsonLayerKec.getBounds(), { padding: [20, 20] });
     }
 
     function resetMap() {
@@ -652,6 +649,7 @@
         if (map.hasLayer(geoJsonLayerDesa)) map.removeLayer(geoJsonLayerDesa);
         if (!map.hasLayer(geoJsonLayerKec)) map.addLayer(geoJsonLayerKec);
         
+        // Reset ke tampilan awal yang pas
         map.fitBounds(geoJsonLayerKec.getBounds(), { padding: [20, 20] });
         map.closePopup();
         
@@ -668,6 +666,7 @@
             geoJsonLayerKec.addData(dataKec);
             rawDesaGeoJson = dataDesa; 
             
+            // --- TAMPILAN AWAL: Padding 20, 20 ---
             map.fitBounds(geoJsonLayerKec.getBounds(), { padding: [20, 20] });
             
             const loader = document.getElementById('loading-overlay');
