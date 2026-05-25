@@ -35,8 +35,6 @@
 
         table { font-size: 13px; }
         .dataTables_wrapper .dataTables_filter input { border-radius: 8px; border: 1px solid #ccc; padding: 5px 10px; }
-        
-        /* Menyembunyikan info jumlah data yang bertumpuk */
         .dataTables_wrapper .dataTables_info { padding-top: 10px; }
         .dataTables_scrollBody { border-top: 1px solid #ddd !important; }
     </style>
@@ -64,7 +62,7 @@
         </div>
     </div>
 
-    <!-- TABLE SECTION (TINGGI SESUAI SISA LAYAR, SCROLL INTERNAL) -->
+    <!-- TABLE SECTION -->
     <div class="table-section">
         <ul class="nav nav-tabs mb-2" id="myTab" role="tablist">
             <li class="nav-item"><button class="nav-link active" id="kec-tab-btn" onclick="switchTab('kec')" type="button">Rekap Kecamatan</button></li>
@@ -121,16 +119,15 @@
         let tahapanSet = new Set();
         rawData.forEach(row => { if(row['tahapan']) tahapanSet.add(row['tahapan']); });
 
-        // Urutan Filter Kustom
         const customOrder = ['PEMILU 2019', 'PILKADA 2020', 'PEMILU 2024', 'PILKADA 2024'];
         let select = document.getElementById('filter-tahapan');
-        select.innerHTML = ''; // Hilangkan "Semua Tahapan"
+        select.innerHTML = ''; 
         
         customOrder.forEach(t => {
-            if (tahapanSet.has(t)) { // Hanya tambah jika ada datanya
+            if (tahapanSet.has(t)) {
                 let opt = document.createElement('option');
                 opt.value = t; opt.text = t;
-                if (t === 'PEMILU 2024') opt.selected = true; // Default
+                if (t === 'PEMILU 2024') opt.selected = true;
                 select.appendChild(opt);
             }
         });
@@ -153,7 +150,7 @@
             totalLk += getNum(row['laki-laki']);
             totalPr += getNum(row['perempuan']);
             totalAll += getNum(row['jumlah']);
-            totalTps++; // 1 Baris = 1 TPS
+            totalTps++; 
         });
 
         document.getElementById('sum-kec').innerText = formatAngka(uniqueKec.size);
@@ -171,14 +168,15 @@
         let heads = [], dataRows = [], foots = [];
 
         if(type === 'kec') {
-            heads = ['No', 'Kode Kec', 'Kecamatan', 'Jml Desa', 'Jml TPS', 'Laki-Laki', 'Perempuan', 'Jumlah'];
+            // HAPUS KODE KEC
+            heads = ['No', 'Kecamatan', 'Jml Desa', 'Jml TPS', 'Laki-Laki', 'Perempuan', 'Jumlah'];
             let grouped = {};
 
             filteredData.forEach(row => {
                 let key = row['kode kec']; if(!key) return;
-                if(!grouped[key]) grouped[key] = { 'kec': row['kecamatan'], 'kode': key, 'desa': new Set(), 'tpsCount': 0, 'lk': 0, 'pr': 0, 'jml': 0 };
+                if(!grouped[key]) grouped[key] = { 'kec': row['kecamatan'], 'desa': new Set(), 'tpsCount': 0, 'lk': 0, 'pr': 0, 'jml': 0 };
                 if(row['kode desa']) grouped[key].desa.add(row['kode desa']);
-                grouped[key].tpsCount++; // Tambah hitungan TPS
+                grouped[key].tpsCount++; 
                 grouped[key].lk += getNum(row['laki-laki']);
                 grouped[key].pr += getNum(row['perempuan']);
                 grouped[key].jml += getNum(row['jumlah']);
@@ -186,19 +184,20 @@
 
             let no = 1, totLk=0, totPr=0, totJml=0, totTps=0;
             Object.values(grouped).forEach(val => {
-                dataRows.push([no++, val.kode, val.kec, val.desa.size, formatAngka(val.tpsCount), formatAngka(val.lk), formatAngka(val.pr), formatAngka(val.jml)]);
+                dataRows.push([no++, val.kec, val.desa.size, formatAngka(val.tpsCount), formatAngka(val.lk), formatAngka(val.pr), formatAngka(val.jml)]);
                 totLk += val.lk; totPr += val.pr; totJml += val.jml; totTps += val.tpsCount;
             });
-            foots = ['', '', 'TOTAL', '', formatAngka(totTps), formatAngka(totLk), formatAngka(totPr), formatAngka(totJml)];
+            foots = ['', 'TOTAL', '', formatAngka(totTps), formatAngka(totLk), formatAngka(totPr), formatAngka(totJml)];
 
         } else if(type === 'desa') {
-            heads = ['No', 'Kode Desa', 'Desa', 'Kecamatan', 'Jml TPS', 'Laki-Laki', 'Perempuan', 'Jumlah'];
+            // HAPUS KODE DESA
+            heads = ['No', 'Desa', 'Kecamatan', 'Jml TPS', 'Laki-Laki', 'Perempuan', 'Jumlah'];
             let grouped = {};
 
             filteredData.forEach(row => {
                 let key = row['kode desa']; if(!key) return;
-                if(!grouped[key]) grouped[key] = { 'desa': row['desa'], 'kec': row['kecamatan'], 'kode': key, 'tpsCount': 0, 'lk': 0, 'pr': 0, 'jml': 0 };
-                grouped[key].tpsCount++; // Tambah hitungan TPS
+                if(!grouped[key]) grouped[key] = { 'desa': row['desa'], 'kec': row['kecamatan'], 'tpsCount': 0, 'lk': 0, 'pr': 0, 'jml': 0 };
+                grouped[key].tpsCount++; 
                 grouped[key].lk += getNum(row['laki-laki']);
                 grouped[key].pr += getNum(row['perempuan']);
                 grouped[key].jml += getNum(row['jumlah']);
@@ -206,10 +205,10 @@
 
             let no = 1, totLk=0, totPr=0, totJml=0, totTps=0;
             Object.values(grouped).forEach(val => {
-                dataRows.push([no++, val.kode, val.desa, val.kec, formatAngka(val.tpsCount), formatAngka(val.lk), formatAngka(val.pr), formatAngka(val.jml)]);
+                dataRows.push([no++, val.desa, val.kec, formatAngka(val.tpsCount), formatAngka(val.lk), formatAngka(val.pr), formatAngka(val.jml)]);
                 totLk += val.lk; totPr += val.pr; totJml += val.jml; totTps += val.tpsCount;
             });
-            foots = ['', '', 'TOTAL', '', formatAngka(totTps), formatAngka(totLk), formatAngka(totPr), formatAngka(totJml)];
+            foots = ['', 'TOTAL', '', formatAngka(totTps), formatAngka(totLk), formatAngka(totPr), formatAngka(totJml)];
 
         } else if(type === 'tps') {
             heads = ['No', 'Kecamatan', 'Desa', 'TPS', 'Laki-Laki', 'Perempuan', 'Jumlah'];
@@ -225,16 +224,15 @@
         $('#table-head').html('<tr>' + heads.map(h => '<th>'+h+'</th>').join('') + '</tr>');
         $('#table-foot').html('<tr>' + foots.map(f => '<th>'+f+'</th>').join('') + '</tr>');
         
-        // DATATABLES DENGAN TINGGI ADAPTIF (AGAR TABEL TIDAK MENDORONG IFRAME KE BAWAH)
         dataTableInstance = $('#main-table').DataTable({
             data: dataRows,
             destroy: true,
             language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/id.json' },
             ordering: true,
-            pageLength: 999, // Tampilkan semua agar scroll mulus
-            scrollY: 'calc(100vh - 380px)', // Sesuaikan tinggi tabel otomatis
+            pageLength: 999, 
+            scrollY: 'calc(100vh - 380px)', 
             scrollCollapse: true,
-            paging: false, // Paging dimatikan, pakai scroll internal
+            paging: false, 
             order: [[0, 'asc']]
         });
 
