@@ -20,6 +20,10 @@
 
 <div class="card">
     <h4 style="color: #C8102E; font-weight: bold; margin-bottom: 20px;">Rekapitulasi Data Pemilih - Tahapan</h4>
+    
+    <!-- Pesan Error jika gagal baca data -->
+    <div id="error-msg" style="display:none; color:red; margin-bottom:15px;"></div>
+
     <table id="tabel-tahapan" class="table table-striped table-bordered" style="width:100%">
         <thead>
             <tr>
@@ -42,7 +46,7 @@
 
 <script>
     // GANTI DENGAN LINK CSV SHEET TAHAPAN ANDA
-    const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSpHbswfamDpkWReHbBBYYWsc5Jq5KXz2SkwYwZarW7M-JlEB3DcUHagO0sVLAFCXU__bCk2V7qoJEp/pub?gid=0&single=true&output=csv';
+    const CSV_URL = 'MASUKKAN_LINK_CSV_TAHAPAN_DISINI';
 
     $(document).ready(function() {
         $('#tabel-tahapan').DataTable({
@@ -50,7 +54,21 @@
                 url: CSV_URL,
                 dataType: 'text',
                 dataSrc: function(csvText) {
-                    let parsed = Papa.parse(csvText, { header: true, skipEmptyLines: true });
+                    let parsed = Papa.parse(csvText, { 
+                        header: true, 
+                        skipEmptyLines: true 
+                    });
+                    
+                    // --- FITUR DEBUGGING ---
+                    // Buka Inspect Element (F12) > tab Console untuk melihat hasil ini
+                    console.log("Data yang berhasil dibaca dari Google Sheets:", parsed.data);
+                    console.log("Error saat parsing (jika ada):", parsed.errors);
+                    console.log("Nama Kolom yang terdeteksi oleh sistem:", parsed.meta.fields);
+
+                    if(parsed.errors.length > 0) {
+                        $('#error-msg').text('Gagal membaca data. Buka Console (F12) untuk detail.').show();
+                    }
+
                     return parsed.data;
                 }
             },
