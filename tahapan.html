@@ -38,14 +38,14 @@
         .nav-tabs .nav-link:hover:not(.active) { color: #333; }
         .search-box input { border: 1px solid #ddd; border-radius: 6px; padding: 5px 12px; font-size: 13px; width: 200px; }
 
-        /* TABEL CAMPURAN CSS MURNI (TANPA SCROLL DATATABLES) */
+        /* TABEL MURNI CSS */
         .table-container { flex: 1; min-height: 0; overflow-y: auto; padding: 0 20px 20px 20px; }
         table { width: 100% !important; border-collapse: collapse; }
         
         thead th { 
             position: sticky; top: 0; z-index: 10; 
             background-color: #f8f9fa; color: #555; font-weight: 700; font-size: 12px; text-transform: uppercase;
-            padding: 12px 10px; border-bottom: 2px solid #C8102E; white-space: nowrap; text-align: left;
+            padding: 12px 10px; border-bottom: 2px solid #C8102E; white-space: nowrap;
         }
         
         tbody td { 
@@ -59,14 +59,12 @@
             padding: 12px 10px; border-top: 2px solid #C8102E; white-space: nowrap;
         }
 
-        /* Penyesuaian Kolom */
+        /* PENGELOMPOKAN RATA KANAN/KIRI */
         .col-no { width: 40px; text-align: center !important; }
         .col-num { text-align: right !important; font-weight: 600; font-variant-numeric: tabular-nums; }
         .col-name { text-align: left !important; }
 
-        /* Hilangkan elemen bawaan DataTables yang mengganggu */
-        .dataTables_length, .dataTables_info, .dataTables_paginate { display: none !important; }
-        .dataTables_filter { display: none !important; } /* Kita pakai search box custom */
+        .dataTables_length, .dataTables_info, .dataTables_paginate, .dataTables_filter { display: none !important; }
 
         @media (max-width: 768px) {
             .cards-row { grid-template-columns: repeat(3, 1fr); }
@@ -199,12 +197,15 @@
     function switchTab(type) {
         currentTab = type;
         if(dataTableInstance) { dataTableInstance.destroy(); dataTableInstance = null; }
-        $('#custom-search').val(''); // Reset search
+        $('#custom-search').val('');
 
         let heads = [], dataRows = [], foots = [];
+        // Daftar index kolom yang isinya TEKS (rata kiri). Selain itu otomatis RATA KANAN.
+        let textColumns = []; 
 
         if(type === 'kec') {
             heads = ['No', 'Kecamatan', 'Jml Desa', 'Jml TPS', 'Laki-Laki', 'Perempuan', 'Jumlah'];
+            textColumns = [1]; // Hanya kolom index 1 (Kecamatan) yang rata kiri
             let grouped = {};
             filteredData.forEach(row => {
                 let key = row['kode kec']; if(!key) return;
@@ -224,6 +225,7 @@
 
         } else if(type === 'desa') {
             heads = ['No', 'Kecamatan', 'Desa', 'Jml TPS', 'Laki-Laki', 'Perempuan', 'Jumlah'];
+            textColumns = [1, 2]; // Kolom Kecamatan & Desa rata kiri
             let grouped = {};
             filteredData.forEach(row => {
                 let key = row['kode desa']; if(!key) return;
@@ -242,6 +244,7 @@
 
         } else if(type === 'tps') {
             heads = ['No', 'Kecamatan', 'Desa', 'TPS', 'Laki-Laki', 'Perempuan', 'Jumlah'];
+            textColumns = [1, 2, 3]; // Kolom Kecamatan, Desa, & TPS rata kiri
             let no = 1, totLk=0, totPr=0, totJml=0;
             filteredData.forEach(row => {
                 dataRows.push([no++, row['kecamatan'], row['desa'], row['tps'], formatAngka(getNum(row['laki-laki'])), formatAngka(getNum(row['perempuan'])), formatAngka(getNum(row['jumlah']))]);
@@ -250,16 +253,21 @@
             foots = ['', '', '', 'TOTAL', formatAngka(totLk), formatAngka(totPr), formatAngka(totJml)];
         }
 
-        // Render HTML MURNI (Bukan DOM DataTables) - INI KUNCI RAPIHNYA
-        let headHtml = '<tr>' + heads.map(h => `<th>${h}</th>`).join('') + '</tr>';
+        // Render HTML dengan logika RATA KANAN otomatis
+        let headHtml = '<tr>' + heads.map((h, idx) => {
+            let cls = textColumns.includes(idx) ? 'col-name' : (idx === 0 ? 'col-no' : 'col-num');
+            return `<th class="${cls}">${h}</th>`;
+        }).join('') + '</tr>';
+
         let bodyHtml = dataRows.map(row => {
             return '<tr>' + row.map((cell, idx) => {
-                let cls = idx === 0 ? 'col-no' : (idx >= 2 ? 'col-num' : 'col-name');
+                let cls = textColumns.includes(idx) ? 'col-name' : (idx === 0 ? 'col-no' : 'col-num');
                 return `<td class="${cls}">${cell}</td>`;
             }).join('') + '</tr>';
         }).join('');
+
         let footHtml = '<tr>' + foots.map((f, idx) => {
-            let cls = idx === 0 ? 'col-no' : (idx >= 2 ? 'col-num' : 'col-name');
+            let cls = textColumns.includes(idx) ? 'col-name' : (idx === 0 ? 'col-no' : 'col-num');
             return `<th class="${cls}">${f}</th>`;
         }).join('') + '</tr>';
 
@@ -267,11 +275,10 @@
         $('#table-body').html(bodyHtml);
         $('#table-foot').html(footHtml);
         
-        // Inisialisasi DataTable HANYA untuk fitur Search, tanpa mengubah layout/scroll
         dataTableInstance = $('#main-table').DataTable({
             destroy: true,
             paging: false,
-            scrollY: false, // SANGAT PENTING: False agar tabel utuh tidak dipecah
+            scrollY: false,
             scrollX: false,
             ordering: true,
             order: [[0, 'asc']],
@@ -279,12 +286,10 @@
             language: { search: "", infoEmpty: "", info: "" }
         });
 
-        // Override search box ke input custom kita
         $('#custom-search').off('keyup').on('keyup', function() {
             dataTableInstance.search(this.value).draw();
         });
 
-        // Set active tab
         document.querySelectorAll('.nav-link').forEach(btn => btn.classList.remove('active'));
         document.getElementById(type+'-tab-btn').classList.add('active');
     }
