@@ -94,7 +94,6 @@
             border-radius: 4px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.3);
             white-space: nowrap;
-            z-index: 9999;
         }
         .leaflet-tooltip-top:before { border-top-color: #C8102E; }
 
@@ -104,7 +103,6 @@
             box-shadow: 0 5px 20px rgba(0,0,0,0.2);
             padding: 0;
             overflow: hidden;
-            z-index: 1001; /* Pastikan popup di atas map */
         }
         .leaflet-popup-content { margin: 0; min-width: 240px; }
         
@@ -117,7 +115,7 @@
             text-align: center;
             margin: 0;
         }
-        .popup-body { padding: 15px; position: relative; z-index: 1002; }
+        .popup-body { padding: 15px; }
         
         .popup-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.95rem; border-bottom: 1px dotted #eee; padding-bottom: 2px; }
         .popup-row:last-child { border-bottom: none; }
@@ -146,8 +144,6 @@
             margin-top: 15px;
             transition: all 0.2s;
             font-size: 1rem;
-            position: relative; z-index: 10000; /* PENTING: Z-Index Sangat Tinggi */
-            pointer-events: auto !important; /* PENTING: Paksa bisa diklik */
         }
         .btn-popup-action:hover {
             background-color: #C8102E;
@@ -187,9 +183,6 @@
             margin-top: 15px;
             transition: background 0.2s;
             font-size: 1rem;
-            position: relative;
-            z-index: 10000; /* PENTING */
-            pointer-events: auto !important; /* PENTING */
         }
         .btn-popup-tps:hover { background-color: #a50d24; }
         .btn-popup-tps:disabled { background-color: #ccc; cursor: not-allowed; }
@@ -239,7 +232,7 @@
         <ul style="margin-bottom: 0; padding-left: 20px; font-size: 0.8rem; margin-top: 5px; color: #555;">
             <li>Hover untuk melihat Label Data.</li>
             <li>Klik wilayah untuk melihat Data.</li>
-            <li>Tekan tombol di Popup untuk Zoom & Lihat TPS.</li>
+            <li>Klik tombol di Popup untuk Zoom & Lihat TPS.</li>
         </ul>
     </div>
 </aside>
@@ -467,7 +460,7 @@
                 geoJsonLayerDesa.resetStyle(e.target);
             },
             click: (e) => {
-                // Pastikan layer diangkat ke paling depan
+                // Pastikan layer diangkat ke paling depan agar klik terbaca
                 e.target.bringToFront();
                 highlightSelectedDesa(e.target, feature);
             }
@@ -486,8 +479,6 @@
 
         // Munculkan Popup Data
         showDesaPopup(feature, clickedLayer);
-
-        // JANGAN ZOOM DI SINI (Sesuai alur: Zoom dilakukan saat klik tombol TPS)
     }
 
     function showDesaPopup(feature, layer) {
@@ -498,8 +489,6 @@
 
         const kecNameFromData = dataInDesa.length > 0 ? dataInDesa[0].kecamatan : "-";
         const headerTitle = `DATA DESA`;
-
-        const isTPSShown = tpsMarkersLayer.getLayers().length > 0 && selectedDesaLayer === layer;
 
         if (dataInDesa.length === 0) {
             const content = `
@@ -518,10 +507,12 @@
         const totalJumlah = totalLaki + totalPerempuan;
         const uniqueTPS = dataInDesa.length;
 
-        // TOMBOL DENGAN ID KHUSUS
-        const btnHtml = isTPSShown 
-            ? `<div id="btn-show-tps-action" class="text-center mt-2 text-success fw-bold" style="position:relative; z-index:10000; pointer-events:auto;"><i class="fas fa-check-circle"></i> Titik TPS Ditampilkan</div>`
-            : `<button id="btn-show-tps-action" class="btn-popup-tps" onclick="triggerShowTPS(event)"><i class="fas fa-map-marker-alt"></i> LIHAT TITIK TPS</button>`;
+        // Tombol dengan ID unik untuk manipulasi DOM nanti
+        const btnHtml = `
+            <button id="btn-show-tps-action" class="btn-popup-tps" onclick="triggerShowTPS()">
+                <i class="fas fa-map-marker-alt"></i> LIHAT TITIK TPS
+            </button>
+        `;
 
         const content = `
             <div class="popup-header">${headerTitle}</div>
@@ -538,26 +529,28 @@
         layer.bindPopup(content).openPopup();
     }
 
-    // --- PERBAIKAN UTAMA: STOP PROPAGATION & Z-INDEX ---
-    window.triggerShowTPS = function(e) {
-        if(e) e.stopPropagation(); // Mencegah klik bocor ke peta (pan/drag)
-        
+    // --- PERBAIKAN UTAMA: FUNGSI TRIGGER TPS ---
+    window.triggerShowTPS = function() {
         if (selectedDesaLayer && selectedDesaFeature) {
-            // 1. Zoom In sesuai alur
+            // 1. Aktifkan Zoom ke peta desa tersebut saja (Max Zoom 16 agar tetangga hanya desa itu)
             map.fitBounds(selectedDesaLayer.getBounds(), { padding: 20, maxZoom: 16 });
             
             // 2. Munculkan Titik TPS
             showTPSPoints(selectedDesaFeature);
             
-            // 3. Update Tampilan Tombol
-            const btn = document.getElementById('btn-show-tps-action');
-            if (btn) {
-                btn.innerHTML = `<i class="fas fa-check-circle"></i> Titik TPS Ditampilkan`;
-                btn.className = "text-center mt-2 text-success fw-bold";
-                btn.style.position = "relative";
-                btn.style.zIndex = "10000";
-                btn.style.pointerEvents = "auto";
-                btn.onclick = null; // Matikan fungsi klik setelah dipencet
+            // 3. Update Tampilan Tombol TANPA MENGHAPUS POPUP (Mencegah Tombol Hilang/Reset)
+            const popup = selectedDesaLayer.getPopup();
+            if (popup) {
+                const btn = popup.getElement().querySelector('#btn-show-tps-action');
+                if (btn) {
+                    // Ubah tampilan tombol menjadi teks status (bukan tombol aktif lagi)
+                    btn.innerHTML = `<i class="fas fa-check-circle"></i> Titik TPS Ditampilkan`;
+                    btn.className = "btn-popup-tps";
+                    btn.style.backgroundColor = "#28a745"; // Hijau
+                    btn.style.borderColor = "#28a745";
+                    // Hilangkan event onclick agar tombol tidak bisa diklik dua kali
+                    btn.removeAttribute('onclick');
+                }
             }
         }
     }
@@ -608,6 +601,7 @@
         if (map.hasLayer(geoJsonLayerDesa)) map.removeLayer(geoJsonLayerDesa);
         if (!map.hasLayer(geoJsonLayerKec)) map.addLayer(geoJsonLayerKec);
         
+        // Reset ke tampilan awal
         map.fitBounds(geoJsonLayerKec.getBounds(), { padding: [20, 20] });
         map.closePopup();
         
@@ -677,7 +671,7 @@
                 const tahapanSet = new Set(currentCsvData.map(row => row.tahapan).filter(t => t));
                 const tahapanList = Array.from(tahapanSet).sort();
 
-                tahapanSelect.innerHTML = '<option value="">-- Pilih Tahapan --</option>';
+                tahapanSelect.innerHTML = '<option value="">-- Pilih Tahapan Dulu --</option>';
                 let foundDefault = false;
                 
                 tahapanList.forEach(t => {
@@ -715,7 +709,7 @@
         });
 
         if(selectedDesaLayer) {
-            // Refresh popup jika ada desa yang terpilih
+            // Jika ada desa yang dipilih sebelum ganti filter, refresh popup-nya
             showDesaPopup(selectedDesaFeature, selectedDesaLayer);
         }
     }
