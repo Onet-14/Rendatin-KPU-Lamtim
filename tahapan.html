@@ -5,110 +5,109 @@
     <title>Data Tahapan</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
-        html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; background-color: #f4f6f9; font-family: 'Segoe UI', sans-serif; font-size: 13px; }
-        
-        /* LAYOUT UTAMA FLEXBOX */
-        .page-container { display: flex; flex-direction: column; height: 100vh; padding: 15px 20px; }
+        /* LAYOUT UTAMA FLEXBOX (ANTI TERPOTONG) */
+        html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; background-color: #f0f2f5; font-family: 'Segoe UI', sans-serif; font-size: 14px; color: #333; }
+        .page-container { display: flex; flex-direction: column; height: 100vh; padding: 20px; gap: 15px; }
         .top-section { flex-shrink: 0; }
-        .table-section { flex-grow: 1; min-height: 0; display: flex; flex-direction: column; background: #ffffff; border-radius: 12px; padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.07); margin-top: 15px; overflow: hidden; /* Penting */ }
         
-        h4 { color: #C8102E; font-weight: bold; margin: 0; }
-        .filter-card { background: #ffffff; border-radius: 10px; padding: 12px 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 12px; margin-top: 12px; }
-        .filter-card label { font-weight: 700; color: #333; white-space: nowrap; font-size: 13px; }
-        .filter-card select { border-radius: 8px; border: 1px solid #ccc; padding: 6px 10px; font-weight: 500; font-size: 13px; }
+        /* HEADER & FILTER */
+        .header-row { display: flex; justify-content: space-between; align-items: center; }
+        h4 { color: #C8102E; font-weight: 800; margin: 0; font-size: 1.3rem; }
+        .filter-group { display: flex; align-items: center; gap: 10px; background: #fff; padding: 8px 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .filter-group label { font-weight: 700; color: #555; font-size: 13px; }
+        .filter-group select { border: 1px solid #ddd; border-radius: 6px; padding: 5px 10px; font-weight: 600; font-size: 13px; color: #C8102E; cursor: pointer; }
 
-        .summary-card { background: #ffffff; border-radius: 10px; padding: 12px 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border-left: 4px solid #C8102E; display: flex; align-items: center; justify-content: space-between; }
-        .summary-card .card-icon { font-size: 1.8rem; color: #C8102E; opacity: 0.8; }
-        .summary-card .card-value { font-size: 1.3rem; font-weight: 800; color: #333; }
-        .summary-card .card-label { font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
+        /* SUMMARY CARDS */
+        .cards-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
+        .stat-card { background: #fff; border-radius: 10px; padding: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border-left: 4px solid #C8102E; }
+        .stat-card.blue { border-left-color: #4da6ff; }
+        .stat-card.pink { border-left-color: #ff66b2; }
+        .stat-info .val { font-size: 1.4rem; font-weight: 800; line-height: 1.2; }
+        .stat-info .lbl { font-size: 0.7rem; color: #888; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+        .stat-icon { font-size: 1.8rem; color: #ddd; }
+
+        /* TABLE SECTION */
+        .table-section { flex-grow: 1; min-height: 0; background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); display: flex; flex-direction: column; overflow: hidden; }
         
-        .nav-tabs .nav-link { color: #555; font-weight: 600; border: none; border-bottom: 3px solid transparent; padding: 8px 15px; font-size: 13px; }
-        .nav-tabs .nav-link.active { color: #C8102E; border-bottom: 3px solid #C8102E; background: transparent; }
-        .nav-tabs .nav-link:hover { border-color: #C8102E; color: #C8102E; }
+        /* TABS & SEARCH */
+        .tab-search-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px 0 20px; }
+        .nav-tabs { border-bottom: 2px solid #eee; }
+        .nav-tabs .nav-link { border: none; color: #888; font-weight: 700; font-size: 13px; padding: 8px 15px; border-bottom: 3px solid transparent; transition: 0.2s; }
+        .nav-tabs .nav-link.active { color: #C8102E; border-bottom-color: #C8102E; background: transparent; }
+        .nav-tabs .nav-link:hover:not(.active) { color: #333; }
+        .search-box input { border: 1px solid #ddd; border-radius: 6px; padding: 5px 12px; font-size: 13px; width: 200px; }
 
-        /* 
-           BAGIAN INI KUNCI FIXNYA: 
-           Kita pakai container biasa dengan overflow-y auto, dan CSS Sticky di thead/tfoot.
-           Tidak pakai scrollY dari DataTables! 
-        */
-        .table-container {
-            flex: 1;
-            min-height: 0;
-            overflow-y: auto; 
-            border-top: 1px solid #dee2e6;
-            border-bottom: 1px solid #dee2e6;
-        }
-
-        table { font-size: 13px; width: 100% !important; border-collapse: collapse !important; }
-        table th, table td { 
-            padding: 8px 10px; 
-            white-space: nowrap; 
-            vertical-align: middle;
-            border: 1px solid #dee2e6; /* Garis pembatas jelas */
-        }
+        /* TABEL CAMPURAN CSS MURNI (TANPA SCROLL DATATABLES) */
+        .table-container { flex: 1; min-height: 0; overflow-y: auto; padding: 0 20px 20px 20px; }
+        table { width: 100% !important; border-collapse: collapse; }
         
-        /* Sticky Header & Footer */
         thead th { 
             position: sticky; top: 0; z-index: 10; 
-            background-color: #f8f9fa; /* Warna latar harus solid agar tidak tembus */
-            border-bottom: 2px solid #C8102E !important;
+            background-color: #f8f9fa; color: #555; font-weight: 700; font-size: 12px; text-transform: uppercase;
+            padding: 12px 10px; border-bottom: 2px solid #C8102E; white-space: nowrap; text-align: left;
         }
+        
+        tbody td { 
+            padding: 10px; border-bottom: 1px solid #eee; font-size: 13px; white-space: nowrap; 
+        }
+        tbody tr:hover { background-color: #fdf2f2; }
+
         tfoot th { 
             position: sticky; bottom: 0; z-index: 10; 
-            background-color: #f8f9fa; /* Warna latar harus solid */
-            border-top: 2px solid #C8102E !important;
-            font-weight: 800;
+            background-color: #f8f9fa; color: #333; font-weight: 800; font-size: 13px;
+            padding: 12px 10px; border-top: 2px solid #C8102E; white-space: nowrap;
         }
 
-        /* Rata kanan untuk angka */
-        .text-end { text-align: right !important; }
-        
-        /* Sembunyikan elemen DataTables yang tidak perlu */
-        .dataTables_length, .dataTables_paginate { display: none !important; }
-        .dataTables_filter { margin-bottom: 10px; }
-        .dataTables_filter input { border-radius: 8px; border: 1px solid #ccc; padding: 5px 10px; }
+        /* Penyesuaian Kolom */
+        .col-no { width: 40px; text-align: center !important; }
+        .col-num { text-align: right !important; font-weight: 600; font-variant-numeric: tabular-nums; }
+        .col-name { text-align: left !important; }
+
+        /* Hilangkan elemen bawaan DataTables yang mengganggu */
+        .dataTables_length, .dataTables_info, .dataTables_paginate { display: none !important; }
+        .dataTables_filter { display: none !important; } /* Kita pakai search box custom */
+
+        @media (max-width: 768px) {
+            .cards-row { grid-template-columns: repeat(3, 1fr); }
+        }
     </style>
 </head>
 <body>
 
 <div class="page-container">
     <div class="top-section">
-        <h4><i class="fas fa-list-ol"></i> Rekap Data Tahapan</h4>
-        
-        <div class="filter-card">
-            <i class="fas fa-filter" style="color: #C8102E;"></i>
-            <label for="filter-tahapan">Filter Tahapan:</label>
-            <select id="filter-tahapan" class="form-select" onchange="applyFilter()"></select>
+        <div class="header-row">
+            <h4><i class="fas fa-list-ol"></i> Rekap Data Tahapan</h4>
+            <div class="filter-group">
+                <i class="fas fa-filter" style="color: #C8102E;"></i>
+                <label>Tahapan:</label>
+                <select id="filter-tahapan" onchange="applyFilter()"></select>
+            </div>
         </div>
 
-        <div class="row mt-3" id="summary-cards">
-            <div class="col-lg-2 col-md-4 col-sm-6 mb-2"><div class="summary-card"><div><div class="card-value" id="sum-kec">0</div><div class="card-label">Jml Kecamatan</div></div><div class="card-icon"><i class="fas fa-map"></i></div></div></div>
-            <div class="col-lg-2 col-md-4 col-sm-6 mb-2"><div class="summary-card"><div><div class="card-value" id="sum-desa">0</div><div class="card-label">Jml Desa</div></div><div class="card-icon"><i class="fas fa-home"></i></div></div></div>
-            <div class="col-lg-2 col-md-4 col-sm-6 mb-2"><div class="summary-card"><div><div class="card-value" id="sum-tps">0</div><div class="card-label">Jml TPS</div></div><div class="card-icon"><i class="fas fa-box"></i></div></div></div>
-            <div class="col-lg-2 col-md-4 col-sm-6 mb-2"><div class="summary-card" style="border-left-color: #4da6ff;"><div><div class="card-value" id="sum-lk">0</div><div class="card-label">Pemilih Lk</div></div><div class="card-icon" style="color: #4da6ff;"><i class="fas fa-mars"></i></div></div></div>
-            <div class="col-lg-2 col-md-4 col-sm-6 mb-2"><div class="summary-card" style="border-left-color: #ff66b2;"><div><div class="card-value" id="sum-pr">0</div><div class="card-label">Pemilih Pr</div></div><div class="card-icon" style="color: #ff66b2;"><i class="fas fa-venus"></i></div></div></div>
-            <div class="col-lg-2 col-md-4 col-sm-6 mb-2"><div class="summary-card" style="border-left-color: #C8102E;"><div><div class="card-value" id="sum-total">0</div><div class="card-label">Total Pemilih</div></div><div class="card-icon" style="color: #C8102E;"><i class="fas fa-users"></i></div></div></div>
+        <div class="cards-row mt-3">
+            <div class="stat-card"><div class="stat-info"><div class="val" id="sum-kec">0</div><div class="lbl">Jml Kecamatan</div></div><div class="stat-icon"><i class="fas fa-map"></i></div></div>
+            <div class="stat-card"><div class="stat-info"><div class="val" id="sum-desa">0</div><div class="lbl">Jml Desa</div></div><div class="stat-icon"><i class="fas fa-home"></i></div></div>
+            <div class="stat-card"><div class="stat-info"><div class="val" id="sum-tps">0</div><div class="lbl">Jml TPS</div></div><div class="stat-icon"><i class="fas fa-box"></i></div></div>
+            <div class="stat-card blue"><div class="stat-info"><div class="val" id="sum-lk">0</div><div class="lbl">Pemilih Laki-Laki</div></div><div class="stat-icon"><i class="fas fa-mars"></i></div></div>
+            <div class="stat-card pink"><div class="stat-info"><div class="val" id="sum-pr">0</div><div class="lbl">Pemilih Perempuan</div></div><div class="stat-icon"><i class="fas fa-venus"></i></div></div>
+            <div class="stat-card"><div class="stat-info"><div class="val" id="sum-total">0</div><div class="lbl">Total Pemilih</div></div><div class="stat-icon"><i class="fas fa-users"></i></div></div>
         </div>
     </div>
 
     <div class="table-section">
-        <div style="flex-shrink: 0; display: flex; justify-content: space-between; align-items: center;">
-            <ul class="nav nav-tabs mb-0" id="myTab" role="tablist" style="border-bottom: none;">
-                <li class="nav-item"><button class="nav-link active" id="kec-tab-btn" onclick="switchTab('kec')" type="button">Rekap Kecamatan</button></li>
-                <li class="nav-item"><button class="nav-link" id="desa-tab-btn" onclick="switchTab('desa')" type="button">Rekap Desa</button></li>
-                <li class="nav-item"><button class="nav-link" id="tps-tab-btn" onclick="switchTab('tps')" type="button">Detail TPS</button></li>
+        <div class="tab-search-row">
+            <ul class="nav nav-tabs" id="myTab">
+                <li class="nav-item"><a class="nav-link active" id="kec-tab-btn" onclick="switchTab('kec')" href="#">Rekap Kecamatan</a></li>
+                <li class="nav-item"><a class="nav-link" id="desa-tab-btn" onclick="switchTab('desa')" href="#">Rekap Desa</a></li>
+                <li class="nav-item"><a class="nav-link" id="tps-tab-btn" onclick="switchTab('tps')" href="#">Detail TPS</a></li>
             </ul>
-            <div id="table_filter_container" style="display: none;"></div>
+            <div class="search-box"><input type="text" id="custom-search" placeholder="Cari data..."></div>
         </div>
 
-        <!-- Container Scroll Murni (Bawaan Browser, bukan DataTables) -->
         <div class="table-container">
-            <table id="main-table" class="table table-striped">
+            <table id="main-table" class="table">
                 <thead id="table-head"></thead>
                 <tbody id="table-body"></tbody>
                 <tfoot id="table-foot"></tfoot>
@@ -117,6 +116,9 @@
     </div>
 </div>
 
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script>
     const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSpHbswfamDpkWReHbBBYYWsc5Jq5KXz2SkwYwZarW7M-JlEB3DcUHagO0sVLAFCXU__bCk2V7qoJEp/pub?gid=0&single=true&output=csv';
 
@@ -197,6 +199,7 @@
     function switchTab(type) {
         currentTab = type;
         if(dataTableInstance) { dataTableInstance.destroy(); dataTableInstance = null; }
+        $('#custom-search').val(''); // Reset search
 
         let heads = [], dataRows = [], foots = [];
 
@@ -217,7 +220,7 @@
                 dataRows.push([no++, val.kec, val.desa.size, formatAngka(val.tpsCount), formatAngka(val.lk), formatAngka(val.pr), formatAngka(val.jml)]);
                 totLk += val.lk; totPr += val.pr; totJml += val.jml; totTps += val.tpsCount;
             });
-            foots = ['', '<strong>TOTAL</strong>', '', formatAngka(totTps), formatAngka(totLk), formatAngka(totPr), formatAngka(totJml)];
+            foots = ['', 'TOTAL', '', formatAngka(totTps), formatAngka(totLk), formatAngka(totPr), formatAngka(totJml)];
 
         } else if(type === 'desa') {
             heads = ['No', 'Kecamatan', 'Desa', 'Jml TPS', 'Laki-Laki', 'Perempuan', 'Jumlah'];
@@ -235,7 +238,7 @@
                 dataRows.push([no++, val.kec, val.desa, formatAngka(val.tpsCount), formatAngka(val.lk), formatAngka(val.pr), formatAngka(val.jml)]);
                 totLk += val.lk; totPr += val.pr; totJml += val.jml; totTps += val.tpsCount;
             });
-            foots = ['', '<strong>TOTAL</strong>', '', formatAngka(totTps), formatAngka(totLk), formatAngka(totPr), formatAngka(totJml)];
+            foots = ['', 'TOTAL', '', formatAngka(totTps), formatAngka(totLk), formatAngka(totPr), formatAngka(totJml)];
 
         } else if(type === 'tps') {
             heads = ['No', 'Kecamatan', 'Desa', 'TPS', 'Laki-Laki', 'Perempuan', 'Jumlah'];
@@ -244,46 +247,44 @@
                 dataRows.push([no++, row['kecamatan'], row['desa'], row['tps'], formatAngka(getNum(row['laki-laki'])), formatAngka(getNum(row['perempuan'])), formatAngka(getNum(row['jumlah']))]);
                 totLk += getNum(row['laki-laki']); totPr += getNum(row['perempuan']); totJml += getNum(row['jumlah']);
             });
-            foots = ['', '', '', '<strong>TOTAL</strong>', formatAngka(totLk), formatAngka(totPr), formatAngka(totJml)];
+            foots = ['', '', '', 'TOTAL', formatAngka(totLk), formatAngka(totPr), formatAngka(totJml)];
         }
 
-        // Render HTML Tables manual (Tidak pakai DOM DataTables yang bikin error)
-        let headHtml = '<tr>' + heads.map(h => '<th>'+h+'</th>').join('') + '</tr>';
-        let bodyHtml = dataRows.map(row => '<tr>' + row.map((cell, idx) => {
-            // Tambah class text-end untuk kolom angka (index 2 ke atas di TPS, 3 ke atas lainnya)
-            let isNumberCol = (type === 'tps' && idx >= 3) || (type !== 'tps' && idx >= 2);
-            return `<td class="${isNumberCol ? 'text-end' : ''}">${cell}</td>`;
-        }).join('') + '</tr>').join('');
+        // Render HTML MURNI (Bukan DOM DataTables) - INI KUNCI RAPIHNYA
+        let headHtml = '<tr>' + heads.map(h => `<th>${h}</th>`).join('') + '</tr>';
+        let bodyHtml = dataRows.map(row => {
+            return '<tr>' + row.map((cell, idx) => {
+                let cls = idx === 0 ? 'col-no' : (idx >= 2 ? 'col-num' : 'col-name');
+                return `<td class="${cls}">${cell}</td>`;
+            }).join('') + '</tr>';
+        }).join('');
         let footHtml = '<tr>' + foots.map((f, idx) => {
-            let isNumberCol = (type === 'tps' && idx >= 3) || (type !== 'tps' && idx >= 2);
-            return `<th class="${isNumberCol ? 'text-end' : ''}">${f}</th>`;
+            let cls = idx === 0 ? 'col-no' : (idx >= 2 ? 'col-num' : 'col-name');
+            return `<th class="${cls}">${f}</th>`;
         }).join('') + '</tr>';
 
         $('#table-head').html(headHtml);
         $('#table-body').html(bodyHtml);
         $('#table-foot').html(footHtml);
         
-        // Inisialisasi DataTables HANYA untuk fitur Search/Sort, TANPA scrollY
+        // Inisialisasi DataTable HANYA untuk fitur Search, tanpa mengubah layout/scroll
         dataTableInstance = $('#main-table').DataTable({
             destroy: true,
-            language: { 
-                search: "Cari:", 
-                zeroRecords: "Data tidak ditemukan",
-                info: "",
-                infoEmpty: ""
-            },
-            paging: false,      // Matikan pagination
-            scrollY: false,     // MATIKAN INI! Biar tabel utuh tidak dipecah
+            paging: false,
+            scrollY: false, // SANGAT PENTING: False agar tabel utuh tidak dipecah
             scrollX: false,
             ordering: true,
             order: [[0, 'asc']],
-            autoWidth: false
+            autoWidth: false,
+            language: { search: "", infoEmpty: "", info: "" }
         });
 
-        // Pindahkan kotak search ke tempat yang rapi
-        $('#main-table_wrapper .dataTables_filter').detach().appendTo('#table_filter_container');
-        $('#table_filter_container').show();
+        // Override search box ke input custom kita
+        $('#custom-search').off('keyup').on('keyup', function() {
+            dataTableInstance.search(this.value).draw();
+        });
 
+        // Set active tab
         document.querySelectorAll('.nav-link').forEach(btn => btn.classList.remove('active'));
         document.getElementById(type+'-tab-btn').classList.add('active');
     }
