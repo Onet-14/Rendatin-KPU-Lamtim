@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Peta Data Pemilih</title>
+    <!-- Library Peta Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Library Parse CSV -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <style>
+        body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; background: #f4f6f9; display: flex; flex-direction: column; height: 100vh; }
+        #header-peta { background: #fff; padding: 10px 20px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; }
+        #header-peta h5 { margin: 0; color: #C8102E; font-weight: bold; }
+        #btn-back { display: none; background: #C8102E; color: white; border: none; padding: 5px 15px; border-radius: 5px; cursor: pointer; }
+        #map { flex: 1; width: 100%; }
+        .info-panel { padding: 6px 8px; font-size: 14px; background: white; border-radius: 5px; box-shadow: 0 0 15px rgba(0,0,0,0.2); }
+        .info-panel b { color: #C8102E; }
+    </style>
+</head>
+<body>
+
+<div id="header-peta">
+    <h5 id="judul-peta">Peta Pemilih Lampung Timur (Klik Kecamatan untuk Detail Desa)</h5>
+    <button id="btn-back" onclick="loadKecamatan()"><i class="fas fa-arrow-left"></i> Kembali ke Kecamatan</button>
+</div>
+
+<div id="map"></div>
+
+<!-- Library Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+    // 1. INISIALISASI PETA
+    const map = L.map('map').setView([-5.1, 105.6], 10); // Koordinat tengah Lampung Timur
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Panel Info saat hover
+    const info = L.control();
+    info.onAdd = function (map) {
+        this._div = L.DomUtil.create('div', 'info-panel');
+        this.update();
+        return this._div;
+    };
+    info.update = function (props) {
+        this._div.innerHTML = '<h6>Data Pemilih</h6>' + (props ? `<b>${props.NAMA}</b><br>Pemilih: ${props.PEMILIH || 'N/A'}<br>TPS: ${props.TPS || 'N/A'}` : 'Arahkan kursor ke wilayah');
+    };
+    info.addTo(map);
+
+    let geojsonLayer;
+
+    // 2. GANTI DENGAN LINK CSV GOOGLE SHEETS ANDA
+    const CSV_URL = 'MASUKKAN_LINK_CSV_GOOGLE_SHEETS_ANDA_DISINI';
+
+    // 3. GANTI DENGAN NAMA FILE GEOJSON ANDA
+    const GEOJSON_URL = 'peta_lamtim.geojson'; 
+
+    let sheetData = {};
+
+    // Fungsi untuk mengambil data Spreadsheet
+    Papa.parse(CSV_URL, {
+        download: true,
+        header: true,
+        complete: function(results) {
+            // Simpan data sheet dalam bentuk objek dengan Kode_Wilayah sebagai key
+            results.data.forEach(row => {
+                // SESUAIKAN NAMA KOLOM DENGAN SPREADSHEET ANDA
+                let kode = row.Kode_Wilayah; 
+                if(kode) {
+                    sheetData[kode] = {
+                        PEMILIH: row.Jumlah_Pemilih,
+                        TPS: row.Jumlah_TPS
+                    };
+                }
+            });
+            // Setelah data siap, muat peta Kecamatan
+            loadKecamatan();
+        }
+    });
+
+    // Styling untuk peta
+    function getColor(d) {
+        return d > 50000 ? '#800026' :
+               d > 20000 ? '#BD0026' :
+               d > 10000 ? '#E31A1C' :
+               d > 5000  ? '#FC4E2A' :
+               d > 1000  ? '#FD8D3C' :
+                           '#FEB24C';
+    }
+
+    function style(feature) {
+        let kode = feature.properties.KEC_ID; // SESUAIKAN DENGAN PROPERTI GEOJSON
+        let pemilih = sheetData[kode] ? parseInt(sheetData[kode].PEMILIH) : 0;
+        return {
+            fillColor: getColor(pemilih),
+            weight: 2,
+            opacity: 1,
+            color: 'white',
+            dashArray: '3',
+            fillOpacity: 0.7
+        };
+    }
+
+    // Event Hover
+    function highlightFeature(e) {
+        let layer = e.target;
+        let props = layer.feature.properties;
+        let kode = props.KEC_ID; // SESUAIKAN
+        
+        // Gabungkan properti GeoJSON dengan Data Sheet
+        let displayProps = {
+            NAMA: props.NAMA_KEC || props.NAMA_DESA, // SESUAIKAN
+            PEMILIH: sheetData[kode] ? sheetData[kode].PEMILIH : 'N/A',
+            TPS: sheetData[kode] ? sheetData[kode].TPS : 'N/A'
+        };
+
+        layer.setStyle({ weight: 3, color: '#666', fillOpacity: 0.9 });
+        info.update(displayProps);
+    }
+
+    function resetHighlight(e) {
+        geojsonLayer.resetStyle(e.target);
+        info.update();
+    }
+
+    // 4. FUNGSI LOAD PETA KECAMATAN (TAMPILAN AWAL)
+    function loadKecamatan() {
+        document.getElementById('btn-back').style.display = 'none';
+        document.getElementById('judul-peta').innerText = 'Peta Pemilih Lampung Timur (Klik Kecamatan untuk Detail Desa)';
+        
+        if(geojsonLayer) map.removeLayer(geojsonLayer);
+
+        fetch(GEOJSON_URL)
+            .then(response => response.json())
+            .then(data => {
+                // Filter hanya level Kecamatan (Asumsi GeoJSON punya properti 'level')
+                let kecGeo = { ...data, features: data.features.filter(f => f.properties.level === 'kecamatan') };
+                
+                geojsonLayer = L.geoJSON(kecGeo, {
+                    style: style,
+                    onEachFeature: function(feature, layer) {
+                        layer.on({
+                            mouseover: highlightFeature,
+                            mouseout: resetHighlight,
+                            click: loadDesa // Drill-down ke desa saat diklik
+                        });
+                    }
+                }).addTo(map);
+                
+                map.setView([-5.1, 105.6], 10); // Zoom out kembali
+            });
+    }
+
+    // 5. FUNGSI DRILL-DOWN LOAD DESA
+    function loadDesa(e) {
+        let kecId = e.target.feature.properties.KEC_ID; // SESUAIKAN
+        let namaKec = e.target.feature.properties.NAMA_KEC; // SESUAIKAN
+
+        document.getElementById('btn-back').style.display = 'inline-block';
+        document.getElementById('judul-peta').innerText = 'Peta Desa - Kecamatan ' + namaKec;
+
+        if(geojsonLayer) map.removeLayer(geojsonLayer);
+
+        fetch(GEOJSON_URL)
+            .then(response => response.json())
+            .then(data => {
+                // Filter hanya desa di kecamatan tersebut (Asumsi ada properti parent_kec)
+                let desaGeo = { ...data, features: data.features.filter(f => f.properties.parent_kec === kecId) };
+                
+                geojsonLayer = L.geoJSON(desaGeo, {
+                    style: style,
+                    onEachFeature: function(feature, layer) {
+                        layer.on({
+                            mouseover: highlightFeature,
+                            mouseout: resetHighlight
+                        });
+                    }
+                }).addTo(map);
+
+                // Zoom ke area kecamatan yang diklik
+                map.fitBounds(e.target.getBounds());
+            });
+    }
+
+</script>
+</body>
+</html>
