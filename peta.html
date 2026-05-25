@@ -153,6 +153,25 @@
             font-size: 1rem; 
         }
 
+        /* STYLE UNTUK TOMBOL DI POPUP */
+        .btn-popup-action {
+            width: 100%;
+            background-color: transparent;
+            color: #C8102E;
+            border: 2px solid #C8102E;
+            padding: 8px;
+            border-radius: 4px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+        .btn-popup-action:hover {
+            background-color: #C8102E;
+            color: white;
+        }
+
         /* CUSTOM TPS ICON */
         .custom-div-icon {
             background: transparent;
@@ -173,7 +192,7 @@
             color: #a50d24;
         }
 
-        /* BUTTON STYLE IN POPUP */
+        /* BUTTON STYLE IN POPUP (TPS) */
         .btn-popup-tps {
             width: 100%;
             background-color: #C8102E;
@@ -211,7 +230,6 @@
         
         <div class="mb-3">
             <label class="form-label">Jenis Data</label>
-            <!-- DEFAULT VALUE DISET KE 'pemutakhiran' -->
             <select id="jenis-select" class="form-select" onchange="changeJenis()">
                 <option value="">-- Pilih Jenis --</option>
                 <option value="pemutakhiran" selected>Rekap Pemutakhiran</option>
@@ -235,7 +253,7 @@
         <small><i class="fas fa-info-circle"></i> <strong>Panduan:</strong></small><br>
         <ul style="margin-bottom: 0; padding-left: 20px; font-size: 0.8rem; margin-top: 5px; color: #555;">
             <li>Hover wilayah untuk label nama.</li>
-            <li>Klik <strong>Kecamatan</strong> untuk masuk ke desa.</li>
+            <li>Klik <strong>Kecamatan</strong> atau tombol di popup.</li>
             <li>Klik <strong>Desa</strong> untuk memilih.</li>
             <li>Gunakan tombol <strong>Kembali</strong> di atas peta.</li>
         </ul>
@@ -271,6 +289,9 @@
     let selectedDesaLayer = null;
     let selectedDesaFeature = null;
     
+    // Variabel Global untuk menyimpan konteks popup Kecamatan
+    let activeKecContext = null;
+
     let desaNameMap = {};
     let kecamatanNameMap = {};
 
@@ -381,12 +402,12 @@
         });
         layer.on({
             mouseover: (e) => { 
-                // PERBAIKAN: Warna hover diubah jadi PUTIH sesuai permintaan
                 e.target.setStyle({ weight: 3, color: '#ffffff', fillOpacity: 0.7 }); 
             },
             mouseout: (e) => { geoJsonLayerKec.resetStyle(e.target); },
             click: (e) => {
                 showKecamatanPopup(feature, layer);
+                // Drill down otomatis saat klik peta
                 drillDownToDesa(feature, layer);
             }
         });
@@ -398,6 +419,12 @@
         const activeData = getActiveData();
         const dataInKec = activeData.filter(row => String(row['kode kec']).trim() === kecId);
         const headerTitle = `DATA KECAMATAN`;
+
+        // --- PERBAIKAN: Ganti teks jadi TOMBOL ---
+        // Kita gunakan fungsi triggerDrillDownFromPopup()
+        const actionBtn = `<button class="btn-popup-action" onclick="triggerDrillDownFromPopup()">
+                                <i class="fas fa-search-location"></i> MASUK KE PETA DESA
+                            </button>`;
 
         if (dataInKec.length === 0) {
             const content = `
@@ -425,11 +452,22 @@
                 <div class="popup-row"><span class="popup-label">Laki-laki:</span> <span class="popup-val">${totalLaki.toLocaleString('id-ID')}</span></div>
                 <div class="popup-row"><span class="popup-label">Perempuan:</span> <span class="popup-val">${totalPerempuan.toLocaleString('id-ID')}</span></div>
                 <div class="popup-row total-bold"><span class="popup-label">Total:</span> <span class="popup-val">${totalJumlah.toLocaleString('id-ID')}</span></div>
-                <div class="text-center mt-2 text-muted" style="font-size:0.8em"><i class="fas fa-mouse-pointer"></i> Klik untuk lihat Desa</div>
+                ${actionBtn}
             </div>
         `;
+        
+        // Simpan konteks sekarang agar tombol bisa mengaksesnya
+        activeKecContext = { feature, layer };
+        
         layer.bindPopup(content).openPopup();
     }
+
+    // Fungsi Global untuk tombol di Popup
+    window.triggerDrillDownFromPopup = function() {
+        if (activeKecContext) {
+            drillDownToDesa(activeKecContext.feature, activeKecContext.layer);
+        }
+    };
 
     function drillDownToDesa(feature, layer) {
         if (!rawDesaGeoJson) return;
@@ -439,7 +477,8 @@
         selectedDesaFeature = null;
 
         map.removeLayer(geoJsonLayerKec);
-        const desaFeatures = rawDesaGeoJSON.features.filter(f => String(f.properties.kec_id).trim() === kecId);
+        // PERBAIKAN TYPO: rawDesaGeoJSON -> rawDesaGeoJson
+        const desaFeatures = rawDesaGeoJson.features.filter(f => String(f.properties.kec_id).trim() === kecId);
         
         if (desaFeatures.length === 0) {
             alert("Data desa tidak ditemukan (ID tidak cocok).");
@@ -620,9 +659,7 @@
         map.setView([-5.10, 105.40], 10);
         map.closePopup();
         
-        // Reset dropdowns to default
         document.getElementById('jenis-select').value = 'pemutakhiran';
-        // Trigger load again to reset tahapan
         changeJenis();
     }
 
@@ -633,14 +670,12 @@
             fetch(URLS.geojson_desa).then(res => { if(!res.ok) throw new Error("GeoJSON Desa Error"); return res.json(); })
         ]).then(([dataKec, dataDesa]) => {
             geoJsonLayerKec.addData(dataKec);
-            rawDesaGeoJSON = dataDesa; 
+            rawDesaGeoJson = dataDesa; 
             
             const loader = document.getElementById('loading-overlay');
             loader.classList.add('fade-out');
             setTimeout(() => { loader.style.display = 'none'; }, 500);
 
-            // --- AUTO LOAD DEFAULT DATA ---
-            // Karena HTML sudah set value="pemutakhiran", kita trigger changeJenis()
             changeJenis();
 
         }).catch(err => {
@@ -653,7 +688,6 @@
         const tahapanSelect = document.getElementById('tahapan-select');
         const loader = document.getElementById('loading-overlay');
         
-        // Reset state
         tahapanSelect.innerHTML = '<option value="">-- Pilih Tahapan Dulu --</option>';
         tahapanSelect.disabled = true;
         tpsMarkersLayer.clearLayers();
@@ -667,7 +701,6 @@
 
         if (!jenis) return;
 
-        // Tampilkan loading jika tidak ada data (hindari flash saat pertama kali load)
         if(loader.style.display === 'none') {
             loader.style.display = 'flex'; 
             loader.style.opacity = '0.8';
@@ -698,8 +731,6 @@
                     option.value = t; 
                     option.textContent = t;
                     
-                    // --- SET DEFAULT TAHAPAN "PEMILU 2024" ---
-                    // Cek exact match atau substring
                     if (t.toLowerCase() === "pemilu 2024" || t.toLowerCase().includes("pemilu 2024")) {
                         option.selected = true;
                         foundDefault = true;
@@ -711,7 +742,6 @@
                 tahapanSelect.disabled = false;
                 loader.style.display = 'none';
 
-                // Trigger update map jika default tahapan ditemukan
                 if (foundDefault) {
                     updateMapData();
                 }
