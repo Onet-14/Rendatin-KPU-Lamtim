@@ -35,6 +35,20 @@
         .table-card { background: #ffffff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.07); }
         table { font-size: 13px; }
         .dataTables_wrapper .dataTables_filter input { border-radius: 8px; border: 1px solid #ccc; padding: 5px 10px; }
+        
+        /* Styling Tombol Lihat Rekap */
+        .btn-rekap {
+            background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba;
+            font-size: 11px; padding: 4px 10px; border-radius: 20px; cursor: pointer; font-weight: 600;
+            transition: all 0.2s;
+        }
+        .btn-rekap:hover { background-color: #ffc107; color: #000; border-color: #ffc107; }
+
+        /* Styling Filter Info */
+        .filter-info {
+            background: #e7f3ff; padding: 10px 15px; border-radius: 8px; margin-bottom: 15px;
+            color: #004085; font-weight: 600; display: flex; justify-content: space-between; align-items: center;
+        }
     </style>
 </head>
 <body>
@@ -95,6 +109,12 @@
         </li>
     </ul>
 
+    <!-- Info Filter Drill-down -->
+    <div id="drill-info" class="filter-info" style="display: none;">
+        <span id="drill-text"></span>
+        <button class="btn btn-sm btn-danger" onclick="resetDrill()">Tampilkan Semua</button>
+    </div>
+
     <table id="main-table" class="table table-striped table-bordered" style="width:100%">
         <thead id="table-head"></thead>
         <tbody id="table-body"></tbody>
@@ -109,6 +129,10 @@
     let rawData = [];
     let dataTableInstance = null;
     let currentTab = 'kec';
+    
+    // Variabel untuk Drill-down
+    let activeFilterKec = null;
+    let activeFilterDesa = null;
 
     // Format Angka Ribuan
     function formatAngka(angka) {
@@ -121,14 +145,23 @@
         header: true,
         skipEmptyLines: true,
         complete: function(results) {
-            rawData = results.data;
+            // Normalisasi Header: Ubah jadi huruf kecil dan hapus spasi berlebih
+            rawData = results.data.map(row => {
+                let cleanRow = {};
+                Object.keys(row).forEach(key => {
+                    let cleanKey = key.trim().toLowerCase();
+                    cleanRow[cleanKey] = row[key].trim();
+                });
+                return cleanRow;
+            });
+            
             calculateSummary();
             initDataTable();
-            switchTab('kec'); // Load tab kecamatan pertama kali
+            switchTab('kec'); 
         }
     });
 
-    // Hitung Summary Card
+    // Hitung Summary Card (Selalu menghitung dari total data)
     function calculateSummary() {
         let uniqueKec = new Set();
         let uniqueDesa = new Set();
@@ -153,26 +186,50 @@
         document.getElementById('sum-total').innerText = formatAngka(totalAll);
     }
 
-    // Inisialisasi DataTable
+    // Inisialisasi DataTable Kosong
     function initDataTable() {
         dataTableInstance = $('#main-table').DataTable({
-            language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/id.json' },
-            ordering: true,
-            pageLength: 10
+            language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/id.json' }
         });
+    }
+
+    // Fungsi Drill-down (Klik Tombol Lihat Rekap)
+    function drillDown(targetTab, kodeKec, kodeDesa) {
+        if(targetTab === 'desa') {
+            activeFilterKec = kodeKec;
+            activeFilterDesa = null;
+            document.getElementById('drill-text').innerText = "Menampilkan Desa di Kecamatan terpilih";
+        } else if(targetTab === 'tps') {
+            activeFilterDesa = kodeDesa;
+            document.getElementById('drill-text').innerText = "Menampilkan TPS di Desa terpilih";
+        }
+        document.getElementById('drill-info').style.display = 'flex';
+        switchTab(targetTab);
+    }
+
+    // Reset Drill-down
+    function resetDrill() {
+        activeFilterKec = null;
+        activeFilterDesa = null;
+        document.getElementById('drill-info').style.display = 'none';
+        switchTab(currentTab);
     }
 
     // Fungsi Ganti Tab (Kec / Desa / TPS)
     function switchTab(type) {
         currentTab = type;
-        dataTableInstance.clear().destroy(); // Hancurkan dulu datatable agar bisa ganti header
+        dataTableInstance.clear().destroy(); 
 
         let heads = [];
         let dataRows = [];
         let foots = [];
 
         if(type === 'kec') {
-            heads = ['No', 'Kode Kec', 'Kecamatan', 'Jml Desa', 'Jml TPS', 'Laki-Laki', 'Perempuan', 'Jumlah'];
+            activeFilterKec = null; // Reset filter saat pindah ke tab utama
+            activeFilterDesa = null;
+            document.getElementById('drill-info').style.display = 'none';
+
+            heads = ['No', 'Kode Kec', 'Kecamatan', 'Jml Desa', 'Jml TPS', 'Laki-Laki', 'Perempuan', 'Jumlah', 'Aksi'];
             let grouped = {};
 
             rawData.forEach(row => {
@@ -190,19 +247,26 @@
             let no = 1;
             let totLk=0, totPr=0, totJml=0;
             Object.values(grouped).forEach(val => {
-                dataRows.push([no++, val.kode, val.kec, val.desa.size, val.tps.size, formatAngka(val.lk), formatAngka(val.pr), formatAngka(val.jml)]);
+                dataRows.push([
+                    no++, val.kode, val.kec, val.desa.size, val.tps.size, 
+                    formatAngka(val.lk), formatAngka(val.pr), formatAngka(val.jml),
+                    `<button class="btn-rekap" onclick="drillDown('desa', '${val.kode}', null)"><i class="fas fa-eye"></i> Lihat Rekap</button>`
+                ]);
                 totLk += val.lk; totPr += val.pr; totJml += val.jml;
             });
-            foots = ['', '', 'TOTAL', '', '', formatAngka(totLk), formatAngka(totPr), formatAngka(totJml)];
+            foots = ['', '', 'TOTAL', '', '', formatAngka(totLk), formatAngka(totPr), formatAngka(totJml), ''];
 
         } else if(type === 'desa') {
-            heads = ['No', 'Kode Desa', 'Desa', 'Kecamatan', 'Jml TPS', 'Laki-Laki', 'Perempuan', 'Jumlah'];
+            heads = ['No', 'Kode Desa', 'Desa', 'Kecamatan', 'Jml TPS', 'Laki-Laki', 'Perempuan', 'Jumlah', 'Aksi'];
             let grouped = {};
 
             rawData.forEach(row => {
+                // Filter jika drill-down aktif
+                if(activeFilterKec && row['kode kec'] !== activeFilterKec) return;
+
                 let key = row['kode desa'];
                 if(!grouped[key]) {
-                    grouped[key] = { 'desa': row['desa'], 'kec': row['kecamatan'], 'kode': key, 'tps': new Set(), 'lk': 0, 'pr': 0, 'jml': 0 };
+                    grouped[key] = { 'desa': row['desa'], 'kec': row['kecamatan'], 'kode': key, 'kodekec': row['kode kec'], 'tps': new Set(), 'lk': 0, 'pr': 0, 'jml': 0 };
                 }
                 if(row['tps']) grouped[key].tps.add(row['tps']);
                 grouped[key].lk += parseInt(row['laki-laki']) || 0;
@@ -213,10 +277,14 @@
             let no = 1;
             let totLk=0, totPr=0, totJml=0;
             Object.values(grouped).forEach(val => {
-                dataRows.push([no++, val.kode, val.desa, val.kec, val.tps.size, formatAngka(val.lk), formatAngka(val.pr), formatAngka(val.jml)]);
+                dataRows.push([
+                    no++, val.kode, val.desa, val.kec, val.tps.size, 
+                    formatAngka(val.lk), formatAngka(val.pr), formatAngka(val.jml),
+                    `<button class="btn-rekap" onclick="drillDown('tps', '${val.kodekec}', '${val.kode}')"><i class="fas fa-eye"></i> Lihat Rekap</button>`
+                ]);
                 totLk += val.lk; totPr += val.pr; totJml += val.jml;
             });
-            foots = ['', '', 'TOTAL', '', '', formatAngka(totLk), formatAngka(totPr), formatAngka(totJml)];
+            foots = ['', '', 'TOTAL', '', '', formatAngka(totLk), formatAngka(totPr), formatAngka(totJml), ''];
 
         } else if(type === 'tps') {
             heads = ['No', 'Kecamatan', 'Desa', 'TPS', 'Laki-Laki', 'Perempuan', 'Jumlah'];
@@ -224,7 +292,16 @@
             let totLk=0, totPr=0, totJml=0;
 
             rawData.forEach(row => {
-                dataRows.push([no++, row['kecamatan'], row['desa'], row['tps'], formatAngka(parseInt(row['laki-laki'])||0), formatAngka(parseInt(row['perempuan'])||0), formatAngka(parseInt(row['jumlah'])||0)]);
+                // Filter jika drill-down aktif
+                if(activeFilterKec && row['kode kec'] !== activeFilterKec) return;
+                if(activeFilterDesa && row['kode desa'] !== activeFilterDesa) return;
+
+                dataRows.push([
+                    no++, row['kecamatan'], row['desa'], row['tps'], 
+                    formatAngka(parseInt(row['laki-laki'])||0), 
+                    formatAngka(parseInt(row['perempuan'])||0), 
+                    formatAngka(parseInt(row['jumlah'])||0)
+                ]);
                 totLk += parseInt(row['laki-laki'])||0;
                 totPr += parseInt(row['perempuan'])||0;
                 totJml += parseInt(row['jumlah'])||0;
@@ -232,9 +309,8 @@
             foots = ['', '', '', 'TOTAL', formatAngka(totLk), formatAngka(totPr), formatAngka(totJml)];
         }
 
-        // Update Header
+        // Update Header & Footer
         $('#table-head').html('<tr>' + heads.map(h => '<th>'+h+'</th>').join('') + '</tr>');
-        // Update Footer
         $('#table-foot').html('<tr>' + foots.map(f => '<th>'+f+'</th>').join('') + '</tr>');
         
         // Re-init DataTable
@@ -243,7 +319,9 @@
             language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/id.json' },
             ordering: true,
             pageLength: 10,
-            order: [[0, 'asc']]
+            order: [[0, 'asc']],
+            // Mencegah kolom Aksi di-sort agar tombol tidak ikut ter-sortir acak
+            columnDefs: [ { orderable: false, targets: (type !== 'tps' ? 8 : -1) } ] 
         });
 
         // Styling Tab Aktif
