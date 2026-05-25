@@ -43,7 +43,8 @@
         .menu-group.open .toggle-arrow { transform: rotate(180deg); }
         .sub-menu { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-in-out; background: #fdfdfd; border-radius: 0 0 8px 8px; }
         .menu-group.open .sub-menu { max-height: 200px; }
-        .sub-item { display: block; padding: 10px 15px 10px 50px; color: #666; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; text-decoration: none; border-left: 3px solid transparent; }
+        .sub-item { display: flex; align-items: center; padding: 10px 15px 10px 50px; color: #666; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; text-decoration: none; border-left: 3px solid transparent; }
+        .sub-item i { margin-right: 10px; font-size: 0.85rem; width: 15px; text-align: center; }
         .sub-item:hover { color: #C8102E; background: #fff5f5; border-left-color: #C8102E; }
         .sub-item.active { color: #C8102E; font-weight: 600; border-left-color: #C8102E; }
 
@@ -56,7 +57,7 @@
         .topbar { background-color: #ffffff; padding: 15px 25px; border-bottom: 1px solid #e0e0e0; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
         .topbar-title { font-weight: 700; color: #333333; }
 
-        /* FRAME LOOKER / HTML */
+        /* FRAME HTML */
         #iframe-wrapper { flex: 1; padding: 25px; background-color: #f4f6f9; display: none; justify-content: center; overflow: hidden; }
         #iframe-container { width: 100%; max-width: 1500px; height: 100%; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.07); overflow: hidden; display: flex; }
         #content-frame { flex: 1; border: none; }
@@ -114,25 +115,41 @@
         </div>
 
         <div class="sidebar-menu">
-            <div id="menu-dashboard" class="menu-item active" onclick="showDashboard(this)"><i class="fas fa-home"></i> Beranda</div>
+            <!-- Menu Beranda -->
+            <div id="menu-dashboard" class="menu-item active" onclick="showDashboard(this)">
+                <i class="fas fa-home"></i> Beranda
+            </div>
             <div style="height: 10px;"></div>
 
             <!-- MENU REKAPITULASI DENGAN SUBMENU -->
-            <div class="menu-group open">
+            <div class="menu-group">
                 <div class="menu-item" onclick="toggleSubMenu(this)">
-                    <i class="fas fa-database"></i> 
+                    <i class="fas fa-clipboard-list"></i> 
                     <span>Rekapitulasi Data Pemilih</span>
                     <i class="fas fa-chevron-down toggle-arrow"></i>
                 </div>
                 <div class="sub-menu">
-                    <div class="sub-item" onclick="loadPage('tahapan.html', this, 'sub-tahapan')">Tahapan</div>
-                    <div class="sub-item" onclick="loadPage('pdpb.html', this, 'sub-pdpb')">PDPB</div>
-                    <div class="sub-item" onclick="loadPage('peta.html', this, 'sub-peta')">Peta Data Pemilih</div>
+                    <div class="sub-item" onclick="loadPage('tahapan.html', this, 'sub-tahapan')">
+                        <i class="fas fa-list-ol"></i> Tahapan
+                    </div>
+                    <div class="sub-item" onclick="loadPage('pdpb.html', this, 'sub-pdpb')">
+                        <i class="fas fa-user-check"></i> PDPB
+                    </div>
                 </div>
             </div>
+
+            <!-- MENU PETA (MENU UTAMA, BUKAN SUBMENU) -->
+            <div id="menu-peta" class="menu-item" onclick="loadPage('peta.html', this, 'menu-peta')">
+                <i class="fas fa-map-marked-alt"></i> 
+                <span>Peta Data Pemilih</span>
+            </div>
             
-            <div class="menu-item menu-logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></div>
+            <!-- TOMBOL KELUAR -->
+            <div class="menu-item menu-logout" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i> <span>Logout</span>
+            </div>
         </div>
+
         <div class="sidebar-footer">Crafted by Onet14</div>
     </aside>
 
@@ -214,22 +231,34 @@
         document.getElementById('dashboard-view').style.display = 'none';
         document.getElementById('iframe-wrapper').style.display = 'flex';
         document.getElementById('content-frame').src = pageUrl;
+        
         let titleText = element.innerText.trim();
         document.getElementById('topbar-title').innerText = titleText;
+        
         document.querySelectorAll('.menu-item, .sub-item').forEach(el => el.classList.remove('active'));
         element.classList.add('active');
-        // Aktifkan juga parent menu-nya
+        
+        // Jika yang diklik adalah sub-item, aktifkan juga parent menu-nya
         const parentGroup = element.closest('.menu-group');
-        if (parentGroup) parentGroup.querySelector('.menu-item').classList.add('active');
-        sessionStorage.setItem('currentPage', pageUrl); sessionStorage.setItem('activeMenuId', menuId);
+        if (parentGroup) {
+            parentGroup.querySelector('.menu-item').classList.add('active');
+            parentGroup.classList.add('open'); // Pastikan submenu terbuka
+        }
+        
+        sessionStorage.setItem('currentPage', pageUrl); 
+        sessionStorage.setItem('activeMenuId', menuId);
         if(window.innerWidth < 768) { toggleSidebar(); }
     }
 
     function showDashboard(element) {
-        document.getElementById('iframe-wrapper').style.display = 'none'; document.getElementById('content-frame').src = '';
-        document.getElementById('dashboard-view').style.display = 'flex'; document.getElementById('topbar-title').innerText = 'Beranda';
-        document.querySelectorAll('.menu-item, .sub-item').forEach(el => el.classList.remove('active')); element.classList.add('active');
-        sessionStorage.setItem('currentPage', 'dashboard'); sessionStorage.setItem('activeMenuId', 'menu-dashboard');
+        document.getElementById('iframe-wrapper').style.display = 'none'; 
+        document.getElementById('content-frame').src = '';
+        document.getElementById('dashboard-view').style.display = 'flex'; 
+        document.getElementById('topbar-title').innerText = 'Beranda';
+        document.querySelectorAll('.menu-item, .sub-item').forEach(el => el.classList.remove('active')); 
+        element.classList.add('active');
+        sessionStorage.setItem('currentPage', 'dashboard'); 
+        sessionStorage.setItem('activeMenuId', 'menu-dashboard');
         if(window.innerWidth < 768) { toggleSidebar(); }
     }
 
