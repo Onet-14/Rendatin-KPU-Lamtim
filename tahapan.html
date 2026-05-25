@@ -45,7 +45,7 @@
         thead th { 
             position: sticky; top: 0; z-index: 10; 
             background-color: #f8f9fa; color: #555; font-weight: 700; font-size: 12px; text-transform: uppercase;
-            padding: 12px 10px; border-bottom: 2px solid #C8102E; white-space: nowrap; text-align: left; /* Header rata kiri */
+            padding: 12px 10px; border-bottom: 2px solid #C8102E; white-space: nowrap; text-align: left;
         }
         
         tbody td { 
@@ -57,19 +57,17 @@
             position: sticky; bottom: 0; z-index: 10; 
             background-color: #f8f9fa; color: #333; font-weight: 800; font-size: 13px;
             padding: 12px 10px; border-top: 2px solid #C8102E; white-space: nowrap;
-            text-align: left !important; /* TOTAL rata kiri */
+            text-align: left !important; 
         }
 
-        /* Penyesuaian Kolom - PERBAIKAN RATANYA */
-        .col-no { width: 40px; text-align: center !important; } /* Hanya kolom No yang tetap tengah */
+        /* Penyesuaian Kolom */
+        .col-no { width: 40px; text-align: center !important; }
         .col-num { 
-            text-align: left !important; /* DIPAKSA RATA KIRI SESUAI PERMINTAAN */
+            text-align: left !important; 
             font-weight: 600; 
             font-variant-numeric: tabular-nums; 
         }
-        .col-name { 
-            text-align: left !important; 
-        }
+        .col-name { text-align: left !important; }
 
         /* Hilangkan elemen bawaan DataTables */
         .dataTables_length, .dataTables_info, .dataTables_paginate, .dataTables_filter { display: none !important; }
@@ -142,6 +140,12 @@
 
     function formatAngka(angka) { return new Intl.NumberFormat('id-ID').format(angka); }
 
+    // Fungsi membalikkan format angka ke bilangan asli untuk perhitungan ulang di search
+    function parseBackToNum(str) {
+        if (!str) return 0;
+        return parseInt(str.toString().replace(/\./g, '')) || 0;
+    }
+
     Papa.parse(CSV_URL, {
         download: true,
         header: true,
@@ -202,6 +206,37 @@
         document.getElementById('sum-total').innerText = formatAngka(totalAll);
     }
 
+    // FUNGSI UPDATE TOTAL SAAT SEARCH
+    function updateFooterOnSearch() {
+        if (!dataTableInstance) return;
+        var api = dataTableInstance;
+        
+        // Tentukan kolom mana saja yang berisi angka dan perlu dijumlah
+        let numericCols = [];
+        if (currentTab === 'kec') numericCols = [2, 3, 4, 5, 6]; // Desa, TPS, Lk, Pr, Jml
+        if (currentTab === 'desa') numericCols = [3, 4, 5, 6];    // TPS, Lk, Pr, Jml
+        if (currentTab === 'tps') numericCols = [4, 5, 6];        // Lk, Pr, Jml
+
+        let totals = {};
+        numericCols.forEach(i => totals[i] = 0);
+
+        // Jumlahkan hanya baris yang sedang tampil (terfilter oleh search)
+        api.rows({ search: 'applied' }).every(function() {
+            let data = this.data();
+            numericCols.forEach(i => {
+                totals[i] += parseBackToNum(data[i]);
+            });
+        });
+
+        // Update tampilan footer
+        $(api.table().footer()).find('th').each(function(index) {
+            if (numericCols.includes(index)) {
+                // Bungkus dengan <strong> agar angkanya bold
+                $(this).html('<strong>' + formatAngka(totals[index]) + '</strong>');
+            }
+        });
+    }
+
     function switchTab(type) {
         currentTab = type;
         if(dataTableInstance) { dataTableInstance.destroy(); dataTableInstance = null; }
@@ -221,12 +256,13 @@
                 grouped[key].pr += getNum(row['perempuan']);
                 grouped[key].jml += getNum(row['jumlah']);
             });
-            let no = 1, totLk=0, totPr=0, totJml=0, totTps=0;
+            let no = 1, totLk=0, totPr=0, totJml=0, totTps=0, totDesa=0;
             Object.values(grouped).forEach(val => {
                 dataRows.push([no++, val.kec, val.desa.size, formatAngka(val.tpsCount), formatAngka(val.lk), formatAngka(val.pr), formatAngka(val.jml)]);
                 totLk += val.lk; totPr += val.pr; totJml += val.jml; totTps += val.tpsCount;
+                totDesa += val.desa.size; // PENAMBAHAN: Jumlah desa per kecamatan dijumlahkan
             });
-            foots = ['', 'TOTAL', '', formatAngka(totTps), formatAngka(totLk), formatAngka(totPr), formatAngka(totJml)];
+            foots = ['', '<strong>TOTAL</strong>', '<strong>' + formatAngka(totDesa) + '</strong>', '<strong>' + formatAngka(totTps) + '</strong>', '<strong>' + formatAngka(totLk) + '</strong>', '<strong>' + formatAngka(totPr) + '</strong>', '<strong>' + formatAngka(totJml) + '</strong>'];
 
         } else if(type === 'desa') {
             heads = ['No', 'Kecamatan', 'Desa', 'Jml TPS', 'Laki-Laki', 'Perempuan', 'Jumlah'];
@@ -244,7 +280,7 @@
                 dataRows.push([no++, val.kec, val.desa, formatAngka(val.tpsCount), formatAngka(val.lk), formatAngka(val.pr), formatAngka(val.jml)]);
                 totLk += val.lk; totPr += val.pr; totJml += val.jml; totTps += val.tpsCount;
             });
-            foots = ['', 'TOTAL', '', formatAngka(totTps), formatAngka(totLk), formatAngka(totPr), formatAngka(totJml)];
+            foots = ['', '<strong>TOTAL</strong>', '', '<strong>' + formatAngka(totTps) + '</strong>', '<strong>' + formatAngka(totLk) + '</strong>', '<strong>' + formatAngka(totPr) + '</strong>', '<strong>' + formatAngka(totJml) + '</strong>'];
 
         } else if(type === 'tps') {
             heads = ['No', 'Kecamatan', 'Desa', 'TPS', 'Laki-Laki', 'Perempuan', 'Jumlah'];
@@ -253,7 +289,7 @@
                 dataRows.push([no++, row['kecamatan'], row['desa'], row['tps'], formatAngka(getNum(row['laki-laki'])), formatAngka(getNum(row['perempuan'])), formatAngka(getNum(row['jumlah']))]);
                 totLk += getNum(row['laki-laki']); totPr += getNum(row['perempuan']); totJml += getNum(row['jumlah']);
             });
-            foots = ['', '', '', 'TOTAL', formatAngka(totLk), formatAngka(totPr), formatAngka(totJml)];
+            foots = ['', '', '', '<strong>TOTAL</strong>', '<strong>' + formatAngka(totLk) + '</strong>', '<strong>' + formatAngka(totPr) + '</strong>', '<strong>' + formatAngka(totJml) + '</strong>'];
         }
 
         let headHtml = '<tr>' + heads.map(h => `<th>${h}</th>`).join('') + '</tr>';
@@ -280,7 +316,11 @@
             ordering: true,
             order: [[0, 'asc']],
             autoWidth: false,
-            language: { search: "", infoEmpty: "", info: "" }
+            language: { search: "", infoEmpty: "", info: "" },
+            // Panggil fungsi update footer setiap kali tabel di-render ulang (misal saat search)
+            drawCallback: function(settings) {
+                updateFooterOnSearch();
+            }
         });
 
         $('#custom-search').off('keyup').on('keyup', function() {
