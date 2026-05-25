@@ -12,74 +12,74 @@
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
-        body { padding: 25px; background-color: #f4f6f9; font-family: 'Segoe UI', sans-serif; font-size: 13px; }
-        h4 { color: #C8102E; font-weight: bold; }
+        /* LAYOUT ANTI TERPOTONG (FLEXBOX) */
+        html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; background-color: #f4f6f9; font-family: 'Segoe UI', sans-serif; font-size: 13px; }
+        .page-container { display: flex; flex-direction: column; height: 100vh; padding: 15px 20px; }
+        .top-section { flex-shrink: 0; } /* Bagian atas tidak ikut scroll */
+        .table-section { flex-grow: 1; min-height: 0; display: flex; flex-direction: column; background: #ffffff; border-radius: 12px; padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.07); margin-top: 15px; }
         
-        .filter-card { background: #ffffff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.07); margin-bottom: 20px; display: flex; align-items: center; gap: 15px; }
-        .filter-card label { font-weight: 700; color: #333; white-space: nowrap; }
-        .filter-card select { max-width: 300px; border-radius: 8px; border: 1px solid #ccc; padding: 8px 12px; font-weight: 500; }
+        /* STYLING ELEMEN */
+        h4 { color: #C8102E; font-weight: bold; margin: 0; }
+        .filter-card { background: #ffffff; border-radius: 10px; padding: 12px 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 12px; margin-top: 12px; }
+        .filter-card label { font-weight: 700; color: #333; white-space: nowrap; font-size: 13px; }
+        .filter-card select { border-radius: 8px; border: 1px solid #ccc; padding: 6px 10px; font-weight: 500; font-size: 13px; }
 
-        .summary-card { background: #ffffff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.07); border-left: 5px solid #C8102E; display: flex; align-items: center; justify-content: space-between; transition: transform 0.2s; margin-bottom: 20px; }
-        .summary-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
-        .summary-card .card-icon { font-size: 2.5rem; color: #C8102E; opacity: 0.8; }
-        .summary-card .card-value { font-size: 1.8rem; font-weight: 800; color: #333; }
-        .summary-card .card-label { font-size: 0.85rem; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
+        .summary-card { background: #ffffff; border-radius: 10px; padding: 12px 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border-left: 4px solid #C8102E; display: flex; align-items: center; justify-content: space-between; }
+        .summary-card .card-icon { font-size: 1.8rem; color: #C8102E; opacity: 0.8; }
+        .summary-card .card-value { font-size: 1.3rem; font-weight: 800; color: #333; }
+        .summary-card .card-label { font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
         
-        .nav-tabs .nav-link { color: #555; font-weight: 600; border: none; border-bottom: 3px solid transparent; }
+        .nav-tabs .nav-link { color: #555; font-weight: 600; border: none; border-bottom: 3px solid transparent; padding: 8px 15px; font-size: 13px; }
         .nav-tabs .nav-link.active { color: #C8102E; border-bottom: 3px solid #C8102E; background: transparent; }
         .nav-tabs .nav-link:hover { border-color: #C8102E; color: #C8102E; }
 
-        .table-card { background: #ffffff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.07); }
         table { font-size: 13px; }
         .dataTables_wrapper .dataTables_filter input { border-radius: 8px; border: 1px solid #ccc; padding: 5px 10px; }
         
-        .btn-rekap { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; font-size: 11px; padding: 4px 10px; border-radius: 20px; cursor: pointer; font-weight: 600; transition: all 0.2s; }
-        .btn-rekap:hover { background-color: #ffc107; color: #000; border-color: #ffc107; }
-
-        .filter-info { background: #e7f3ff; padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; color: #004085; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
-        #debug-box { background: #fff3cd; color: #856404; padding: 10px; border-radius: 8px; margin-bottom: 15px; display: none; font-size: 12px; }
+        /* Menyembunyikan info jumlah data yang bertumpuk */
+        .dataTables_wrapper .dataTables_info { padding-top: 10px; }
+        .dataTables_scrollBody { border-top: 1px solid #ddd !important; }
     </style>
 </head>
 <body>
 
-<h4 style="margin-bottom: 20px;"><i class="fas fa-list-ol"></i> Rekap Data Tahapan</h4>
+<div class="page-container">
+    <!-- TOP SECTION (TIDAK IKUT SCROLL) -->
+    <div class="top-section">
+        <h4><i class="fas fa-list-ol"></i> Rekap Data Tahapan</h4>
+        
+        <div class="filter-card">
+            <i class="fas fa-filter" style="color: #C8102E;"></i>
+            <label for="filter-tahapan">Filter Tahapan:</label>
+            <select id="filter-tahapan" class="form-select" onchange="applyFilter()"></select>
+        </div>
 
-<div id="debug-box"></div>
-
-<div class="filter-card">
-    <i class="fas fa-filter" style="color: #C8102E; font-size: 1.2rem;"></i>
-    <label for="filter-tahapan">Filter Tahapan:</label>
-    <select id="filter-tahapan" class="form-select" onchange="applyFilter()">
-        <option value="all">Semua Tahapan</option>
-    </select>
-</div>
-
-<div class="row" id="summary-cards">
-    <div class="col-lg-2 col-md-4 col-sm-6"><div class="summary-card"><div><div class="card-value" id="sum-kec">0</div><div class="card-label">Jml Kecamatan</div></div><div class="card-icon"><i class="fas fa-map"></i></div></div></div>
-    <div class="col-lg-2 col-md-4 col-sm-6"><div class="summary-card"><div><div class="card-value" id="sum-desa">0</div><div class="card-label">Jml Desa</div></div><div class="card-icon"><i class="fas fa-home"></i></div></div></div>
-    <div class="col-lg-2 col-md-4 col-sm-6"><div class="summary-card"><div><div class="card-value" id="sum-tps">0</div><div class="card-label">Jml TPS</div></div><div class="card-icon"><i class="fas fa-box"></i></div></div></div>
-    <div class="col-lg-2 col-md-4 col-sm-6"><div class="summary-card" style="border-left-color: #4da6ff;"><div><div class="card-value" id="sum-lk">0</div><div class="card-label">Pemilih Lk</div></div><div class="card-icon" style="color: #4da6ff;"><i class="fas fa-mars"></i></div></div></div>
-    <div class="col-lg-2 col-md-4 col-sm-6"><div class="summary-card" style="border-left-color: #ff66b2;"><div><div class="card-value" id="sum-pr">0</div><div class="card-label">Pemilih Pr</div></div><div class="card-icon" style="color: #ff66b2;"><i class="fas fa-venus"></i></div></div></div>
-    <div class="col-lg-2 col-md-4 col-sm-6"><div class="summary-card" style="border-left-color: #C8102E;"><div><div class="card-value" id="sum-total">0</div><div class="card-label">Total Pemilih</div></div><div class="card-icon" style="color: #C8102E;"><i class="fas fa-users"></i></div></div></div>
-</div>
-
-<div class="table-card">
-    <ul class="nav nav-tabs mb-3" id="myTab" role="tablist">
-        <li class="nav-item"><button class="nav-link active" id="kec-tab-btn" onclick="switchTab('kec')" type="button">Rekap Kecamatan</button></li>
-        <li class="nav-item"><button class="nav-link" id="desa-tab-btn" onclick="switchTab('desa')" type="button">Rekap Desa</button></li>
-        <li class="nav-item"><button class="nav-link" id="tps-tab-btn" onclick="switchTab('tps')" type="button">Detail TPS</button></li>
-    </ul>
-
-    <div id="drill-info" class="filter-info" style="display: none;">
-        <span id="drill-text"></span>
-        <button class="btn btn-sm btn-danger" onclick="resetDrill()"><i class="fas fa-times"></i> Tampilkan Semua</button>
+        <div class="row mt-3" id="summary-cards">
+            <div class="col-lg-2 col-md-4 col-sm-6 mb-2"><div class="summary-card"><div><div class="card-value" id="sum-kec">0</div><div class="card-label">Jml Kecamatan</div></div><div class="card-icon"><i class="fas fa-map"></i></div></div></div>
+            <div class="col-lg-2 col-md-4 col-sm-6 mb-2"><div class="summary-card"><div><div class="card-value" id="sum-desa">0</div><div class="card-label">Jml Desa</div></div><div class="card-icon"><i class="fas fa-home"></i></div></div></div>
+            <div class="col-lg-2 col-md-4 col-sm-6 mb-2"><div class="summary-card"><div><div class="card-value" id="sum-tps">0</div><div class="card-label">Jml TPS</div></div><div class="card-icon"><i class="fas fa-box"></i></div></div></div>
+            <div class="col-lg-2 col-md-4 col-sm-6 mb-2"><div class="summary-card" style="border-left-color: #4da6ff;"><div><div class="card-value" id="sum-lk">0</div><div class="card-label">Pemilih Lk</div></div><div class="card-icon" style="color: #4da6ff;"><i class="fas fa-mars"></i></div></div></div>
+            <div class="col-lg-2 col-md-4 col-sm-6 mb-2"><div class="summary-card" style="border-left-color: #ff66b2;"><div><div class="card-value" id="sum-pr">0</div><div class="card-label">Pemilih Pr</div></div><div class="card-icon" style="color: #ff66b2;"><i class="fas fa-venus"></i></div></div></div>
+            <div class="col-lg-2 col-md-4 col-sm-6 mb-2"><div class="summary-card" style="border-left-color: #C8102E;"><div><div class="card-value" id="sum-total">0</div><div class="card-label">Total Pemilih</div></div><div class="card-icon" style="color: #C8102E;"><i class="fas fa-users"></i></div></div></div>
+        </div>
     </div>
 
-    <table id="main-table" class="table table-striped table-bordered" style="width:100%">
-        <thead id="table-head"></thead>
-        <tbody id="table-body"></tbody>
-        <tfoot id="table-foot"></tfoot>
-    </table>
+    <!-- TABLE SECTION (TINGGI SESUAI SISA LAYAR, SCROLL INTERNAL) -->
+    <div class="table-section">
+        <ul class="nav nav-tabs mb-2" id="myTab" role="tablist">
+            <li class="nav-item"><button class="nav-link active" id="kec-tab-btn" onclick="switchTab('kec')" type="button">Rekap Kecamatan</button></li>
+            <li class="nav-item"><button class="nav-link" id="desa-tab-btn" onclick="switchTab('desa')" type="button">Rekap Desa</button></li>
+            <li class="nav-item"><button class="nav-link" id="tps-tab-btn" onclick="switchTab('tps')" type="button">Detail TPS</button></li>
+        </ul>
+
+        <div style="flex-grow: 1; min-height: 0;">
+            <table id="main-table" class="table table-striped table-bordered" style="width:100%">
+                <thead id="table-head"></thead>
+                <tbody id="table-body"></tbody>
+                <tfoot id="table-foot"></tfoot>
+            </table>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -89,8 +89,6 @@
     let filteredData = []; 
     let dataTableInstance = null;
     let currentTab = 'kec';
-    let activeFilterKec = null; // Simpan KODE KEC untuk drill down
-    let activeFilterDesa = null; // Simpan KODE DESA untuk drill down
 
     function getNum(val) {
         if (!val) return 0;
@@ -114,12 +112,6 @@
                 });
                 return cleanRow;
             });
-
-            if(rawData.length > 0) {
-                document.getElementById('debug-box').innerHTML = "<b>Detected Cols:</b> " + Object.keys(rawData[0]).join(', ') + " | <b>Rows:</b> " + rawData.length;
-                document.getElementById('debug-box').style.display = 'block';
-            }
-
             populateFilters();
             applyFilter(); 
         }
@@ -129,69 +121,47 @@
         let tahapanSet = new Set();
         rawData.forEach(row => { if(row['tahapan']) tahapanSet.add(row['tahapan']); });
 
+        // Urutan Filter Kustom
+        const customOrder = ['PEMILU 2019', 'PILKADA 2020', 'PEMILU 2024', 'PILKADA 2024'];
         let select = document.getElementById('filter-tahapan');
-        select.innerHTML = '<option value="all">Semua Tahapan</option>';
+        select.innerHTML = ''; // Hilangkan "Semua Tahapan"
         
-        Array.from(tahapanSet).sort().forEach(t => {
-            let opt = document.createElement('option');
-            opt.value = t; opt.text = t;
-            if(t.toLowerCase().includes('pemilu 2024') || t.toLowerCase().includes('pemilu2024')) opt.selected = true;
-            select.appendChild(opt);
+        customOrder.forEach(t => {
+            if (tahapanSet.has(t)) { // Hanya tambah jika ada datanya
+                let opt = document.createElement('option');
+                opt.value = t; opt.text = t;
+                if (t === 'PEMILU 2024') opt.selected = true; // Default
+                select.appendChild(opt);
+            }
         });
     }
 
     function applyFilter() {
         let selectedTahapan = document.getElementById('filter-tahapan').value;
-        filteredData = (selectedTahapan === 'all') ? rawData : rawData.filter(row => row['tahapan'] === selectedTahapan);
-        
-        activeFilterKec = null;
-        activeFilterDesa = null;
-        document.getElementById('drill-info').style.display = 'none';
-
+        filteredData = rawData.filter(row => row['tahapan'] === selectedTahapan);
         calculateSummary();
         switchTab(currentTab);
     }
 
     function calculateSummary() {
-        let uniqueKec = new Set(), uniqueDesa = new Set(), uniqueTps = new Set();
-        let totalLk = 0, totalPr = 0, totalAll = 0;
+        let uniqueKec = new Set(), uniqueDesa = new Set();
+        let totalLk = 0, totalPr = 0, totalAll = 0, totalTps = 0;
 
         filteredData.forEach(row => {
             if(row['kode kec']) uniqueKec.add(row['kode kec']);
             if(row['kode desa']) uniqueDesa.add(row['kode desa']);
-            if(row['tps']) uniqueTps.add(row['tps']);
             totalLk += getNum(row['laki-laki']);
             totalPr += getNum(row['perempuan']);
             totalAll += getNum(row['jumlah']);
+            totalTps++; // 1 Baris = 1 TPS
         });
 
         document.getElementById('sum-kec').innerText = formatAngka(uniqueKec.size);
         document.getElementById('sum-desa').innerText = formatAngka(uniqueDesa.size);
-        document.getElementById('sum-tps').innerText = formatAngka(uniqueTps.size);
+        document.getElementById('sum-tps').innerText = formatAngka(totalTps);
         document.getElementById('sum-lk').innerText = formatAngka(totalLk);
         document.getElementById('sum-pr').innerText = formatAngka(totalPr);
         document.getElementById('sum-total').innerText = formatAngka(totalAll);
-    }
-
-    function drillDown(targetTab, kodeKec, kodeDesa) {
-        if(targetTab === 'desa') {
-            activeFilterKec = kodeKec; activeFilterDesa = null;
-            // Cari nama kec untuk info drill down
-            let namaKec = filteredData.find(r => r['kode kec'] === kodeKec)['kecamatan'] || kodeKec;
-            document.getElementById('drill-text').innerText = "Menampilkan Desa di Kecamatan: " + namaKec;
-        } else if(targetTab === 'tps') {
-            activeFilterDesa = kodeDesa;
-            let namaDesa = filteredData.find(r => r['kode desa'] === kodeDesa)['desa'] || kodeDesa;
-            document.getElementById('drill-text').innerText = "Menampilkan TPS di Desa: " + namaDesa;
-        }
-        document.getElementById('drill-info').style.display = 'flex';
-        switchTab(targetTab);
-    }
-
-    function resetDrill() {
-        activeFilterKec = null; activeFilterDesa = null;
-        document.getElementById('drill-info').style.display = 'none';
-        switchTab(currentTab);
     }
 
     function switchTab(type) {
@@ -201,59 +171,51 @@
         let heads = [], dataRows = [], foots = [];
 
         if(type === 'kec') {
-            activeFilterKec = null; activeFilterDesa = null;
-            document.getElementById('drill-info').style.display = 'none';
-
-            heads = ['No', 'Kode Kec', 'Kecamatan', 'Jml Desa', 'Jml TPS', 'Laki-Laki', 'Perempuan', 'Jumlah', 'Aksi'];
+            heads = ['No', 'Kode Kec', 'Kecamatan', 'Jml Desa', 'Jml TPS', 'Laki-Laki', 'Perempuan', 'Jumlah'];
             let grouped = {};
 
             filteredData.forEach(row => {
                 let key = row['kode kec']; if(!key) return;
-                if(!grouped[key]) grouped[key] = { 'kec': row['kecamatan'], 'kode': key, 'desa': new Set(), 'tps': new Set(), 'lk': 0, 'pr': 0, 'jml': 0 };
+                if(!grouped[key]) grouped[key] = { 'kec': row['kecamatan'], 'kode': key, 'desa': new Set(), 'tpsCount': 0, 'lk': 0, 'pr': 0, 'jml': 0 };
                 if(row['kode desa']) grouped[key].desa.add(row['kode desa']);
-                if(row['tps']) grouped[key].tps.add(row['tps']);
+                grouped[key].tpsCount++; // Tambah hitungan TPS
                 grouped[key].lk += getNum(row['laki-laki']);
                 grouped[key].pr += getNum(row['perempuan']);
                 grouped[key].jml += getNum(row['jumlah']);
             });
 
-            let no = 1, totLk=0, totPr=0, totJml=0;
+            let no = 1, totLk=0, totPr=0, totJml=0, totTps=0;
             Object.values(grouped).forEach(val => {
-                dataRows.push([no++, val.kode, val.kec, val.desa.size, val.tps.size, formatAngka(val.lk), formatAngka(val.pr), formatAngka(val.jml), `<button class="btn-rekap" onclick="drillDown('desa', '${val.kode}', null)"><i class="fas fa-eye"></i> Lihat Rekap</button>`]);
-                totLk += val.lk; totPr += val.pr; totJml += val.jml;
+                dataRows.push([no++, val.kode, val.kec, val.desa.size, formatAngka(val.tpsCount), formatAngka(val.lk), formatAngka(val.pr), formatAngka(val.jml)]);
+                totLk += val.lk; totPr += val.pr; totJml += val.jml; totTps += val.tpsCount;
             });
-            foots = ['', '', 'TOTAL', '', '', formatAngka(totLk), formatAngka(totPr), formatAngka(totJml), ''];
+            foots = ['', '', 'TOTAL', '', formatAngka(totTps), formatAngka(totLk), formatAngka(totPr), formatAngka(totJml)];
 
         } else if(type === 'desa') {
-            heads = ['No', 'Kode Desa', 'Desa', 'Kecamatan', 'Jml TPS', 'Laki-Laki', 'Perempuan', 'Jumlah', 'Aksi'];
+            heads = ['No', 'Kode Desa', 'Desa', 'Kecamatan', 'Jml TPS', 'Laki-Laki', 'Perempuan', 'Jumlah'];
             let grouped = {};
 
             filteredData.forEach(row => {
                 let key = row['kode desa']; if(!key) return;
-                if(activeFilterKec && row['kode kec'] !== activeFilterKec) return; // SUMIF by Kec
-
-                if(!grouped[key]) grouped[key] = { 'desa': row['desa'], 'kec': row['kecamatan'], 'kode': key, 'kodekec': row['kode kec'], 'tps': new Set(), 'lk': 0, 'pr': 0, 'jml': 0 };
-                if(row['tps']) grouped[key].tps.add(row['tps']);
+                if(!grouped[key]) grouped[key] = { 'desa': row['desa'], 'kec': row['kecamatan'], 'kode': key, 'tpsCount': 0, 'lk': 0, 'pr': 0, 'jml': 0 };
+                grouped[key].tpsCount++; // Tambah hitungan TPS
                 grouped[key].lk += getNum(row['laki-laki']);
                 grouped[key].pr += getNum(row['perempuan']);
                 grouped[key].jml += getNum(row['jumlah']);
             });
 
-            let no = 1, totLk=0, totPr=0, totJml=0;
+            let no = 1, totLk=0, totPr=0, totJml=0, totTps=0;
             Object.values(grouped).forEach(val => {
-                dataRows.push([no++, val.kode, val.desa, val.kec, val.tps.size, formatAngka(val.lk), formatAngka(val.pr), formatAngka(val.jml), `<button class="btn-rekap" onclick="drillDown('tps', '${val.kodekec}', '${val.kode}')"><i class="fas fa-eye"></i> Lihat Rekap</button>`]);
-                totLk += val.lk; totPr += val.pr; totJml += val.jml;
+                dataRows.push([no++, val.kode, val.desa, val.kec, formatAngka(val.tpsCount), formatAngka(val.lk), formatAngka(val.pr), formatAngka(val.jml)]);
+                totLk += val.lk; totPr += val.pr; totJml += val.jml; totTps += val.tpsCount;
             });
-            foots = ['', '', 'TOTAL', '', '', formatAngka(totLk), formatAngka(totPr), formatAngka(totJml), ''];
+            foots = ['', '', 'TOTAL', '', formatAngka(totTps), formatAngka(totLk), formatAngka(totPr), formatAngka(totJml)];
 
         } else if(type === 'tps') {
             heads = ['No', 'Kecamatan', 'Desa', 'TPS', 'Laki-Laki', 'Perempuan', 'Jumlah'];
             let no = 1, totLk=0, totPr=0, totJml=0;
 
             filteredData.forEach(row => {
-                if(activeFilterKec && row['kode kec'] !== activeFilterKec) return; // Filter by Kec
-                if(activeFilterDesa && row['kode desa'] !== activeFilterDesa) return; // Filter by Desa
-
                 dataRows.push([no++, row['kecamatan'], row['desa'], row['tps'], formatAngka(getNum(row['laki-laki'])), formatAngka(getNum(row['perempuan'])), formatAngka(getNum(row['jumlah']))]);
                 totLk += getNum(row['laki-laki']); totPr += getNum(row['perempuan']); totJml += getNum(row['jumlah']);
             });
@@ -263,14 +225,17 @@
         $('#table-head').html('<tr>' + heads.map(h => '<th>'+h+'</th>').join('') + '</tr>');
         $('#table-foot').html('<tr>' + foots.map(f => '<th>'+f+'</th>').join('') + '</tr>');
         
+        // DATATABLES DENGAN TINGGI ADAPTIF (AGAR TABEL TIDAK MENDORONG IFRAME KE BAWAH)
         dataTableInstance = $('#main-table').DataTable({
             data: dataRows,
             destroy: true,
             language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/id.json' },
             ordering: true,
-            pageLength: 10,
-            order: [[0, 'asc']],
-            columnDefs: [ { orderable: false, targets: (type !== 'tps' ? 8 : -1) } ] 
+            pageLength: 999, // Tampilkan semua agar scroll mulus
+            scrollY: 'calc(100vh - 380px)', // Sesuaikan tinggi tabel otomatis
+            scrollCollapse: true,
+            paging: false, // Paging dimatikan, pakai scroll internal
+            order: [[0, 'asc']]
         });
 
         document.querySelectorAll('.nav-link').forEach(btn => btn.classList.remove('active'));
