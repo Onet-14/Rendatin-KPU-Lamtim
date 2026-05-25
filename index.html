@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* PENGATURAN TEMA LIGHT MODE KPU */
-        body { background-color: #f4f6f9; color: #333333; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; height: 100vh; }
+        body { background-color: #f4f6f9; color: #333333; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; height: 100vh; margin: 0; }
 
         /* LOADING OVERLAY */
         #loading-overlay {
@@ -23,7 +23,7 @@
         @keyframes rotator { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .path {
             stroke-dasharray: 187; stroke-dashoffset: 0; transform-origin: center;
-            animation: dash 1.4s ease-in-out infinite; stroke: #C8102E; /* Warna Merah KPU */
+            animation: dash 1.4s ease-in-out infinite; stroke: #C8102E;
         }
         @keyframes dash {
             0% { stroke-dashoffset: 187; }
@@ -32,7 +32,7 @@
         }
 
         /* HALAMAN LOGIN */
-        #login-screen { position: fixed; inset: 0; background: url('background.jpg') no-repeat center center fixed; background-size: cover; display: flex; justify-content: center; align-items: center; z-index: 9999; }
+        #login-screen { position: fixed; inset: 0; background: url('background.jpg') no-repeat center center fixed; background-size: cover; display: none; justify-content: center; align-items: center; z-index: 9999; }
         #login-screen::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.6); z-index: 1; }
         .login-box { background: #ffffff; padding: 40px; border-radius: 15px; box-shadow: 0 15px 30px rgba(0,0,0,0.3); text-align: center; width: 350px; position: relative; z-index: 2; }
         .login-box h3 { color: #C8102E; font-weight: bold; margin-bottom: 20px; }
@@ -44,7 +44,7 @@
         .toggle-password { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #888; font-size: 1.1rem; }
         .toggle-password:hover { color: #C8102E; }
 
-        /* LAYOUT UTAMA */
+        /* LAYOUT UTAMA - DEFAULT DISPLAY NONE */
         #app-wrapper { display: none; height: 100vh; width: 100vw; }
 
         /* SIDEBAR KIRI */
@@ -81,7 +81,7 @@
         #iframe-container { width: 100%; max-width: 1500px; height: 100%; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.07); overflow: hidden; display: flex; }
         #content-frame { flex: 1; border: none; }
 
-        /* DASHBOARD */
+        /* DASHBOARD - DEFAULT DISPLAY NONE */
         #dashboard-view { height: 100%; display: none; align-items: center; justify-content: center; background: linear-gradient(135deg, #8a0b1a 0%, #C8102E 60%, #e6334a 100%); padding: 40px; position: relative; overflow: hidden; }
         #dashboard-view::before { content: ''; position: absolute; top: -100px; right: -100px; width: 400px; height: 400px; background: rgba(255,255,255,0.1); border-radius: 50%; }
         #dashboard-view::after { content: ''; position: absolute; bottom: -150px; left: -100px; width: 500px; height: 500px; background: rgba(255,255,255,0.05); border-radius: 50%; }
@@ -109,15 +109,15 @@
 </head>
 <body>
 
-<!-- LOADING SPINNER OVERLAY -->
+<!-- LOADING SPINNER OVERLAY (Default tampil) -->
 <div id="loading-overlay">
    <svg class="spinner" width="65px" height="65px" viewBox="0 0 66 66" xmlns="http://www.w3.org/2000/svg">
       <circle class="path" fill="none" stroke-width="6" stroke-linecap="round" cx="33" cy="33" r="30"></circle>
    </svg>
 </div>
 
-<!-- HALAMAN LOGIN PASSWORD -->
-<div id="login-screen" style="display: none;">
+<!-- HALAMAN LOGIN PASSWORD (Default sembunyi) -->
+<div id="login-screen">
     <div class="login-box">
         <h3>LOGIN</h3>
         <p style="color: #666; font-size: 0.9rem;">Input User dan Password!</p>
@@ -131,8 +131,8 @@
     </div>
 </div>
 
-<div id="app-wrapper" style="display: none;">
-    <!-- SIDEBAR KIRI -->
+<!-- APP WRAPPER (Default sembunyi) -->
+<div id="app-wrapper">
     <aside id="sidebar">
         <div class="sidebar-header">
             <img src="logo_kpu.png" alt="Logo KPU">
@@ -140,7 +140,8 @@
         </div>
 
         <div class="sidebar-menu">
-            <div id="menu-dashboard" class="menu-item active" onclick="showDashboard(this)">
+            <!-- PERBAIKAN: Hilangkan class active default, biar JS yang atur -->
+            <div id="menu-dashboard" class="menu-item" onclick="showDashboard(this)">
                 <i class="fas fa-home"></i> Beranda
             </div>
             <div style="height: 10px;"></div>
@@ -172,7 +173,7 @@
 
     <div id="sidebar-overlay" onclick="toggleSidebar()"></div>
 
-    <main id="main-content" style="visibility: hidden;">
+    <main id="main-content">
         <div class="topbar">
             <button class="btn btn-link text-dark d-md-none me-2 p-0" onclick="toggleSidebar()"><i class="fas fa-bars fa-lg"></i></button>
             <span class="topbar-title" id="topbar-title">Beranda</span>
@@ -202,15 +203,6 @@
 </div>
 
 <script>
-    // 1. CEK SESSION SAAT PERTAMA KALI (SEBELUM RENDER) - MENCEGAH FLICKER
-    const isAuth = sessionStorage.getItem('isAuthenticated') === 'true';
-    if (isAuth) {
-        document.getElementById('app-wrapper').style.display = 'flex'; // Langsung tampilkan app wrapper
-    } else {
-        document.getElementById('login-screen').style.display = 'flex'; // Langsung tampilkan login
-        document.getElementById('loading-overlay').style.display = 'none'; // Matikan spinner kalau mau ke login
-    }
-
     // Toggle Password
     document.getElementById('toggle-password').addEventListener('click', function() {
         const passInput = document.getElementById('password-input');
@@ -246,6 +238,7 @@
         sessionStorage.clear(); 
         document.getElementById('app-wrapper').style.display = 'none'; 
         document.getElementById('login-screen').style.display = 'flex';
+        document.getElementById('loading-overlay').style.display = 'none'; // Matikan spinner saat logout
         document.getElementById('user-input').value = ''; 
         document.getElementById('password-input').value = ''; 
         document.getElementById('error-msg').style.display = 'none'; 
@@ -301,12 +294,10 @@
 
     // INISIALISASI UTAMA
     function initializeApp() {
-        document.getElementById('login-screen').style.display = 'none'; 
-        document.getElementById('app-wrapper').style.display = 'flex';
-
         let currentPage = sessionStorage.getItem('currentPage'); 
         let activeMenuId = sessionStorage.getItem('activeMenuId');
 
+        // 1. Atur dulu semuanya di belakang layar (app-wrapper masih display: none)
         if (currentPage && currentPage !== 'dashboard' && activeMenuId) {
             let element = document.getElementById(activeMenuId);
             if(element) { 
@@ -318,17 +309,26 @@
             showDashboard(document.getElementById('menu-dashboard')); 
         }
 
-        // AKHIRI LOADING: Setelah semua halaman JS selesai diatur, matikan spinner & tampilkan konten
-        document.getElementById('main-content').style.visibility = 'visible';
-        document.getElementById('loading-overlay').classList.add('fade-out');
-        setTimeout(() => { document.getElementById('loading-overlay').style.display = 'none'; }, 300);
+        // 2. Setelah layout benar, tampilkan app & sembunyikan login/spinner
+        document.getElementById('login-screen').style.display = 'none'; 
+        document.getElementById('app-wrapper').style.display = 'flex';
+        
+        // 3. Akhiri loading spinner
+        const loader = document.getElementById('loading-overlay');
+        loader.classList.add('fade-out');
+        setTimeout(() => { loader.style.display = 'none'; }, 300);
     }
 
-    // 2. TRIGGER INISIALISASI SAAT HALAMAN SELESAI DIMUAT (ONLOAD)
+    // CEK SESI SAAT PERTAMA KALI WEBSITE DIBUKA / DIREFRESH
     window.onload = function() { 
+        const isAuth = sessionStorage.getItem('isAuthenticated') === 'true';
         if (isAuth) { 
             initializeApp(); 
-        } 
+        } else {
+            // Jika belum login, langsung tampilkan login & matikan spinner
+            document.getElementById('loading-overlay').style.display = 'none';
+            document.getElementById('login-screen').style.display = 'flex';
+        }
     };
 </script>
 </body>
