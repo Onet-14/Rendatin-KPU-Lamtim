@@ -38,7 +38,6 @@
         .menu-item:hover { background-color: #fff5f5; color: #C8102E; }
         .menu-item.active { background-color: #C8102E; color: #ffffff; box-shadow: 0 4px 10px rgba(200, 16, 46, 0.3); }
         
-        /* Styling Submenu */
         .toggle-arrow { margin-left: auto; font-size: 0.8rem; transition: transform 0.3s ease; }
         .menu-group.open .toggle-arrow { transform: rotate(180deg); }
         .sub-menu { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-in-out; background: #fdfdfd; border-radius: 0 0 8px 8px; }
@@ -62,7 +61,7 @@
         #content-frame { flex: 1; border: none; }
 
         /* DASHBOARD */
-        #dashboard-view { height: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #8a0b1a 0%, #C8102E 60%, #e6334a 100%); padding: 40px; position: relative; overflow: hidden; }
+        #dashboard-view { height: 100%; display: none; align-items: center; justify-content: center; background: linear-gradient(135deg, #8a0b1a 0%, #C8102E 60%, #e6334a 100%); padding: 40px; position: relative; overflow: hidden; }
         #dashboard-view::before { content: ''; position: absolute; top: -100px; right: -100px; width: 400px; height: 400px; background: rgba(255,255,255,0.1); border-radius: 50%; }
         #dashboard-view::after { content: ''; position: absolute; bottom: -150px; left: -100px; width: 500px; height: 500px; background: rgba(255,255,255,0.05); border-radius: 50%; }
         .dashboard-content { display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 1000px; z-index: 10; }
@@ -73,7 +72,6 @@
         .logo-section { flex: 0 0 250px; display: flex; justify-content: center; align-items: center; margin-left: 60px; }
         .logo-section img { max-width: 100%; height: auto; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.4)); }
 
-        /* RESPONSIVE MOBILE */
         #sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 999; display: none; }
         @media (max-width: 768px) {
             #sidebar { position: fixed; left: 0; top: 0; bottom: 0; transform: translateX(-100%); box-shadow: 5px 0 15px rgba(0,0,0,0.1); }
@@ -119,7 +117,6 @@
             </div>
             <div style="height: 10px;"></div>
 
-            <!-- MENU REKAPITULASI DENGAN SUBMENU -->
             <div class="menu-group">
                 <div class="menu-item" onclick="toggleSubMenu(this)">
                     <i class="fas fa-database"></i> 
@@ -132,13 +129,11 @@
                 </div>
             </div>
             
-            <!-- MENU PETA -->
             <div id="menu-peta" class="menu-item" onclick="loadPage('peta.html', this, 'menu-peta')">
                 <i class="fas fa-map-marked-alt"></i> 
                 <span>Peta Data Pemilih</span>
             </div>
             
-            <!-- TOMBOL KELUAR -->
             <div class="menu-item menu-logout" onclick="logout()">
                 <i class="fas fa-sign-out-alt"></i> <span>Logout</span>
             </div>
@@ -156,6 +151,7 @@
             <small style="color: #888;">Komisi Pemilihan Umum Kab. Lampung Timur</small>
         </div>
 
+        <!-- Defaultnya display: none, akan diatur oleh JS -->
         <div id="dashboard-view">
             <div class="dashboard-content">
                 <div class="text-section">
@@ -178,19 +174,21 @@
     </main>
 </div>
 
-<!-- ANTI-FLASH LOGIN SCRIPT -->
+<!-- ANTI-FLICKER SCRIPT (PENTING!) -->
 <script>
-    // Cek otomatis sebelum render penuh, mencegah muncul login sesaat saat F5
+    // Cek otomatis sebelum render penuh
     if (sessionStorage.getItem('isAuthenticated') === 'true') {
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('app-wrapper').style.display = 'flex';
+        // Sembunyikan area konten sesaat agar tidak kedip ke Beranda saat reload halaman lain
+        document.getElementById('main-content').style.visibility = 'hidden';
     }
 </script>
 
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script>
-    // Toggle Password Mata
+    // Toggle Password
     document.getElementById('toggle-password').addEventListener('click', function() {
         const passInput = document.getElementById('password-input');
         const icon = this;
@@ -211,7 +209,6 @@
             if (isAuthenticated) {
                 sessionStorage.setItem('isAuthenticated', 'true'); 
                 sessionStorage.setItem('currentUser', userInput);
-                // Saat login pertama, arahkan ke dashboard
                 sessionStorage.setItem('currentPage', 'dashboard'); 
                 sessionStorage.setItem('activeMenuId', 'menu-dashboard');
                 initializeApp();
@@ -232,7 +229,6 @@
         document.getElementById('content-frame').src = ''; 
     }
 
-    // Navigasi & Submenu
     function toggleSubMenu(element) {
         const menuGroup = element.parentElement;
         const isOpening = !menuGroup.classList.contains('open');
@@ -257,7 +253,6 @@
             parentGroup.classList.add('open');
         }
         
-        // PENTING: Simpan state agar F5 tidak hilang
         sessionStorage.setItem('currentPage', pageUrl); 
         sessionStorage.setItem('activeMenuId', menuId);
 
@@ -273,7 +268,6 @@
         document.querySelectorAll('.menu-item, .sub-item').forEach(el => el.classList.remove('active')); 
         element.classList.add('active');
         
-        // PENTING: Simpan state agar F5 tidak hilang
         sessionStorage.setItem('currentPage', 'dashboard'); 
         sessionStorage.setItem('activeMenuId', 'menu-dashboard');
 
@@ -282,7 +276,7 @@
 
     function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebar-overlay').classList.toggle('open'); }
 
-    // FUNGSI INISIALISASI SAAT REFRESH
+    // INISIALISASI UTAMA
     function initializeApp() {
         document.getElementById('login-screen').style.display = 'none'; 
         document.getElementById('app-wrapper').style.display = 'flex';
@@ -300,6 +294,9 @@
         } else { 
             showDashboard(document.getElementById('menu-dashboard')); 
         }
+
+        // HAPUS SEMBUNYIANTI FLICKER: Setelah halaman yang benar diatur, tampilkan kontennya
+        document.getElementById('main-content').style.visibility = 'visible';
     }
 
     // CEK SESI SAAT PERTAMA KALI WEBSITE DIBUKA / DIREFRESH
