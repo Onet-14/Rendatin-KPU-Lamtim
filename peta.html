@@ -83,6 +83,29 @@
         .map-wrapper { flex: 1; position: relative; height: 100%; }
         #map { width: 100%; height: 100%; background-color: #e5e9ec; z-index: 1; }
 
+        /* TOMBOL KEMBALI (CUSTOM) */
+        .btn-back-control {
+            position: absolute;
+            top: 10px;
+            right: 50px; /* Sedikit ke kiri dari tombol zoom */
+            z-index: 1000;
+            background-color: #ffffff;
+            border: 2px solid #C8102E;
+            color: #C8102E;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            font-weight: 700;
+            font-size: 0.9rem;
+            display: none; /* Default hidden */
+            transition: all 0.2s;
+        }
+        .btn-back-control:hover {
+            background-color: #C8102E;
+            color: #ffffff;
+        }
+
         /* CUSTOM TOOLTIP STYLE */
         .custom-tooltip {
             background: rgba(255, 255, 255, 0.95);
@@ -171,6 +194,7 @@
             body { flex-direction: column; overflow: auto; height: auto; }
             .filter-panel { width: 100%; height: auto; border-right: none; border-bottom: 1px solid #dee2e6; }
             .map-wrapper { height: 60vh; width: 100%; }
+            .btn-back-control { top: 80px; right: 10px; } /* Geser tombol back di mobile */
         }
     </style>
 </head>
@@ -212,12 +236,15 @@
             <li>Hover wilayah untuk label nama.</li>
             <li>Klik <strong>Kecamatan</strong> untuk masuk ke desa.</li>
             <li>Klik <strong>Desa</strong> untuk memilih.</li>
-            <li>Tekan tombol <strong>Lihat TPS</strong> di popup.</li>
+            <li>Gunakan tombol <strong>Kembali</strong> di atas peta.</li>
         </ul>
     </div>
 </aside>
 
 <div class="map-wrapper">
+    <button id="btn-back" class="btn-back-control" onclick="goBackToKecamatan()">
+        <i class="fas fa-arrow-left"></i> KEMBALI
+    </button>
     <div id="map"></div>
 </div>
 
@@ -243,7 +270,6 @@
     let selectedDesaLayer = null;
     let selectedDesaFeature = null;
     
-    // Dictionary untuk mencari nama
     let desaNameMap = {};
     let kecamatanNameMap = {};
 
@@ -262,6 +288,7 @@
     }
 
     function initMap() {
+        // POSISI AWAL: [-5.10, 105.40], Zoom 10
         map = L.map('map', { zoomControl: false }).setView([-5.10, 105.40], 10);
         L.control.zoom({ position: 'topright' }).addTo(map);
 
@@ -285,13 +312,15 @@
         loadGeoJsons();
     }
 
+    // --- STYLE FUNCTIONS (GARIS BATAS PUTIH) ---
+
     function styleKecamatan(feature) {
         const color = getFeatureColor(feature);
         return {
             fillColor: color,
             weight: 2,
             opacity: 1,
-            color: '#333333',
+            color: '#ffffff', // Ganti ke Putih
             fillOpacity: 0.5
         };
     }
@@ -302,34 +331,33 @@
             fillColor: color,
             weight: 1,
             opacity: 1,
-            color: '#555555',
+            color: '#ffffff', // Ganti ke Putih
             fillOpacity: 0.5
         };
     }
 
-    // STYLE HIGHLIGHT (DIPILIH)
     const styleDesaSelected = {
         weight: 3,
-        color: '#C8102E',
+        color: '#ffffff', // Ganti ke Putih
         fillOpacity: 0.9,
         fillColor: '#ffcccc'
     };
 
-    // STYLE DIMMED (TIDAK DIPILIH)
     const styleDesaDimmed = {
         weight: 1,
-        color: '#666666',
+        color: '#ffffff', // Ganti ke Putih
         fillOpacity: 0.7, 
         fillColor: '#d3d3d3' 
     };
     
-    // STYLE HOVER
     const styleDesaHover = {
         weight: 2,
-        color: '#000000',
+        color: '#ffffff', // Ganti ke Putih
         fillOpacity: 0.6,
         dashArray: '3, 3'
     };
+
+    // --- LOGIKA ---
 
     function getFeatureName(feature, type) {
         const props = feature.properties;
@@ -426,6 +454,9 @@
         map.fitBounds(geoJsonLayerDesa.getBounds(), { padding: [50, 50] });
         
         tpsMarkersLayer.clearLayers();
+        
+        // Tampilkan Tombol Kembali
+        document.getElementById('btn-back').style.display = 'block';
     }
 
     function onEachFeatureDesa(feature, layer) {
@@ -436,30 +467,22 @@
 
         layer.on({
             mouseover: (e) => {
-                // Jika sedang ada desa yang dipilih, dan kursor di desa LAIN, beri efek hover
                 if (selectedDesaLayer && selectedDesaLayer !== e.target) {
                     e.target.setStyle(styleDesaHover);
-                } 
-                // Jika TIDAK ada desa yang dipilih, tetap beri efek hover biasa
-                else if (!selectedDesaLayer) {
+                } else if (!selectedDesaLayer) {
                     e.target.setStyle(styleDesaHover);
                 }
             },
             mouseout: (e) => {
-                // --- FIX BUG DI SINI ---
                 if (selectedDesaLayer) {
-                    // MODE SELEKSI: Ada desa yang dipilih
                     if (selectedDesaLayer === e.target) {
                         e.target.setStyle(styleDesaSelected);
                     } else {
                         e.target.setStyle(styleDesaDimmed);
                     }
                 } else {
-                    // MODE NORMAL: Belum ada yang dipilih
-                    // Kembalikan ke style DEFAULT (Warna-warni), jangan Dimmed!
                     geoJsonLayerDesa.resetStyle(e.target);
                 }
-                // ------------------------
             },
             click: (e) => {
                 highlightSelectedDesa(e.target, feature);
@@ -472,14 +495,11 @@
         selectedDesaLayer = clickedLayer;
         selectedDesaFeature = feature;
 
-        // Set semua layer menjadi Dimmed
         geoJsonLayerDesa.eachLayer(function (layer) {
             layer.setStyle(styleDesaDimmed);
         });
 
-        // Set yang diklik menjadi Selected
         clickedLayer.setStyle(styleDesaSelected);
-        
         tpsMarkersLayer.clearLayers();
         map.fitBounds(clickedLayer.getBounds(), { padding: [50, 50], maxZoom: 16 });
     }
@@ -578,7 +598,28 @@
         });
     }
 
+    // --- TOMBOL KEMBALI ---
+    function goBackToKecamatan() {
+        // Sembunyikan tombol kembali
+        document.getElementById('btn-back').style.display = 'none';
+        
+        // Reset pilihan
+        selectedDesaLayer = null;
+        selectedDesaFeature = null;
+        tpsMarkersLayer.clearLayers();
+
+        // Hapus layer desa, tampilkan kecamatan
+        if (map.hasLayer(geoJsonLayerDesa)) map.removeLayer(geoJsonLayerDesa);
+        if (!map.hasLayer(geoJsonLayerKec)) map.addLayer(geoJsonLayerKec);
+
+        // Zoom ke batas Kecamatan agar terlihat wilayahnya
+        map.fitBounds(geoJsonLayerKec.getBounds(), { padding: [50, 50] });
+    }
+
     function resetMap() {
+        // Sembunyikan tombol kembali
+        document.getElementById('btn-back').style.display = 'none';
+
         selectedDesaLayer = null;
         selectedDesaFeature = null;
         tpsMarkersLayer.clearLayers();
@@ -586,7 +627,8 @@
         if (map.hasLayer(geoJsonLayerDesa)) map.removeLayer(geoJsonLayerDesa);
         if (!map.hasLayer(geoJsonLayerKec)) map.addLayer(geoJsonLayerKec);
         
-        map.setView([-5.25, 105.35], 9);
+        // Reset view ke koordinat awal yang baru
+        map.setView([-5.10, 105.40], 10);
         map.closePopup();
     }
 
