@@ -15,55 +15,37 @@
         body { padding: 25px; background-color: #f4f6f9; font-family: 'Segoe UI', sans-serif; font-size: 13px; }
         h4 { color: #C8102E; font-weight: bold; }
         
-        /* Styling Filter */
-        .filter-card {
-            background: #ffffff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.07);
-            margin-bottom: 20px; display: flex; align-items: center; gap: 15px;
-        }
+        .filter-card { background: #ffffff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.07); margin-bottom: 20px; display: flex; align-items: center; gap: 15px; }
         .filter-card label { font-weight: 700; color: #333; white-space: nowrap; }
         .filter-card select { max-width: 300px; border-radius: 8px; border: 1px solid #ccc; padding: 8px 12px; font-weight: 500; }
 
-        /* Styling Summary Cards */
-        .summary-card {
-            background: #ffffff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.07);
-            border-left: 5px solid #C8102E; display: flex; align-items: center; justify-content: space-between;
-            transition: transform 0.2s; margin-bottom: 20px;
-        }
+        .summary-card { background: #ffffff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.07); border-left: 5px solid #C8102E; display: flex; align-items: center; justify-content: space-between; transition: transform 0.2s; margin-bottom: 20px; }
         .summary-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
         .summary-card .card-icon { font-size: 2.5rem; color: #C8102E; opacity: 0.8; }
         .summary-card .card-value { font-size: 1.8rem; font-weight: 800; color: #333; }
         .summary-card .card-label { font-size: 0.85rem; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
         
-        /* Styling Tabs */
         .nav-tabs .nav-link { color: #555; font-weight: 600; border: none; border-bottom: 3px solid transparent; }
         .nav-tabs .nav-link.active { color: #C8102E; border-bottom: 3px solid #C8102E; background: transparent; }
         .nav-tabs .nav-link:hover { border-color: #C8102E; color: #C8102E; }
 
-        /* Styling Tabel Card */
         .table-card { background: #ffffff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.07); }
         table { font-size: 13px; }
         .dataTables_wrapper .dataTables_filter input { border-radius: 8px; border: 1px solid #ccc; padding: 5px 10px; }
         
-        /* Styling Tombol Lihat Rekap */
-        .btn-rekap {
-            background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba;
-            font-size: 11px; padding: 4px 10px; border-radius: 20px; cursor: pointer; font-weight: 600;
-            transition: all 0.2s;
-        }
+        .btn-rekap { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; font-size: 11px; padding: 4px 10px; border-radius: 20px; cursor: pointer; font-weight: 600; transition: all 0.2s; }
         .btn-rekap:hover { background-color: #ffc107; color: #000; border-color: #ffc107; }
 
-        /* Styling Filter Drill Info */
-        .filter-info {
-            background: #e7f3ff; padding: 10px 15px; border-radius: 8px; margin-bottom: 15px;
-            color: #004085; font-weight: 600; display: flex; justify-content: space-between; align-items: center;
-        }
+        .filter-info { background: #e7f3ff; padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; color: #004085; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+        #debug-box { background: #fff3cd; color: #856404; padding: 10px; border-radius: 8px; margin-bottom: 15px; display: none; font-size: 12px; }
     </style>
 </head>
 <body>
 
 <h4 style="margin-bottom: 20px;"><i class="fas fa-list-ol"></i> Rekap Data Tahapan</h4>
 
-<!-- FILTER TAHAPAN -->
+<div id="debug-box"></div>
+
 <div class="filter-card">
     <i class="fas fa-filter" style="color: #C8102E; font-size: 1.2rem;"></i>
     <label for="filter-tahapan">Filter Tahapan:</label>
@@ -72,7 +54,6 @@
     </select>
 </div>
 
-<!-- SUMMARY CARDS -->
 <div class="row" id="summary-cards">
     <div class="col-lg-2 col-md-4 col-sm-6"><div class="summary-card"><div><div class="card-value" id="sum-kec">0</div><div class="card-label">Jml Kecamatan</div></div><div class="card-icon"><i class="fas fa-map"></i></div></div></div>
     <div class="col-lg-2 col-md-4 col-sm-6"><div class="summary-card"><div><div class="card-value" id="sum-desa">0</div><div class="card-label">Jml Desa</div></div><div class="card-icon"><i class="fas fa-home"></i></div></div></div>
@@ -82,9 +63,8 @@
     <div class="col-lg-2 col-md-4 col-sm-6"><div class="summary-card" style="border-left-color: #C8102E;"><div><div class="card-value" id="sum-total">0</div><div class="card-label">Total Pemilih</div></div><div class="card-icon" style="color: #C8102E;"><i class="fas fa-users"></i></div></div></div>
 </div>
 
-<!-- TABBED TABLE -->
 <div class="table-card">
-    <ul class="nav nav-tabs mb-3">
+    <ul class="nav nav-tabs mb-3" id="myTab" role="tablist">
         <li class="nav-item"><button class="nav-link active" id="kec-tab-btn" onclick="switchTab('kec')" type="button">Rekap Kecamatan</button></li>
         <li class="nav-item"><button class="nav-link" id="desa-tab-btn" onclick="switchTab('desa')" type="button">Rekap Desa</button></li>
         <li class="nav-item"><button class="nav-link" id="tps-tab-btn" onclick="switchTab('tps')" type="button">Detail TPS</button></li>
@@ -95,19 +75,22 @@
         <button class="btn btn-sm btn-danger" onclick="resetDrill()"><i class="fas fa-times"></i> Tampilkan Semua</button>
     </div>
 
-    <!-- Kontainer Tabel Dinamis -->
-    <div id="table-container"></div>
+    <table id="main-table" class="table table-striped table-bordered" style="width:100%">
+        <thead id="table-head"></thead>
+        <tbody id="table-body"></tbody>
+        <tfoot id="table-foot"></tfoot>
+    </table>
 </div>
 
 <script>
     const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSpHbswfamDpkWReHbBBYYWsc5Jq5KXz2SkwYwZarW7M-JlEB3DcUHagO0sVLAFCXU__bCk2V7qoJEp/pub?gid=0&single=true&output=csv';
 
     let rawData = [];
-    let filteredData = [];
+    let filteredData = []; 
     let dataTableInstance = null;
     let currentTab = 'kec';
-    let activeFilterKec = null;
-    let activeFilterDesa = null;
+    let activeFilterKec = null; // Simpan KODE KEC untuk drill down
+    let activeFilterDesa = null; // Simpan KODE DESA untuk drill down
 
     function getNum(val) {
         if (!val) return 0;
@@ -116,9 +99,7 @@
         return isNaN(num) ? 0 : num;
     }
 
-    function formatAngka(angka) {
-        return new Intl.NumberFormat('id-ID').format(angka);
-    }
+    function formatAngka(angka) { return new Intl.NumberFormat('id-ID').format(angka); }
 
     Papa.parse(CSV_URL, {
         download: true,
@@ -133,27 +114,28 @@
                 });
                 return cleanRow;
             });
+
+            if(rawData.length > 0) {
+                document.getElementById('debug-box').innerHTML = "<b>Detected Cols:</b> " + Object.keys(rawData[0]).join(', ') + " | <b>Rows:</b> " + rawData.length;
+                document.getElementById('debug-box').style.display = 'block';
+            }
+
             populateFilters();
-            applyFilter();
+            applyFilter(); 
         }
     });
 
     function populateFilters() {
         let tahapanSet = new Set();
-        rawData.forEach(row => {
-            if(row['tahapan']) tahapanSet.add(row['tahapan']);
-        });
+        rawData.forEach(row => { if(row['tahapan']) tahapanSet.add(row['tahapan']); });
 
         let select = document.getElementById('filter-tahapan');
         select.innerHTML = '<option value="all">Semua Tahapan</option>';
         
         Array.from(tahapanSet).sort().forEach(t => {
             let opt = document.createElement('option');
-            opt.value = t;
-            opt.text = t;
-            if(t.toLowerCase().includes('pemilu 2024') || t.toLowerCase().includes('pemilu2024')) {
-                opt.selected = true;
-            }
+            opt.value = t; opt.text = t;
+            if(t.toLowerCase().includes('pemilu 2024') || t.toLowerCase().includes('pemilu2024')) opt.selected = true;
             select.appendChild(opt);
         });
     }
@@ -161,9 +143,11 @@
     function applyFilter() {
         let selectedTahapan = document.getElementById('filter-tahapan').value;
         filteredData = (selectedTahapan === 'all') ? rawData : rawData.filter(row => row['tahapan'] === selectedTahapan);
+        
         activeFilterKec = null;
         activeFilterDesa = null;
         document.getElementById('drill-info').style.display = 'none';
+
         calculateSummary();
         switchTab(currentTab);
     }
@@ -191,32 +175,28 @@
 
     function drillDown(targetTab, kodeKec, kodeDesa) {
         if(targetTab === 'desa') {
-            activeFilterKec = kodeKec;
-            activeFilterDesa = null;
-            document.getElementById('drill-text').innerText = "Menampilkan Desa di Kecamatan terpilih";
+            activeFilterKec = kodeKec; activeFilterDesa = null;
+            // Cari nama kec untuk info drill down
+            let namaKec = filteredData.find(r => r['kode kec'] === kodeKec)['kecamatan'] || kodeKec;
+            document.getElementById('drill-text').innerText = "Menampilkan Desa di Kecamatan: " + namaKec;
         } else if(targetTab === 'tps') {
             activeFilterDesa = kodeDesa;
-            document.getElementById('drill-text').innerText = "Menampilkan TPS di Desa terpilih";
+            let namaDesa = filteredData.find(r => r['kode desa'] === kodeDesa)['desa'] || kodeDesa;
+            document.getElementById('drill-text').innerText = "Menampilkan TPS di Desa: " + namaDesa;
         }
         document.getElementById('drill-info').style.display = 'flex';
         switchTab(targetTab);
     }
 
     function resetDrill() {
-        activeFilterKec = null;
-        activeFilterDesa = null;
+        activeFilterKec = null; activeFilterDesa = null;
         document.getElementById('drill-info').style.display = 'none';
         switchTab(currentTab);
     }
 
     function switchTab(type) {
         currentTab = type;
-        
-        // Hancurkan DataTable lama jika ada
-        if(dataTableInstance) {
-            dataTableInstance.destroy(true);
-            dataTableInstance = null;
-        }
+        if(dataTableInstance) dataTableInstance.clear().destroy(); 
 
         let heads = [], dataRows = [], foots = [];
 
@@ -228,11 +208,8 @@
             let grouped = {};
 
             filteredData.forEach(row => {
-                let key = row['kode kec'] || row['kecamatan']; // Fallback jika kode kosong
-                if(!key) return;
-                if(!grouped[key]) {
-                    grouped[key] = { 'kec': row['kecamatan'], 'kode': row['kode kec'], 'desa': new Set(), 'tps': new Set(), 'lk': 0, 'pr': 0, 'jml': 0 };
-                }
+                let key = row['kode kec']; if(!key) return;
+                if(!grouped[key]) grouped[key] = { 'kec': row['kecamatan'], 'kode': key, 'desa': new Set(), 'tps': new Set(), 'lk': 0, 'pr': 0, 'jml': 0 };
                 if(row['kode desa']) grouped[key].desa.add(row['kode desa']);
                 if(row['tps']) grouped[key].tps.add(row['tps']);
                 grouped[key].lk += getNum(row['laki-laki']);
@@ -242,11 +219,7 @@
 
             let no = 1, totLk=0, totPr=0, totJml=0;
             Object.values(grouped).forEach(val => {
-                dataRows.push([
-                    no++, val.kode, val.kec, val.desa.size, val.tps.size, 
-                    formatAngka(val.lk), formatAngka(val.pr), formatAngka(val.jml),
-                    `<button class="btn-rekap" onclick="drillDown('desa', '${val.kode}', null)"><i class="fas fa-eye"></i> Lihat Rekap</button>`
-                ]);
+                dataRows.push([no++, val.kode, val.kec, val.desa.size, val.tps.size, formatAngka(val.lk), formatAngka(val.pr), formatAngka(val.jml), `<button class="btn-rekap" onclick="drillDown('desa', '${val.kode}', null)"><i class="fas fa-eye"></i> Lihat Rekap</button>`]);
                 totLk += val.lk; totPr += val.pr; totJml += val.jml;
             });
             foots = ['', '', 'TOTAL', '', '', formatAngka(totLk), formatAngka(totPr), formatAngka(totJml), ''];
@@ -256,13 +229,10 @@
             let grouped = {};
 
             filteredData.forEach(row => {
-                if(activeFilterKec && row['kode kec'] !== activeFilterKec) return;
-                let key = row['kode desa'] || row['desa']; // Fallback
-                if(!key) return;
+                let key = row['kode desa']; if(!key) return;
+                if(activeFilterKec && row['kode kec'] !== activeFilterKec) return; // SUMIF by Kec
 
-                if(!grouped[key]) {
-                    grouped[key] = { 'desa': row['desa'], 'kec': row['kecamatan'], 'kode': row['kode desa'], 'kodekec': row['kode kec'], 'tps': new Set(), 'lk': 0, 'pr': 0, 'jml': 0 };
-                }
+                if(!grouped[key]) grouped[key] = { 'desa': row['desa'], 'kec': row['kecamatan'], 'kode': key, 'kodekec': row['kode kec'], 'tps': new Set(), 'lk': 0, 'pr': 0, 'jml': 0 };
                 if(row['tps']) grouped[key].tps.add(row['tps']);
                 grouped[key].lk += getNum(row['laki-laki']);
                 grouped[key].pr += getNum(row['perempuan']);
@@ -271,11 +241,7 @@
 
             let no = 1, totLk=0, totPr=0, totJml=0;
             Object.values(grouped).forEach(val => {
-                dataRows.push([
-                    no++, val.kode, val.desa, val.kec, val.tps.size, 
-                    formatAngka(val.lk), formatAngka(val.pr), formatAngka(val.jml),
-                    `<button class="btn-rekap" onclick="drillDown('tps', '${val.kodekec}', '${val.kode}')"><i class="fas fa-eye"></i> Lihat Rekap</button>`
-                ]);
+                dataRows.push([no++, val.kode, val.desa, val.kec, val.tps.size, formatAngka(val.lk), formatAngka(val.pr), formatAngka(val.jml), `<button class="btn-rekap" onclick="drillDown('tps', '${val.kodekec}', '${val.kode}')"><i class="fas fa-eye"></i> Lihat Rekap</button>`]);
                 totLk += val.lk; totPr += val.pr; totJml += val.jml;
             });
             foots = ['', '', 'TOTAL', '', '', formatAngka(totLk), formatAngka(totPr), formatAngka(totJml), ''];
@@ -285,33 +251,21 @@
             let no = 1, totLk=0, totPr=0, totJml=0;
 
             filteredData.forEach(row => {
-                if(activeFilterKec && row['kode kec'] !== activeFilterKec) return;
-                if(activeFilterDesa && row['kode desa'] !== activeFilterDesa) return;
+                if(activeFilterKec && row['kode kec'] !== activeFilterKec) return; // Filter by Kec
+                if(activeFilterDesa && row['kode desa'] !== activeFilterDesa) return; // Filter by Desa
 
-                dataRows.push([
-                    no++, row['kecamatan'], row['desa'], row['tps'], 
-                    formatAngka(getNum(row['laki-laki'])), 
-                    formatAngka(getNum(row['perempuan'])), 
-                    formatAngka(getNum(row['jumlah']))
-                ]);
-                totLk += getNum(row['laki-laki']);
-                totPr += getNum(row['perempuan']);
-                totJml += getNum(row['jumlah']);
+                dataRows.push([no++, row['kecamatan'], row['desa'], row['tps'], formatAngka(getNum(row['laki-laki'])), formatAngka(getNum(row['perempuan'])), formatAngka(getNum(row['jumlah']))]);
+                totLk += getNum(row['laki-laki']); totPr += getNum(row['perempuan']); totJml += getNum(row['jumlah']);
             });
             foots = ['', '', '', 'TOTAL', formatAngka(totLk), formatAngka(totPr), formatAngka(totJml)];
         }
 
-        // Bangun Ulang Tabel dari Nol di dalam DOM
-        let tableHtml = `<table id="dynamic-table" class="table table-striped table-bordered" style="width:100%">`;
-        tableHtml += `<thead><tr>` + heads.map(h => `<th>${h}</th>`).join('') + `</tr></thead>`;
-        tableHtml += `<tfoot><tr>` + foots.map(f => `<th>${f}</th>`).join('') + `</tr></tfoot>`;
-        tableHtml += `</table>`;
+        $('#table-head').html('<tr>' + heads.map(h => '<th>'+h+'</th>').join('') + '</tr>');
+        $('#table-foot').html('<tr>' + foots.map(f => '<th>'+f+'</th>').join('') + '</tr>');
         
-        document.getElementById('table-container').innerHTML = tableHtml;
-
-        // Inisialisasi DataTable Baru
-        dataTableInstance = $('#dynamic-table').DataTable({
+        dataTableInstance = $('#main-table').DataTable({
             data: dataRows,
+            destroy: true,
             language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/id.json' },
             ordering: true,
             pageLength: 10,
