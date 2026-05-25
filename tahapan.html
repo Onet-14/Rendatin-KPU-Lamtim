@@ -6,7 +6,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* LAYOUT UTAMA FLEXBOX (ANTI TERPOTONG) */
         html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; background-color: #f0f2f5; font-family: 'Segoe UI', sans-serif; font-size: 14px; color: #333; }
         .page-container { display: flex; flex-direction: column; height: 100vh; padding: 20px; gap: 15px; }
         .top-section { flex-shrink: 0; }
@@ -17,9 +16,21 @@
         .filter-group { display: flex; align-items: center; gap: 10px; background: #fff; padding: 8px 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .filter-group label { font-weight: 700; color: #555; font-size: 13px; }
         .filter-group select { border: 1px solid #ddd; border-radius: 6px; padding: 5px 10px; font-weight: 600; font-size: 13px; color: #C8102E; cursor: pointer; }
+        .btn-lihat { background-color: #C8102E; color: #fff; border: none; border-radius: 6px; padding: 6px 15px; font-weight: 700; font-size: 13px; cursor: pointer; transition: 0.2s; }
+        .btn-lihat:hover { background-color: #a50d24; }
+
+        /* EMPTY STATE (Tampilan Awal) */
+        .empty-state { flex-grow: 1; display: flex; justify-content: center; align-items: center; background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); }
+        .empty-box { text-align: center; color: #888; }
+        .empty-box i { font-size: 4rem; color: #ccc; margin-bottom: 15px; }
+        .empty-box h5 { font-weight: 700; color: #555; }
+        .empty-box p { font-size: 13px; }
+
+        /* DATA AREA (Disembunyikan awalnya) */
+        #data-area { display: none; flex-grow: 1; min-height: 0; display: flex; flex-direction: column; gap: 15px; }
 
         /* SUMMARY CARDS */
-        .cards-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
+        .cards-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; flex-shrink: 0; }
         .stat-card { background: #fff; border-radius: 10px; padding: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border-left: 4px solid #C8102E; }
         .stat-card.blue { border-left-color: #4da6ff; }
         .stat-card.pink { border-left-color: #ff66b2; }
@@ -30,51 +41,27 @@
         /* TABLE SECTION */
         .table-section { flex-grow: 1; min-height: 0; background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); display: flex; flex-direction: column; overflow: hidden; }
         
-        /* TABS & SEARCH */
-        .tab-search-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px 0 20px; }
+        .tab-search-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px 0 20px; flex-shrink: 0; }
         .nav-tabs { border-bottom: 2px solid #eee; }
         .nav-tabs .nav-link { border: none; color: #888; font-weight: 700; font-size: 13px; padding: 8px 15px; border-bottom: 3px solid transparent; transition: 0.2s; }
         .nav-tabs .nav-link.active { color: #C8102E; border-bottom-color: #C8102E; background: transparent; }
         .nav-tabs .nav-link:hover:not(.active) { color: #333; }
         .search-box input { border: 1px solid #ddd; border-radius: 6px; padding: 5px 12px; font-size: 13px; width: 200px; }
 
-        /* TABEL MURNI CSS */
         .table-container { flex: 1; min-height: 0; overflow-y: auto; padding: 0 20px 20px 20px; }
         table { width: 100% !important; border-collapse: collapse; }
-        
-        thead th { 
-            position: sticky; top: 0; z-index: 10; 
-            background-color: #f8f9fa; color: #555; font-weight: 700; font-size: 12px; text-transform: uppercase;
-            padding: 12px 10px; border-bottom: 2px solid #C8102E; white-space: nowrap; text-align: left;
-        }
-        
-        tbody td { 
-            padding: 10px; border-bottom: 1px solid #eee; font-size: 13px; white-space: nowrap; 
-        }
+        thead th { position: sticky; top: 0; z-index: 10; background-color: #f8f9fa; color: #555; font-weight: 700; font-size: 12px; text-transform: uppercase; padding: 12px 10px; border-bottom: 2px solid #C8102E; white-space: nowrap; text-align: left; }
+        tbody td { padding: 10px; border-bottom: 1px solid #eee; font-size: 13px; white-space: nowrap; }
         tbody tr:hover { background-color: #fdf2f2; }
+        tfoot th { position: sticky; bottom: 0; z-index: 10; background-color: #f8f9fa; color: #333; font-weight: 800; font-size: 13px; padding: 12px 10px; border-top: 2px solid #C8102E; white-space: nowrap; text-align: left !important; }
 
-        tfoot th { 
-            position: sticky; bottom: 0; z-index: 10; 
-            background-color: #f8f9fa; color: #333; font-weight: 800; font-size: 13px;
-            padding: 12px 10px; border-top: 2px solid #C8102E; white-space: nowrap;
-            text-align: left !important; 
-        }
-
-        /* Penyesuaian Kolom */
         .col-no { width: 40px; text-align: center !important; }
-        .col-num { 
-            text-align: left !important; 
-            font-weight: 600; 
-            font-variant-numeric: tabular-nums; 
-        }
+        .col-num { text-align: left !important; font-weight: 600; font-variant-numeric: tabular-nums; }
         .col-name { text-align: left !important; }
 
-        /* Hilangkan elemen bawaan DataTables */
         .dataTables_length, .dataTables_info, .dataTables_paginate, .dataTables_filter { display: none !important; }
 
-        @media (max-width: 768px) {
-            .cards-row { grid-template-columns: repeat(3, 1fr); }
-        }
+        @media (max-width: 768px) { .cards-row { grid-template-columns: repeat(3, 1fr); } }
     </style>
 </head>
 <body>
@@ -86,11 +73,24 @@
             <div class="filter-group">
                 <i class="fas fa-filter" style="color: #C8102E;"></i>
                 <label>Tahapan:</label>
-                <select id="filter-tahapan" onchange="applyFilter()"></select>
+                <select id="filter-tahapan"></select>
+                <button class="btn-lihat" id="btn-lihat-rekap"><i class="fas fa-search"></i> Lihat Rekap</button>
             </div>
         </div>
+    </div>
 
-        <div class="cards-row mt-3">
+    <!-- TAMPILAN AWAL (Sebelum klik Lihat Rekap) -->
+    <div class="empty-state" id="empty-state">
+        <div class="empty-box">
+            <i class="fas fa-hand-pointer"></i>
+            <h5>Silakan Pilih Tahapan</h5>
+            <p>Pilih filter Tahapan di atas, lalu klik <b>Lihat Rekap</b> untuk memuat data.</p>
+        </div>
+    </div>
+
+    <!-- AREA DATA (Disembunyikan awalnya) -->
+    <div id="data-area">
+        <div class="cards-row">
             <div class="stat-card"><div class="stat-info"><div class="val" id="sum-kec">0</div><div class="lbl">Jml Kecamatan</div></div><div class="stat-icon"><i class="fas fa-map"></i></div></div>
             <div class="stat-card"><div class="stat-info"><div class="val" id="sum-desa">0</div><div class="lbl">Jml Desa</div></div><div class="stat-icon"><i class="fas fa-home"></i></div></div>
             <div class="stat-card"><div class="stat-info"><div class="val" id="sum-tps">0</div><div class="lbl">Jml TPS</div></div><div class="stat-icon"><i class="fas fa-box"></i></div></div>
@@ -98,24 +98,23 @@
             <div class="stat-card pink"><div class="stat-info"><div class="val" id="sum-pr">0</div><div class="lbl">Pemilih Perempuan</div></div><div class="stat-icon"><i class="fas fa-venus"></i></div></div>
             <div class="stat-card"><div class="stat-info"><div class="val" id="sum-total">0</div><div class="lbl">Total Pemilih</div></div><div class="stat-icon"><i class="fas fa-users"></i></div></div>
         </div>
-    </div>
 
-    <div class="table-section">
-        <div class="tab-search-row">
-            <ul class="nav nav-tabs" id="myTab">
-                <li class="nav-item"><a class="nav-link active" id="kec-tab-btn" onclick="switchTab('kec')" href="#">Rekap Kecamatan</a></li>
-                <li class="nav-item"><a class="nav-link" id="desa-tab-btn" onclick="switchTab('desa')" href="#">Rekap Desa</a></li>
-                <li class="nav-item"><a class="nav-link" id="tps-tab-btn" onclick="switchTab('tps')" href="#">Detail TPS</a></li>
-            </ul>
-            <div class="search-box"><input type="text" id="custom-search" placeholder="Cari data..."></div>
-        </div>
-
-        <div class="table-container">
-            <table id="main-table" class="table">
-                <thead id="table-head"></thead>
-                <tbody id="table-body"></tbody>
-                <tfoot id="table-foot"></tfoot>
-            </table>
+        <div class="table-section">
+            <div class="tab-search-row">
+                <ul class="nav nav-tabs" id="myTab">
+                    <li class="nav-item"><a class="nav-link active" id="kec-tab-btn" onclick="switchTab('kec')" href="#">Rekap Kecamatan</a></li>
+                    <li class="nav-item"><a class="nav-link" id="desa-tab-btn" onclick="switchTab('desa')" href="#">Rekap Desa</a></li>
+                    <li class="nav-item"><a class="nav-link" id="tps-tab-btn" onclick="switchTab('tps')" href="#">Detail TPS</a></li>
+                </ul>
+                <div class="search-box"><input type="text" id="custom-search" placeholder="Cari data..."></div>
+            </div>
+            <div class="table-container">
+                <table id="main-table" class="table">
+                    <thead id="table-head"></thead>
+                    <tbody id="table-body"></tbody>
+                    <tfoot id="table-foot"></tfoot>
+                </table>
+            </div>
         </div>
     </div>
 </div>
@@ -139,12 +138,7 @@
     }
 
     function formatAngka(angka) { return new Intl.NumberFormat('id-ID').format(angka); }
-
-    // Fungsi membalikkan format angka ke bilangan asli untuk perhitungan ulang di search
-    function parseBackToNum(str) {
-        if (!str) return 0;
-        return parseInt(str.toString().replace(/\./g, '')) || 0;
-    }
+    function parseBackToNum(str) { if (!str) return 0; return parseInt(str.toString().replace(/\./g, '')) || 0; }
 
     Papa.parse(CSV_URL, {
         download: true,
@@ -160,7 +154,7 @@
                 return cleanRow;
             });
             populateFilters();
-            applyFilter(); 
+            // TIDAK MEMANGGIL applyFilter() DI SINI! Biarkan tombol yang memicu.
         }
     });
 
@@ -179,6 +173,13 @@
             }
         });
     }
+
+    // EVENT LISTENER TOMBOL LIHAT REKAP
+    document.getElementById('btn-lihat-rekap').addEventListener('click', function() {
+        document.getElementById('empty-state').style.display = 'none';
+        document.getElementById('data-area').style.display = 'flex';
+        applyFilter();
+    });
 
     function applyFilter() {
         let selectedTahapan = document.getElementById('filter-tahapan').value;
@@ -206,32 +207,24 @@
         document.getElementById('sum-total').innerText = formatAngka(totalAll);
     }
 
-    // FUNGSI UPDATE TOTAL SAAT SEARCH
     function updateFooterOnSearch() {
         if (!dataTableInstance) return;
         var api = dataTableInstance;
-        
-        // Tentukan kolom mana saja yang berisi angka dan perlu dijumlah
         let numericCols = [];
-        if (currentTab === 'kec') numericCols = [2, 3, 4, 5, 6]; // Desa, TPS, Lk, Pr, Jml
-        if (currentTab === 'desa') numericCols = [3, 4, 5, 6];    // TPS, Lk, Pr, Jml
-        if (currentTab === 'tps') numericCols = [4, 5, 6];        // Lk, Pr, Jml
+        if (currentTab === 'kec') numericCols = [2, 3, 4, 5, 6]; 
+        if (currentTab === 'desa') numericCols = [3, 4, 5, 6];    
+        if (currentTab === 'tps') numericCols = [4, 5, 6];        
 
         let totals = {};
         numericCols.forEach(i => totals[i] = 0);
 
-        // Jumlahkan hanya baris yang sedang tampil (terfilter oleh search)
         api.rows({ search: 'applied' }).every(function() {
             let data = this.data();
-            numericCols.forEach(i => {
-                totals[i] += parseBackToNum(data[i]);
-            });
+            numericCols.forEach(i => { totals[i] += parseBackToNum(data[i]); });
         });
 
-        // Update tampilan footer
         $(api.table().footer()).find('th').each(function(index) {
             if (numericCols.includes(index)) {
-                // Bungkus dengan <strong> agar angkanya bold
                 $(this).html('<strong>' + formatAngka(totals[index]) + '</strong>');
             }
         });
@@ -260,7 +253,7 @@
             Object.values(grouped).forEach(val => {
                 dataRows.push([no++, val.kec, val.desa.size, formatAngka(val.tpsCount), formatAngka(val.lk), formatAngka(val.pr), formatAngka(val.jml)]);
                 totLk += val.lk; totPr += val.pr; totJml += val.jml; totTps += val.tpsCount;
-                totDesa += val.desa.size; // PENAMBAHAN: Jumlah desa per kecamatan dijumlahkan
+                totDesa += val.desa.size;
             });
             foots = ['', '<strong>TOTAL</strong>', '<strong>' + formatAngka(totDesa) + '</strong>', '<strong>' + formatAngka(totTps) + '</strong>', '<strong>' + formatAngka(totLk) + '</strong>', '<strong>' + formatAngka(totPr) + '</strong>', '<strong>' + formatAngka(totJml) + '</strong>'];
 
@@ -309,23 +302,12 @@
         $('#table-foot').html(footHtml);
         
         dataTableInstance = $('#main-table').DataTable({
-            destroy: true,
-            paging: false,
-            scrollY: false, 
-            scrollX: false,
-            ordering: true,
-            order: [[0, 'asc']],
-            autoWidth: false,
+            destroy: true, paging: false, scrollY: false, scrollX: false, ordering: true, order: [[0, 'asc']], autoWidth: false,
             language: { search: "", infoEmpty: "", info: "" },
-            // Panggil fungsi update footer setiap kali tabel di-render ulang (misal saat search)
-            drawCallback: function(settings) {
-                updateFooterOnSearch();
-            }
+            drawCallback: function(settings) { updateFooterOnSearch(); }
         });
 
-        $('#custom-search').off('keyup').on('keyup', function() {
-            dataTableInstance.search(this.value).draw();
-        });
+        $('#custom-search').off('keyup').on('keyup', function() { dataTableInstance.search(this.value).draw(); });
 
         document.querySelectorAll('.nav-link').forEach(btn => btn.classList.remove('active'));
         document.getElementById(type+'-tab-btn').classList.add('active');
