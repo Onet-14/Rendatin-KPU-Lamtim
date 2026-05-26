@@ -354,14 +354,6 @@
             fillOpacity: 0.5
         };
     }
-
-        const styleDesaSelected = {
-        fillColor: color,
-        weight: 3,
-        opacity: 1,
-        color: '#ffffff',
-        fillOpacity: 0.5
-    };
     
     const styleDesaDimmed = {
         weight: 1,
@@ -509,8 +501,17 @@
             mouseout: (e) => {
                 if (selectedDesaLayer) {
                     if (selectedDesaLayer === e.target) {
-                        e.target.setStyle(styleDesaSelected);
+                        // Jika ini desa yang sedang aktif/dipilih, pertahankan warna aslinya
+                        const originalColor = getFeatureColor(selectedDesaFeature);
+                        e.target.setStyle({
+                            fillColor: originalColor,
+                            weight: 3,
+                            opacity: 1,
+                            color: '#ffffff',
+                            fillOpacity: 0.85
+                        });
                     } else {
+                        // Jika bukan desa yang dipilih, biar tetap abu-abu
                         e.target.setStyle(styleDesaDimmed);
                     }
                 } else {
@@ -524,16 +525,28 @@
         });
     }
 
-    function highlightSelectedDesa(clickedLayer, feature) {
+        function highlightSelectedDesa(clickedLayer, feature) {
         selectedDesaLayer = clickedLayer;
         selectedDesaFeature = feature;
 
+        // 1. Ubah semua desa jadi abu-abu (redup)
         geoJsonLayerDesa.eachLayer(function (layer) {
             layer.setStyle(styleDesaDimmed);
         });
 
-    clickedLayer.setStyle(styleDesaSelected);
-    tpsMarkersLayer.clearLayers();
+        // 2. Ambil warna asli dari desa yang diklik
+        const originalColor = getFeatureColor(feature);
+
+        // 3. Terapkan style highlight TAPI pakai warna asli desa tersebut
+        clickedLayer.setStyle({
+            fillColor: originalColor, // PAKAI WARNA ASLINYA
+            weight: 3,               // Garis tepi tebal
+            opacity: 1,
+            color: '#ffffff',        // Garis tepi putih
+            fillOpacity: 0.85        // Buat lebih solid agar menonjol dibanding yang abu-abu
+        });
+        
+        tpsMarkersLayer.clearLayers();
     }
 
     function showDesaPopup(feature, layer) {
