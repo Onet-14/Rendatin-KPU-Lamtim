@@ -14,21 +14,14 @@
 
     <style>
         body { 
-            margin: 0; 
-            padding: 0; 
-            background-color: #f4f6f9; 
+            margin: 0; padding: 0; background-color: #f4f6f9; 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            height: 100vh; 
-            width: 100vw;
-            overflow: hidden; 
-            display: flex; 
+            height: 100vh; width: 100vw; overflow: hidden; display: flex; 
         }
 
-        /* FIX: Hapus efek kotak hitam/garis saat klik */
         .leaflet-container path.leaflet-interactive { outline: none; }
         .leaflet-container :focus { outline: none; box-shadow: none; }
 
-        /* LOADING OVERLAY */
         #loading-overlay {
             position: fixed; inset: 0; background-color: rgba(255, 255, 255, 0.95);
             display: flex; flex-direction: column; justify-content: center; align-items: center;
@@ -37,19 +30,10 @@
         .spinner-border { color: #C8102E; width: 3rem; height: 3rem; }
         .loading-text { margin-top: 15px; color: #555; font-weight: 600; font-size: 1.1rem; }
 
-        /* SIDEBAR FILTER */
         .filter-panel {
-            width: 300px;
-            background: #ffffff;
-            border-right: 1px solid #dee2e6;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            overflow-y: auto;
-            flex-shrink: 0;
-            z-index: 1000;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+            width: 300px; background: #ffffff; border-right: 1px solid #dee2e6;
+            padding: 20px; display: flex; flex-direction: column; gap: 15px;
+            overflow-y: auto; flex-shrink: 0; z-index: 1000; box-shadow: 2px 0 10px rgba(0,0,0,0.05);
         }
         
         .filter-section h5 { 
@@ -61,15 +45,17 @@
         .form-select { border-radius: 6px; border-color: #ced4da; padding: 10px; font-size: 0.9rem; }
         .form-select:focus { border-color: #C8102E; box-shadow: 0 0 0 0.2rem rgba(200, 16, 46, 0.15); }
         
+        .btn-lihat {
+            background-color: #C8102E; color: white; border: none; width: 100%;
+            padding: 12px; border-radius: 6px; font-weight: 700; transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 1rem;
+        }
+        .btn-lihat:hover:not(:disabled) { background-color: #a50d24; color: white; transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .btn-lihat:disabled { background-color: #e0a3ac; cursor: not-allowed; }
+
         .btn-reset {
-            background-color: #6c757d;
-            color: white;
-            border: none;
-            width: 100%;
-            padding: 12px;
-            border-radius: 6px;
-            font-weight: 600;
-            transition: all 0.2s;
+            background-color: #6c757d; color: white; border: none; width: 100%;
+            padding: 12px; border-radius: 6px; font-weight: 600; transition: all 0.2s;
             display: flex; align-items: center; justify-content: center; gap: 8px;
         }
         .btn-reset:hover { background-color: #5a6268; color: white; transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
@@ -79,65 +65,29 @@
             font-size: 0.8rem; color: #444; margin-top: auto;
         }
 
-        /* MAP AREA */
         .map-wrapper { flex: 1; position: relative; height: 100%; }
         #map { width: 100%; height: 100%; background-color: #e5e9ec; z-index: 1; }
 
-        /* TOMBOL KEMBALI */
         .btn-back-control {
-            position: absolute;
-            top: 10px;
-            right: 50px;
-            z-index: 1000;
-            background-color: #ffffff;
-            border: 2px solid #C8102E;
-            color: #C8102E;
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            font-weight: 700;
-            font-size: 0.9rem;
-            display: none;
-            transition: all 0.2s;
+            position: absolute; top: 10px; right: 50px; z-index: 1000;
+            background-color: #ffffff; border: 2px solid #C8102E; color: #C8102E;
+            padding: 8px 15px; border-radius: 4px; cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2); font-weight: 700; font-size: 0.9rem;
+            display: none; transition: all 0.2s;
         }
-        .btn-back-control:hover {
-            background-color: #C8102E;
-            color: #ffffff;
-        }
+        .btn-back-control:hover { background-color: #C8102E; color: #ffffff; }
 
-        /* CUSTOM TOOLTIP STYLE */
         .custom-tooltip {
-            background: #C8102E;
-            color: #ffffff;
-            border: none;
-            font-weight: 700;
-            font-size: 12px;
-            padding: 6px 10px;
-            border-radius: 4px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-            white-space: nowrap;
+            background: #C8102E; color: #ffffff; border: none; font-weight: 700;
+            font-size: 12px; padding: 6px 10px; border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3); white-space: nowrap;
         }
         .leaflet-tooltip-top:before { border-top-color: #C8102E; }
 
-        /* CUSTOM POPUP STYLE */
-        .leaflet-popup-content-wrapper {
-            border-radius: 8px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
-            padding: 0;
-            overflow: hidden;
-        }
+        .leaflet-popup-content-wrapper { border-radius: 8px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); padding: 0; overflow: hidden; }
         .leaflet-popup-content { margin: 0; min-width: 240px; }
         
-        .popup-header {
-            background-color: #C8102E;
-            color: #ffffff;
-            padding: 12px 15px;
-            font-weight: 700;
-            font-size: 1.1rem;
-            text-align: center;
-            margin: 0;
-        }
+        .popup-header { background-color: #C8102E; color: #ffffff; padding: 12px 15px; font-weight: 700; font-size: 1.1rem; text-align: center; margin: 0; }
         .popup-body { padding: 15px; }
         
         .popup-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.95rem; border-bottom: 1px dotted #eee; padding-bottom: 2px; }
@@ -145,72 +95,18 @@
         .popup-label { color: #666; font-weight: 600; width: 40%; }
         .popup-val { font-weight: 600; color: #333; width: 60%; text-align: right;}
         
-        .total-bold { 
-            border-top: 2px solid #eee; 
-            padding-top: 8px; 
-            margin-top: 8px; 
-            font-weight: 800; 
-            color: #C8102E !important; 
-            font-size: 1rem; 
-        }
+        .total-bold { border-top: 2px solid #eee; padding-top: 8px; margin-top: 8px; font-weight: 800; color: #C8102E !important; font-size: 1rem; }
 
-        /* STYLE UNTUK TOMBOL DI POPUP */
-        .btn-popup-action {
-            width: 100%;
-            background-color: #ffffff;
-            color: #C8102E;
-            border: 2px solid #C8102E;
-            padding: 10px;
-            border-radius: 6px;
-            font-weight: 700;
-            cursor: pointer;
-            margin-top: 15px;
-            transition: all 0.2s;
-            font-size: 1rem;
-        }
-        .btn-popup-action:hover {
-            background-color: #C8102E;
-            color: white;
-        }
+        .btn-popup-action { width: 100%; background-color: #ffffff; color: #C8102E; border: 2px solid #C8102E; padding: 10px; border-radius: 6px; font-weight: 700; cursor: pointer; margin-top: 15px; transition: all 0.2s; font-size: 1rem; }
+        .btn-popup-action:hover { background-color: #C8102E; color: white; }
 
-        /* CUSTOM TPS ICON */
-        .custom-div-icon {
-            background: transparent;
-            border: none;
-        }
-        .tps-pin {
-            font-size: 32px; 
-            color: #C8102E; 
-            filter: drop-shadow(0px 3px 3px rgba(0,0,0,0.4));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            line-height: 1;
-            transition: transform 0.2s;
-        }
-        .tps-pin:hover {
-            transform: scale(1.2) translateY(-5px);
-            color: #a50d24;
-        }
+        .custom-div-icon { background: transparent; border: none; }
+        .tps-pin { font-size: 32px; color: #C8102E; filter: drop-shadow(0px 3px 3px rgba(0,0,0,0.4)); display: flex; align-items: center; justify-content: center; line-height: 1; transition: transform 0.2s; }
+        .tps-pin:hover { transform: scale(1.2) translateY(-5px); color: #a50d24; }
 
-        /* BUTTON STYLE IN POPUP (TPS) */
-        .btn-popup-tps {
-            width: 100%;
-            background-color: #C8102E;
-            color: white;
-            border: none;
-            padding: 10px;
-            border-radius: 6px;
-            font-weight: 700;
-            cursor: pointer;
-            margin-top: 15px;
-            transition: background 0.2s;
-            font-size: 1rem;
-        }
+        .btn-popup-tps { width: 100%; background-color: #C8102E; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: 700; cursor: pointer; margin-top: 15px; transition: background 0.2s; font-size: 1rem; }
         .btn-popup-tps:hover { background-color: #a50d24; }
-        .btn-popup-tps:disabled { background-color: #ccc; cursor: not-allowed; }
 
-        /* RESPONSIVE */
         @media (max-width: 768px) {
             body { flex-direction: column; overflow: auto; height: auto; }
             .filter-panel { width: 100%; height: auto; border-right: none; border-bottom: 1px solid #dee2e6; }
@@ -223,7 +119,7 @@
 
 <div id="loading-overlay">
     <div class="spinner-border text-danger" role="status"><span class="visually-hidden">Loading...</span></div>
-    <div class="loading-text" id="loading-msg">Memuat Peta & Data...</div>
+    <div class="loading-text" id="loading-msg">Memuat Peta Wilayah...</div>
 </div>
 
 <aside class="filter-panel">
@@ -233,9 +129,9 @@
         <div class="mb-3">
             <label class="form-label">Jenis Data</label>
             <select id="jenis-select" class="form-select" onchange="changeJenis()">
-                <option value="">-- Pilih Jenis --</option>
-                <option value="pemutakhiran" selected>REKAP PEMUTAKHIRAN</option>
-                <option value="pdpb">REKAP PDPB</option>
+                <option value="" selected>-- Pilih Jenis --</option>
+                <option value="pemutakhiran">REKAP PEMUTAKHIRAN</option>
+                <option value="pdpb">PDPB</option>
             </select>
         </div>
 
@@ -246,6 +142,10 @@
             </select>
         </div>
 
+        <button class="btn btn-lihat" id="btn-lihat-peta" onclick="loadDataToMap()" disabled>
+            <i class="fas fa-map-marked-alt"></i> LIHAT PETA
+        </button>
+        
         <button class="btn btn-reset" onclick="resetMap()">
             <i class="fas fa-undo"></i> Reset Peta
         </button>
@@ -254,9 +154,9 @@
     <div class="info-card">
         <small><i class="fas fa-info-circle"></i> <strong>Panduan:</strong></small><br>
         <ul style="margin-bottom: 0; padding-left: 20px; font-size: 0.8rem; margin-top: 5px; color: #555;">
+            <li>Pilih Jenis & Tahapan, lalu klik <strong>Lihat Peta</strong>.</li>
             <li>Hover untuk melihat Label Data.</li>
-            <li>Klik wilayah untuk melihat Data.</li>
-            <li>Tekan tombol di Popup untuk aksi.</li>
+            <li>Klik wilayah untuk melihat Data & Aksi.</li>
         </ul>
     </div>
 </aside>
@@ -280,6 +180,28 @@
         geojson_desa: './desa.geojson'
     };
 
+    // HARDCODE TAHAPAN SESUAI REQUEST
+    const TAHAPAN_OPTIONS = {
+        pemutakhiran: [
+            "PEMILU 2019",
+            "PILKADA 2020",
+            "PEMILU 2024",
+            "PILKADA 2024",
+            "(REKAP PEMUTAKHIRAN)"
+        ],
+        pdpb: [
+            "PDPB TRIWULAN II 2025",
+            "PDPB TRIWULAN III 2025",
+            "PDPB TRIWULAN IV 2025",
+            "PDPB TRIWULAN I 2026",
+            "PDPB TRIWULAN II 2026",
+            "PDPB TRIWULAN III 2026",
+            "PDPB TRIWULAN IV 2026",
+            "PDPB TRIWULAN I 2027",
+            "PDPB TRIWULAN II 2027"
+        ]
+    };
+
     let map;
     let geoJsonLayerKec;
     let geoJsonLayerDesa;
@@ -296,9 +218,7 @@
 
     function stringToColor(str) {
         let hash = 0;
-        for (let i = 0; i < str.length; i++) {
-            hash = str.charCodeAt(i) + ((hash << 5) - hash);
-        }
+        for (let i = 0; i < str.length; i++) { hash = str.charCodeAt(i) + ((hash << 5) - hash); }
         const c = (hash & 0x00FFFFFF).toString(16).toUpperCase();
         return '#' + '00000'.substring(0, 6 - c.length) + c;
     }
@@ -313,82 +233,39 @@
         L.control.zoom({ position: 'topright' }).addTo(map);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors',
-            maxZoom: 19
+            attribution: '&copy; OpenStreetMap contributors', maxZoom: 19
         }).addTo(map);
 
-        geoJsonLayerKec = L.geoJSON(null, {
-            style: styleKecamatan,
-            onEachFeature: onEachFeatureKecamatan
-        }).addTo(map);
-
-        geoJsonLayerDesa = L.geoJSON(null, {
-            style: styleDesa,
-            onEachFeature: onEachFeatureDesa
-        });
-
+        geoJsonLayerKec = L.geoJSON(null, { style: styleKecamatan, onEachFeature: onEachFeatureKecamatan }).addTo(map);
+        geoJsonLayerDesa = L.geoJSON(null, { style: styleDesa, onEachFeature: onEachFeatureDesa });
         tpsMarkersLayer = L.layerGroup().addTo(map);
 
-        loadGeoJsons();
+        loadGeoJsons(); // Hanya memuat peta, TIDAK memuat CSV
     }
 
     function styleKecamatan(feature) {
         const color = getFeatureColor(feature);
-        return {
-            fillColor: color,
-            weight: 2,
-            opacity: 1,
-            color: '#ffffff',
-            fillOpacity: 0.5
-        };
+        return { fillColor: color, weight: 2, opacity: 1, color: '#ffffff', fillOpacity: 0.5 };
     }
 
     function styleDesa(feature) {
         const color = getFeatureColor(feature);
-        return {
-            fillColor: color,
-            weight: 1,
-            opacity: 1,
-            color: '#ffffff',
-            fillOpacity: 0.5
-        };
+        return { fillColor: color, weight: 1, opacity: 1, color: '#ffffff', fillOpacity: 0.5 };
     }
 
-    const styleDesaSelected = {
-        weight: 3,
-        color: '#ffffff',
-        fillOpacity: 0.5,
-        fillColor: '#52a322'
-    };
-
-    const styleDesaDimmed = {
-        weight: 1,
-        color: '#ffffff',
-        fillOpacity: 0.7, 
-        fillColor: '#d3d3d3' 
-    };
-    
-    const styleDesaHover = {
-        weight: 2,
-        color: '#ffffff',
-        fillOpacity: 0.6,
-        dashArray: '3, 3'
-    };
+    const styleDesaSelected = { weight: 3, color: '#ffffff', fillOpacity: 0.9, fillColor: '#ffcccc' };
+    const styleDesaDimmed = { weight: 1, color: '#ffffff', fillOpacity: 0.7, fillColor: '#d3d3d3' };
+    const styleDesaHover = { weight: 2, color: '#ffffff', fillOpacity: 0.6, dashArray: '3, 3' };
 
     function getFeatureName(feature, type) {
         const props = feature.properties;
         if (type === 'kecamatan') {
             let name = props.kecamatan || props.KECAMATAN || props.name || props.NAMA;
-            if (!name && props.kec_id) {
-                name = kecamatanNameMap[String(props.kec_id).trim()];
-            }
+            if (!name && props.kec_id) { name = kecamatanNameMap[String(props.kec_id).trim()]; }
             return name || "Kecamatan (Nama Tidak Ditemukan)";
         } else {
             let name = props.name || props.NAMA || props.desa || props.DESA || props.kelurahan || props.KELURAHAN || props.NAMA_DESA || props.WADMKD;
-            if (!name && props.kel_id) {
-                const idKey = String(props.kel_id).trim();
-                name = desaNameMap[idKey];
-            }
+            if (!name && props.kel_id) { name = desaNameMap[String(props.kel_id).trim()]; }
             if (!name) return "Desa (ID: " + (props.kel_id || '?') + ")";
             return name;
         }
@@ -396,17 +273,17 @@
 
     function onEachFeatureKecamatan(feature, layer) {
         const name = getFeatureName(feature, 'kecamatan');
-        layer.bindTooltip("KECAMATAN " + name.toUpperCase(), {
-            sticky: true, direction: 'top', className: 'custom-tooltip'
-        });
+        // TOOLTIP KAPITAL
+        layer.bindTooltip("KECAMATAN " + name.toUpperCase(), { sticky: true, direction: 'top', className: 'custom-tooltip' });
 
         layer.on({
-            mouseover: (e) => { 
-                e.target.setStyle({ weight: 3, color: '#ffffff', fillOpacity: 0.7 }); 
-            },
+            mouseover: (e) => { e.target.setStyle({ weight: 3, color: '#ffffff', fillOpacity: 0.7 }); },
             mouseout: (e) => { geoJsonLayerKec.resetStyle(e.target); },
             click: (e) => {
-                showKecamatanPopup(feature, layer);
+                // HANYA BUKA POPUP JIKA SUDAH ADA DATA DARI CSV
+                if (currentCsvData.length > 0) {
+                    showKecamatanPopup(feature, layer);
+                }
             }
         });
     }
@@ -415,29 +292,22 @@
         const kecId = String(feature.properties.kec_id).trim();
         const kecName = getFeatureName(feature, 'kecamatan');
         const activeData = getActiveData();
-        const dataInKec = activeData.filter(row => String(row['kode kec']).trim() === kecId);
+        const dataInKec = activeData.filter(row => String(row['kode kec'] || row['Kode Kec']).trim() === kecId);
         const headerTitle = `DATA KECAMATAN`;
 
-        const actionBtn = `<button class="btn-popup-action" onclick="triggerDrillDownFromPopup()">
-                                <i class="fas fa-search-location"></i> MASUK KE PETA DESA
-                            </button>`;
+        const actionBtn = `<button class="btn-popup-action" onclick="triggerDrillDownFromPopup()"><i class="fas fa-search-location"></i> MASUK KE PETA DESA</button>`;
 
         if (dataInKec.length === 0) {
-            const content = `
-                <div class="popup-header">${headerTitle}</div>
-                <div class="popup-body text-center text-muted">
-                    <div class="popup-row"><span class="popup-label">Kecamatan:</span> <span class="popup-val">${kecName}</span></div>
-                    <div style="margin-top:10px;">Tidak ada data pada tahapan ini.</div>
-                </div>`;
+            const content = `<div class="popup-header">${headerTitle}</div><div class="popup-body text-center text-muted"><div class="popup-row"><span class="popup-label">Kecamatan:</span> <span class="popup-val">${kecName}</span></div><div style="margin-top:10px;">Tidak ada data pada tahapan ini.</div></div>`;
             layer.bindPopup(content).openPopup();
             return;
         }
 
-        const totalLaki = dataInKec.reduce((sum, item) => sum + parseInt(item['laki-laki'] || 0), 0);
-        const totalPerempuan = dataInKec.reduce((sum, item) => sum + parseInt(item['perempuan'] || 0), 0);
+        const totalLaki = dataInKec.reduce((sum, item) => sum + parseInt(item['laki-laki'] || item['Laki-laki'] || 0), 0);
+        const totalPerempuan = dataInKec.reduce((sum, item) => sum + parseInt(item['perempuan'] || item['Perempuan'] || 0), 0);
         const totalJumlah = totalLaki + totalPerempuan;
-        const uniqueDesa = [...new Set(dataInKec.map(item => item['kode desa']))].length;
-        const uniqueTPS = [...new Set(dataInKec.map(item => item.tps))].length;
+        const uniqueDesa = [...new Set(dataInKec.map(item => item['kode desa'] || item['Kode Desa']))].length;
+        const uniqueTPS = [...new Set(dataInKec.map(item => item.tps || item.TPS))].length;
 
         const content = `
             <div class="popup-header">${headerTitle}</div>
@@ -449,34 +319,25 @@
                 <div class="popup-row"><span class="popup-label">Perempuan:</span> <span class="popup-val">${totalPerempuan.toLocaleString('id-ID')}</span></div>
                 <div class="popup-row total-bold"><span class="popup-label">Total:</span> <span class="popup-val">${totalJumlah.toLocaleString('id-ID')}</span></div>
                 ${actionBtn}
-            </div>
-        `;
+            </div>`;
         
         activeKecContext = { feature, layer };
         layer.bindPopup(content).openPopup();
     }
 
     window.triggerDrillDownFromPopup = function() {
-        if (activeKecContext) {
-            drillDownToDesa(activeKecContext.feature, activeKecContext.layer);
-        }
+        if (activeKecContext) { drillDownToDesa(activeKecContext.feature, activeKecContext.layer); }
     };
 
     function drillDownToDesa(feature, layer) {
         if (!rawDesaGeoJson) return;
         const kecId = String(feature.properties.kec_id).trim();
         
-        selectedDesaLayer = null;
-        selectedDesaFeature = null;
-
+        selectedDesaLayer = null; selectedDesaFeature = null;
         map.removeLayer(geoJsonLayerKec);
         const desaFeatures = rawDesaGeoJson.features.filter(f => String(f.properties.kec_id).trim() === kecId);
         
-        if (desaFeatures.length === 0) {
-            alert("Data desa tidak ditemukan (ID tidak cocok).");
-            map.addLayer(geoJsonLayerKec);
-            return;
-        }
+        if (desaFeatures.length === 0) { alert("Data desa tidak ditemukan (ID tidak cocok)."); map.addLayer(geoJsonLayerKec); return; }
         
         geoJsonLayerDesa.clearLayers();
         geoJsonLayerDesa.addData(desaFeatures);
@@ -489,81 +350,58 @@
 
     function onEachFeatureDesa(feature, layer) {
         const name = getFeatureName(feature, 'desa');
-        layer.bindTooltip("DESA " + name.toUpperCase(), { 
-            sticky: true, direction: 'top', className: 'custom-tooltip'
-        });
+        // TOOLTIP KAPITAL
+        layer.bindTooltip("DESA " + name.toUpperCase(), { sticky: true, direction: 'top', className: 'custom-tooltip' });
 
         layer.on({
             mouseover: (e) => {
-                if (selectedDesaLayer && selectedDesaLayer !== e.target) {
-                    e.target.setStyle(styleDesaHover);
-                } else if (!selectedDesaLayer) {
-                    e.target.setStyle(styleDesaHover);
-                }
+                if (selectedDesaLayer && selectedDesaLayer !== e.target) { e.target.setStyle(styleDesaHover); } 
+                else if (!selectedDesaLayer) { e.target.setStyle(styleDesaHover); }
             },
             mouseout: (e) => {
                 if (selectedDesaLayer) {
-                    if (selectedDesaLayer === e.target) {
-                        e.target.setStyle(styleDesaSelected);
-                    } else {
-                        e.target.setStyle(styleDesaDimmed);
-                    }
-                } else {
-                    geoJsonLayerDesa.resetStyle(e.target);
-                }
+                    if (selectedDesaLayer === e.target) { e.target.setStyle(styleDesaSelected); } 
+                    else { e.target.setStyle(styleDesaDimmed); }
+                } else { geoJsonLayerDesa.resetStyle(e.target); }
             },
             click: (e) => {
                 highlightSelectedDesa(e.target, feature);
-                showDesaPopup(feature, e.target);
+                // HANYA BUKA POPUP JIKA SUDAH ADA DATA DARI CSV
+                if (currentCsvData.length > 0) {
+                    showDesaPopup(feature, e.target);
+                }
             }
         });
     }
 
     function highlightSelectedDesa(clickedLayer, feature) {
-        selectedDesaLayer = clickedLayer;
-        selectedDesaFeature = feature;
-
-        geoJsonLayerDesa.eachLayer(function (layer) {
-            layer.setStyle(styleDesaDimmed);
-        });
-
+        selectedDesaLayer = clickedLayer; selectedDesaFeature = feature;
+        geoJsonLayerDesa.eachLayer(function (layer) { layer.setStyle(styleDesaDimmed); });
         clickedLayer.setStyle(styleDesaSelected);
         tpsMarkersLayer.clearLayers();
-        
-        // DIHAPUS: Peta tidak langsung zoom saat klik desa.
-        // Zoom akan terjadi saat tombol "LIHAT TITIK TPS" diklik.
-        // map.fitBounds(clickedLayer.getBounds(), { padding: [50, 50], maxZoom: 16 });
     }
 
     function showDesaPopup(feature, layer) {
         const kelId = String(feature.properties.kel_id).trim();
         const desaName = getFeatureName(feature, 'desa');
         const activeData = getActiveData();
-        const dataInDesa = activeData.filter(row => String(row['kode desa']).trim() === kelId);
-
-        const kecNameFromData = dataInDesa.length > 0 ? dataInDesa[0].kecamatan : "-";
+        const dataInDesa = activeData.filter(row => String(row['kode desa'] || row['Kode Desa']).trim() === kelId);
+        const kecNameFromData = dataInDesa.length > 0 ? (dataInDesa[0].kecamatan || dataInDesa[0].Kecamatan) : "-";
         const headerTitle = `DATA DESA`;
 
         const isTPSShown = tpsMarkersLayer.getLayers().length > 0 && selectedDesaLayer === layer;
 
         if (dataInDesa.length === 0) {
-            const content = `
-                <div class="popup-header">${headerTitle}</div>
-                <div class="popup-body text-center text-muted">
-                    <div class="popup-row"><span class="popup-label">Kecamatan:</span> <span class="popup-val">${kecNameFromData}</span></div>
-                    <div class="popup-row"><span class="popup-label">Desa:</span> <span class="popup-val">${desaName}</span></div>
-                    <div style="margin-top:10px;">Tidak ada data TPS.</div>
-                </div>`;
+            const content = `<div class="popup-header">${headerTitle}</div><div class="popup-body text-center text-muted"><div class="popup-row"><span class="popup-label">Kecamatan:</span> <span class="popup-val">${kecNameFromData}</span></div><div class="popup-row"><span class="popup-label">Desa:</span> <span class="popup-val">${desaName}</span></div><div style="margin-top:10px;">Tidak ada data TPS.</div></div>`;
             layer.bindPopup(content).openPopup();
             return;
         }
 
-        const totalLaki = dataInDesa.reduce((sum, item) => sum + parseInt(item['laki-laki'] || 0), 0);
-        const totalPerempuan = dataInDesa.reduce((sum, item) => sum + parseInt(item['perempuan'] || 0), 0);
+        const totalLaki = dataInDesa.reduce((sum, item) => sum + parseInt(item['laki-laki'] || item['Laki-laki'] || 0), 0);
+        const totalPerempuan = dataInDesa.reduce((sum, item) => sum + parseInt(item['perempuan'] || item['Perempuan'] || 0), 0);
         const totalJumlah = totalLaki + totalPerempuan;
         const uniqueTPS = dataInDesa.length;
 
-        // Tombol Aksi: Jika TPS sudah ditampilkan, ganti tombol dengan teks hijau
         const btnHtml = isTPSShown 
             ? `<div class="text-center mt-2"><small class="text-success fw-bold"><i class="fas fa-check-circle"></i> Titik TPS Ditampilkan</small></div>`
             : `<button class="btn-popup-tps" onclick="triggerShowTPS()"><i class="fas fa-map-marker-alt"></i> LIHAT TITIK TPS</button>`;
@@ -578,22 +416,14 @@
                 <div class="popup-row"><span class="popup-label">Perempuan:</span> <span class="popup-val">${totalPerempuan.toLocaleString('id-ID')}</span></div>
                 <div class="popup-row total-bold"><span class="popup-label">Total:</span> <span class="popup-val">${totalJumlah.toLocaleString('id-ID')}</span></div>
                 ${btnHtml}
-            </div>
-        `;
+            </div>`;
         layer.bindPopup(content).openPopup();
     }
 
-    // FUNGSI TOMBOL LIHAT TITIK TPS (Dengan tambahan Zoom)
     window.triggerShowTPS = function() {
         if (selectedDesaFeature && selectedDesaLayer) {
-            
-            // 1. ZOOM IN ke desa yang dipilih (Dipindahkan dari highlightSelectedDesa)
             map.fitBounds(selectedDesaLayer.getBounds(), { padding: [50, 50], maxZoom: 16 });
-
-            // 2. Tampilkan Titik TPS
             showTPSPoints(selectedDesaFeature);
-            
-            // 3. Update Popup (Ubah tombol jadi teks hijau)
             showDesaPopup(selectedDesaFeature, selectedDesaLayer);
         }
     }
@@ -602,34 +432,31 @@
         tpsMarkersLayer.clearLayers();
         const activeData = getActiveData();
         const kelId = String(feature.properties.kel_id).trim();
-        const tpsData = activeData.filter(row => String(row['kode desa']).trim() === kelId);
+        const tpsData = activeData.filter(row => String(row['kode desa'] || row['Kode Desa']).trim() === kelId);
 
         const tpsIcon = L.divIcon({
-            className: 'custom-div-icon',
-            html: '<i class="fas fa-map-marker-alt tps-pin"></i>',
-            iconSize: [32, 32],
-            iconAnchor: [16, 32]
+            className: 'custom-div-icon', html: '<i class="fas fa-map-marker-alt tps-pin"></i>',
+            iconSize: [32, 32], iconAnchor: [16, 32]
         });
 
         tpsData.forEach(row => {
-            const lat = parseFloat(row.latitude);
-            const lng = parseFloat(row.longitude);
+            const lat = parseFloat(row.latitude || row.Latitude);
+            const lng = parseFloat(row.longitude || row.Longitude);
+            const tpsName = row.tps || row.TPS;
+            const jml = row.jumlah || row.Jumlah;
             
             if (!isNaN(lat) && !isNaN(lng)) {
                 const marker = L.marker([lat, lng], { icon: tpsIcon });
-                const tooltipText = `TPS ${row.tps} (Jml: ${row.jumlah})`;
-                marker.bindTooltip(tooltipText, { direction: 'top', offset: [0, -35], className: 'custom-tooltip' });
-
+                marker.bindTooltip(`TPS ${tpsName} (Jml: ${jml})`, { direction: 'top', offset: [0, -35], className: 'custom-tooltip' });
                 const popupContent = `
-                    <div class="popup-header" style="font-size:0.9rem">DATA TPS ${row.tps}</div>
+                    <div class="popup-header" style="font-size:0.9rem">DATA TPS ${tpsName}</div>
                     <div class="popup-body">
-                        <div class="popup-row"><span class="popup-label">Kecamatan:</span> <span class="popup-val">${row.kecamatan}</span></div>
-                        <div class="popup-row"><span class="popup-label">Desa:</span> <span class="popup-val">${row.desa}</span></div>
-                        <div class="popup-row"><span class="popup-label">Laki-laki:</span> <span class="popup-val">${row['laki-laki']}</span></div>
-                        <div class="popup-row"><span class="popup-label">Perempuan:</span> <span class="popup-val">${row['perempuan']}</span></div>
-                        <div class="popup-row total-bold"><span class="popup-label">Total:</span> <span class="popup-val">${row.jumlah}</span></div>
-                    </div>
-                `;
+                        <div class="popup-row"><span class="popup-label">Kecamatan:</span> <span class="popup-val">${row.kecamatan || row.Kecamatan}</span></div>
+                        <div class="popup-row"><span class="popup-label">Desa:</span> <span class="popup-val">${row.desa || row.Desa}</span></div>
+                        <div class="popup-row"><span class="popup-label">Laki-laki:</span> <span class="popup-val">${row['laki-laki'] || row['Laki-laki']}</span></div>
+                        <div class="popup-row"><span class="popup-label">Perempuan:</span> <span class="popup-val">${row['perempuan'] || row['Perempuan']}</span></div>
+                        <div class="popup-row total-bold"><span class="popup-label">Total:</span> <span class="popup-val">${jml}</span></div>
+                    </div>`;
                 marker.bindPopup(popupContent);
                 tpsMarkersLayer.addLayer(marker);
             }
@@ -638,31 +465,26 @@
 
     function goBackToKecamatan() {
         document.getElementById('btn-back').style.display = 'none';
-        selectedDesaLayer = null;
-        selectedDesaFeature = null;
-        tpsMarkersLayer.clearLayers();
-
+        selectedDesaLayer = null; selectedDesaFeature = null; tpsMarkersLayer.clearLayers();
         if (map.hasLayer(geoJsonLayerDesa)) map.removeLayer(geoJsonLayerDesa);
         if (!map.hasLayer(geoJsonLayerKec)) map.addLayer(geoJsonLayerKec);
-
-        // Padding disamakan dengan resetMap agar skala zoom identik
         map.fitBounds(geoJsonLayerKec.getBounds(), { padding: [20, 20] });
     }
 
     function resetMap() {
         document.getElementById('btn-back').style.display = 'none';
-        selectedDesaLayer = null;
-        selectedDesaFeature = null;
-        tpsMarkersLayer.clearLayers();
-        
+        selectedDesaLayer = null; selectedDesaFeature = null; tpsMarkersLayer.clearLayers();
         if (map.hasLayer(geoJsonLayerDesa)) map.removeLayer(geoJsonLayerDesa);
         if (!map.hasLayer(geoJsonLayerKec)) map.addLayer(geoJsonLayerKec);
-        
         map.fitBounds(geoJsonLayerKec.getBounds(), { padding: [20, 20] });
         map.closePopup();
         
-        document.getElementById('jenis-select').value = 'pemutakhiran';
-        changeJenis();
+        // Reset state ke default tanpa data
+        currentCsvData = [];
+        document.getElementById('jenis-select').value = '';
+        document.getElementById('tahapan-select').innerHTML = '<option value="">-- Pilih Tahapan Dulu --</option>';
+        document.getElementById('tahapan-select').disabled = true;
+        document.getElementById('btn-lihat-peta').disabled = true;
     }
 
     function loadGeoJsons() {
@@ -673,106 +495,91 @@
         ]).then(([dataKec, dataDesa]) => {
             geoJsonLayerKec.addData(dataKec);
             rawDesaGeoJson = dataDesa; 
-            
             map.fitBounds(geoJsonLayerKec.getBounds(), { padding: [20, 20] });
             
             const loader = document.getElementById('loading-overlay');
             loader.classList.add('fade-out');
             setTimeout(() => { loader.style.display = 'none'; }, 500);
-
-            changeJenis();
-
         }).catch(err => {
             document.getElementById('loading-msg').innerHTML = `<span style="color:red">Error: ${err.message}</span>`;
         });
     }
 
+    // DIUBAH: Hanya mengisi dropdown tahapan, tidak load CSV
     function changeJenis() {
         const jenis = document.getElementById('jenis-select').value;
         const tahapanSelect = document.getElementById('tahapan-select');
-        const loader = document.getElementById('loading-overlay');
+        const btnLihat = document.getElementById('btn-lihat-peta');
         
-        tahapanSelect.innerHTML = '<option value="">-- Pilih Tahapan Dulu --</option>';
+        tahapanSelect.innerHTML = '<option value="">-- Pilih Tahapan --</option>';
         tahapanSelect.disabled = true;
-        tpsMarkersLayer.clearLayers();
+        btnLihat.disabled = true;
         
-        if (selectedDesaLayer) {
-             selectedDesaLayer.setStyle(styleDesa); 
-             selectedDesaLayer = null;
-        }
-
-        currentCsvData = [];
-
         if (!jenis) return;
 
-        if(loader.style.display === 'none') {
-            loader.style.display = 'flex'; 
-            loader.style.opacity = '0.8';
-        }
+        const options = TAHAPAN_OPTIONS[jenis];
+        options.forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t; opt.textContent = t;
+            tahapanSelect.appendChild(opt);
+        });
         
+        tahapanSelect.disabled = false;
+    }
+
+    // DIUBAH: Mengaktifkan tombol Lihat Peta
+    function updateMapData() {
+        const jenis = document.getElementById('jenis-select').value;
+        const tahapan = document.getElementById('tahapan-select').value;
+        const btnLihat = document.getElementById('btn-lihat-peta');
+        
+        btnLihat.disabled = !(jenis && tahapan);
+
+        // Jika data sudah pernah di-load, langsung update popup (jika ganti tahapan)
+        if (currentCsvData.length > 0 && selectedDesaLayer) {
+            showDesaPopup(selectedDesaFeature, selectedDesaLayer);
+        }
+    }
+
+    // BARU: Fungsi yang dipanggil saat klik tombol LIHAT PETA
+    function loadDataToMap() {
+        const jenis = document.getElementById('jenis-select').value;
+        const tahapan = document.getElementById('tahapan-select').value;
+        
+        if (!jenis || !tahapan) return;
+
+        const loader = document.getElementById('loading-overlay');
+        loader.style.display = 'flex'; loader.style.opacity = '0.8';
         document.getElementById('loading-msg').innerText = "Mengunduh Data CSV...";
 
         Papa.parse(URLS[jenis], {
             download: true, header: true,
             complete: function(results) {
-                currentCsvData = results.data.filter(row => row['kode kec']);
+                currentCsvData = results.data.filter(row => row['kode kec'] || row['Kode Kec']);
                 
-                desaNameMap = {};
-                kecamatanNameMap = {};
+                desaNameMap = {}; kecamatanNameMap = {};
                 currentCsvData.forEach(row => {
-                    if(row['kode desa']) desaNameMap[String(row['kode desa']).trim()] = row.desa;
-                    if(row['kode kec']) kecamatanNameMap[String(row['kode kec']).trim()] = row.kecamatan;
+                    if(row['kode desa'] || row['Kode Desa']) desaNameMap[String(row['kode desa'] || row['Kode Desa']).trim()] = row.desa || row.Desa;
+                    if(row['kode kec'] || row['Kode Kec']) kecamatanNameMap[String(row['kode kec'] || row['Kode Kec']).trim()] = row.kecamatan || row.Kecamatan;
                 });
 
-                const tahapanSet = new Set(currentCsvData.map(row => row.tahapan).filter(t => t));
-                const tahapanList = Array.from(tahapanSet).sort();
-
-                tahapanSelect.innerHTML = '<option value="">-- Pilih Tahapan --</option>';
-                let foundDefault = false;
-                
-                tahapanList.forEach(t => {
-                    const option = document.createElement('option');
-                    option.value = t; 
-                    option.textContent = t;
-                    
-                    if (t.toLowerCase() === "pemilu 2024" || t.toLowerCase().includes("pemilu 2024")) {
-                        option.selected = true;
-                        foundDefault = true;
-                    }
-                    
-                    tahapanSelect.appendChild(option);
-                });
-                
-                tahapanSelect.disabled = false;
                 loader.style.display = 'none';
-
-                if (foundDefault) {
-                    updateMapData();
-                }
+                
+                // Setelah data dimuat, update popup jika sedang ada desa yang terbuka
+                if(selectedDesaLayer) { showDesaPopup(selectedDesaFeature, selectedDesaLayer); }
             },
             error: function(err) { alert("Gagal muat CSV"); loader.style.display = 'none'; }
         });
     }
 
-    function updateMapData() {
-        tpsMarkersLayer.clearLayers();
-        desaNameMap = {};
-        kecamatanNameMap = {};
-        const activeData = getActiveData();
-        activeData.forEach(row => {
-            if(row['kode desa']) desaNameMap[String(row['kode desa']).trim()] = row.desa;
-            if(row['kode kec']) kecamatanNameMap[String(row['kode kec']).trim()] = row.kecamatan;
-        });
-
-        if(selectedDesaLayer) {
-            showDesaPopup(selectedDesaFeature, selectedDesaLayer);
-        }
-    }
-
+    // DIUBAH: Case-insensitive match untuk Tahapan
     function getActiveData() {
         const tahapan = document.getElementById('tahapan-select').value;
         if (!tahapan) return [];
-        return currentCsvData.filter(row => row.tahapan === tahapan);
+        return currentCsvData.filter(row => {
+            const rowTahapan = row.tahapan || row.Tahapan || row.TAHAPAN || "";
+            return rowTahapan.trim().toUpperCase() === tahapan.toUpperCase();
+        });
     }
 
     window.onload = initMap;
