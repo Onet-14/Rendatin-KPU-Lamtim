@@ -83,6 +83,31 @@
         .map-wrapper { flex: 1; position: relative; height: 100%; }
         #map { width: 100%; height: 100%; background-color: #e5e9ec; z-index: 1; }
 
+        /* FLOATING BUTTON KEMBALI */
+        .btn-back-kec {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            z-index: 1000;
+            background-color: #ffffff;
+            color: #C8102E;
+            border: 2px solid #C8102E;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-back-kec:hover {
+            background-color: #C8102E;
+            color: white;
+            transform: translateY(-2px);
+        }
+
         /* CUSTOM TOOLTIP STYLE */
         .custom-tooltip {
             background: #C8102E;
@@ -253,6 +278,9 @@
 </aside>
 
 <div class="map-wrapper">
+    <button id="btn-back-kec" class="btn-back-kec" onclick="backToKecamatan()" style="display: none;">
+        <i class="fas fa-arrow-left"></i> Kembali ke Kecamatan
+    </button>
     <div id="map"></div>
 </div>
 
@@ -393,7 +421,7 @@
         const dataInKec = activeData.filter(row => String(row['kode kec']).trim() === kecId);
         const headerTitle = `DATA KECAMATAN`;
 
-        const actionBtn = `<button class="btn-popup-action" onclick="triggerDrillDownFromPopup()">
+        const actionBtn = `<button class="btn-popup-action" onclick="window.triggerDrillDownFromPopup()">
                                 <i class="fas fa-search-location"></i> MASUK KE PETA DESA
                             </button>`;
 
@@ -459,6 +487,9 @@
         map.fitBounds(geoJsonLayerDesa.getBounds(), { padding: [50, 50] });
         
         tpsMarkersLayer.clearLayers();
+        
+        // Tampilkan tombol kembali
+        document.getElementById('btn-back-kec').style.display = 'flex';
     }
 
     function onEachFeatureDesa(feature, layer) {
@@ -472,7 +503,10 @@
                 e.target.setStyle({ weight: 2, color: '#ffffff', fillOpacity: 0.8 });
             },
             mouseout: (e) => {
-                geoJsonLayerDesa.resetStyle(e.target);
+                // Jangan reset style jika ini desa yang sedang dipilih/aktif
+                if (selectedDesaLayer !== e.target) {
+                    geoJsonLayerDesa.resetStyle(e.target);
+                }
             },
             click: (e) => {
                 e.target.bringToFront();
@@ -482,6 +516,11 @@
     }
 
     function highlightSelectedDesa(clickedLayer, feature) {
+        // PERBAIKAN BUG HIGHLIGHT: Reset desa sebelumnya agar tidak nempel warnanya
+        if (selectedDesaLayer && selectedDesaLayer !== clickedLayer) {
+            geoJsonLayerDesa.resetStyle(selectedDesaLayer);
+        }
+
         selectedDesaLayer = clickedLayer;
         selectedDesaFeature = feature;
 
@@ -517,9 +556,8 @@
         const totalJumlah = totalLaki + totalPerempuan;
         const uniqueTPS = dataInDesa.length;
 
-        // TOMBOL DENGAN ID KHUSUS
-        // Status awal selalu Tidak Ditampilkan
-        const btnHtml = `<button id="btn-show-tps-action" class="btn-popup-tps" onclick="triggerShowTPS()"><i class="fas fa-map-marker-alt"></i> LIHAT TITIK TPS</button>`;
+        // PERBAIKAN BUG TOGGLE: Kirim 'this' pada onclick agar JS tahu tombol mana yang diklik
+        const btnHtml = `<button class="btn-popup-tps" onclick="window.triggerShowTPS(this)"><i class="fas fa-map-marker-alt"></i> LIHAT TITIK TPS</button>`;
 
         const content = `
             <div class="popup-header">${headerTitle}</div>
@@ -536,10 +574,9 @@
         layer.bindPopup(content).openPopup();
     }
 
-    // --- PERBAIKAN FUNGSI TRIGGER TPS (TOGGLE LOGIC) ---
-    window.triggerShowTPS = function() {
-        const btn = document.getElementById('btn-show-tps-action');
-        if(!btn) return;
+    // --- PERBAIKAN FUNGSI TRIGGER TPS (MENERIMA ELEMEN TOMBOL) ---
+    window.triggerShowTPS = function(btnElement) {
+        if(!btnElement) return;
 
         const isShown = tpsMarkersLayer.getLayers().length > 0;
 
@@ -548,13 +585,8 @@
             tpsMarkersLayer.clearLayers();
             
             // Kembalikan tombol ke Merah
-            btn.innerHTML = `<i class="fas fa-map-marker-alt"></i> LIHAT TITIK TPS`;
-            btn.className = "btn-popup-tps";
-            btn.style.backgroundColor = "#C8102E";
-            btn.style.color = "white";
-            
-            // Opsional: Zoom out kembali (user meminta hanya klik tombol untuk tampil, tapi biasanya enak jika bisa balik)
-            // map.fitBounds(selectedDesaLayer.getBounds(), { padding: 50, maxZoom: 14 });
+            btnElement.innerHTML = `<i class="fas fa-map-marker-alt"></i> LIHAT TITIK TPS`;
+            btnElement.className = "btn-popup-tps";
             
         } else {
             // MODE LIHAT TPS
@@ -566,10 +598,8 @@
                 showTPSPoints(selectedDesaFeature);
                 
                 // 3. Ubah Tombol jadi Abu-abu (Tutup)
-                btn.innerHTML = `<i class="fas fa-times-circle"></i> TUTUP TITIK TPS`;
-                btn.className = "btn-popup-close"; // Class abu-abu
-                btn.style.backgroundColor = "#6c757d";
-                btn.style.color = "white";
+                btnElement.innerHTML = `<i class="fas fa-times-circle"></i> TUTUP TITIK TPS`;
+                btnElement.className = "btn-popup-close"; // Class abu-abu
             }
         }
     }
@@ -615,6 +645,7 @@
     function resetMap() {
         selectedDesaLayer = null;
         selectedDesaFeature = null;
+        activeKecContext = null;
         tpsMarkersLayer.clearLayers();
         
         if (map.hasLayer(geoJsonLayerDesa)) map.removeLayer(geoJsonLayerDesa);
@@ -623,8 +654,27 @@
         map.fitBounds(geoJsonLayerKec.getBounds(), { padding: [20, 20] });
         map.closePopup();
         
+        // Sembunyikan tombol kembali
+        document.getElementById('btn-back-kec').style.display = 'none';
+        
         document.getElementById('jenis-select').value = 'pemutakhiran';
         changeJenis();
+    }
+
+    // FUNGSI BARU: KEMBALI KE PETA KECAMATAN TANPA RESET DATA
+    function backToKecamatan() {
+        selectedDesaLayer = null;
+        selectedDesaFeature = null;
+        tpsMarkersLayer.clearLayers();
+        
+        if (map.hasLayer(geoJsonLayerDesa)) map.removeLayer(geoJsonLayerDesa);
+        if (!map.hasLayer(geoJsonLayerKec)) map.addLayer(geoJsonLayerKec);
+        
+        map.fitBounds(geoJsonLayerKec.getBounds(), { padding: [20, 20] });
+        map.closePopup();
+        
+        // Sembunyikan tombol kembali
+        document.getElementById('btn-back-kec').style.display = 'none';
     }
 
     function loadGeoJsons() {
@@ -659,7 +709,7 @@
         tpsMarkersLayer.clearLayers();
         
         if (selectedDesaLayer) {
-             selectedDesaLayer.setStyle(styleDesa); 
+             geoJsonLayerDesa.resetStyle(selectedDesaLayer); 
              selectedDesaLayer = null;
         }
 
