@@ -632,15 +632,16 @@
     }
 
     function goBackToKecamatan() {
-        document.getElementById('btn-back').style.display = 'none';
-        selectedDesaLayer = null;
-        selectedDesaFeature = null;
-        tpsMarkersLayer.clearLayers();
+    document.getElementById('btn-back').style.display = 'none';
+    selectedDesaLayer = null;
+    selectedDesaFeature = null;
+    tpsMarkersLayer.clearLayers();
 
-        if (map.hasLayer(geoJsonLayerDesa)) map.removeLayer(geoJsonLayerDesa);
-        if (!map.hasLayer(geoJsonLayerKec)) map.addLayer(geoJsonLayerKec);
+    if (map.hasLayer(geoJsonLayerDesa)) map.removeLayer(geoJsonLayerDesa);
+    if (!map.hasLayer(geoJsonLayerKec)) map.addLayer(geoJsonLayerKec);
 
-        map.fitBounds(geoJsonLayerKec.getBounds(), { padding: [50, 50] });
+    // UBAH PADDING DARI [50, 50] MENJADI [20, 20] AGAR SAMA DENGAN RESET
+    map.fitBounds(geoJsonLayerKec.getBounds(), { padding: [20, 20] }); 
     }
 
     function resetMap() {
