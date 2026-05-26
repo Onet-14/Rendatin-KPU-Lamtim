@@ -103,6 +103,7 @@
             box-shadow: 0 5px 20px rgba(0,0,0,0.2);
             padding: 0;
             overflow: hidden;
+            z-index: 9999; /* PASTIKAN POPUP SELALU DI ATAS */
         }
         .leaflet-popup-content { margin: 0; min-width: 240px; }
         
@@ -153,8 +154,8 @@
         /* TPS BUTTON */
         .btn-popup-tps {
             width: 100%;
-            background-color: #C8102E;
-            color: white;
+            background-color: #c0c0c0; /* Warna Grey saat non-aktif */
+            color: #ffffff;
             border: none;
             padding: 10px;
             border-radius: 6px;
@@ -164,7 +165,8 @@
             transition: background 0.2s;
             font-size: 1rem;
         }
-        .btn-popup-tps:hover { background-color: #a50d24; }
+        .btn-popup-tps:hover { background-color: #C8102E; }
+        .btn-popup-tps.disabled { background-color: #e9ecef; cursor: not-allowed; opacity: 0.6; }
 
         /* CUSTOM TPS ICON */
         .custom-div-icon { background: transparent; border: none; }
@@ -172,7 +174,10 @@
             font-size: 32px; 
             color: #C8102E; 
             filter: drop-shadow(0px 3px 3px rgba(0,0,0,0.4));
-            display: flex; align-items: center; justify-content: center; line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
             transition: transform 0.2s;
         }
         .tps-pin:hover { transform: scale(1.2) translateY(-5px); color: #a50d24; }
@@ -222,8 +227,7 @@
         <ul style="margin-bottom: 0; padding-left: 20px; font-size: 0.8rem; margin-top: 5px; color: #555;">
             <li>Hover wilayah untuk Label Data.</li>
             <li>Klik Desa untuk melihat Popup Data.</li>
-            <li>Klik tombol "LIHAT TITIK TPS" untuk Zoom In & Pin.</li>
-            <li>Gunakan tombol Reset untuk kembali.</li>
+            <li>Klik tombol <strong>LIHAT TITIK TPS</strong> untuk Zoom In & Pin.</li>
         </ul>
     </div>
 </aside>
@@ -319,6 +323,7 @@
         };
     }
     
+    // Style saat desa diklik (Sorot)
     const styleDesaSelected = {
         weight: 3,
         color: '#ffffff',
@@ -457,7 +462,8 @@
                 }
             },
             click: (e) => {
-                e.target.bringToFront(); // Pastikan diklik
+                // Pastikan layer diangkat ke paling depan agar klik terbaca
+                e.target.bringToFront(); 
                 highlightSelectedDesa(e.target, feature);
             }
         });
@@ -467,21 +473,21 @@
         selectedDesaLayer = clickedLayer;
         selectedDesaFeature = feature;
 
-        // 1. Reset semua style desa ke default
+        // Reset semua style desa ke default
         geoJsonLayerDesa.eachLayer(function (layer) {
             layer.setStyle(styleDesa(layer.feature));
         });
 
-        // 2. Highlight desa yang diklik
+        // Highlight desa yang diklik
         clickedLayer.setStyle(styleDesaSelected);
         
-        // 3. Bersihkan TPS lama
+        // Bersihkan TPS lama
         tpsMarkersLayer.clearLayers();
 
-        // 4. Munculkan Popup Data
+        // Munculkan Popup Data
         showDesaPopup(feature, clickedLayer);
 
-        // 5. Jangan zoom (sesuai alur: Zoom dilakukan saat klik tombol TPS)
+        // JANGAN ZOOM DI SINI (Sesuai alur: Zoom dilakukan saat klik tombol TPS)
     }
 
     function showDesaPopup(feature, layer) {
@@ -513,7 +519,7 @@
         const totalJumlah = totalLaki + totalPerempuan;
         const uniqueTPS = dataInDesa.length;
 
-        // Tombol TPS dengan ID Unik agar mudah dimanipulasi tanpa re-render popup
+        // --- PERBAIKAN UTAMA: Menggunakan setPopupContent agar tombol baru selalu segar dan aktif ---
         const btnHtml = isTPSShown 
             ? `<div id="btn-tps-action" class="text-center mt-2 text-success fw-bold"><i class="fas fa-check-circle"></i> Titik TPS Ditampilkan</div>`
             : `<button id="btn-tps-action" class="btn-popup-tps" onclick="triggerShowTPS()"><i class="fas fa-map-marker-alt"></i> LIHAT TITIK TPS</button>`;
@@ -530,10 +536,11 @@
                 ${btnHtml}
             </div>
         `;
-        layer.bindPopup(content).openPopup();
+        
+        layer.setPopupContent(content);
     }
 
-    // --- PERBAIKAN BUG TOMBOL TPS ---
+    // --- FUNGSI TRIGGER TPS (DIBUAT SANGAT DIPANGGILAKAN POPUP SECARA AGAR TOMBOL SEGAR BARU ---
     window.triggerShowTPS = function() {
         if (selectedDesaLayer && selectedDesaFeature) {
             // 1. Zoom In ke desa tersebut
@@ -542,15 +549,15 @@
             // 2. Munculkan Titik TPS
             showTPSPoints(selectedDesaFeature);
             
-            // 3. Update Tampilan Tombol (Langsung manipulasi DOM, jangan bindPopup ulang)
+            // 3. Update Tampilan Tombol dengan DOM Element langsung (Lebih stabil daripada string replace)
             const popup = selectedDesaLayer.getPopup();
             const btn = popup ? popup.getElement().querySelector('#btn-tps-action') : null;
             
             if (btn) {
                 btn.innerHTML = `<i class="fas fa-check-circle"></i> Titik TPS Ditampilkan`;
                 btn.className = "text-center mt-2 text-success fw-bold";
-                // Hilangkan event listener agar tombol tidak bisa diklik 2x
-                btn.onclick = null;
+                // Hapus onclick untuk mencegah klik ulang
+                btn.removeAttribute('onclick');
             }
         }
     }
@@ -559,7 +566,7 @@
         tpsMarkersLayer.clearLayers();
         const activeData = getActiveData();
         const kelId = String(feature.properties.kel_id).trim();
-        const tpsData = activeData.filter(row => String(row['kode desa']).trim() === kelId);
+        const tpsData = activeData.filter(row => String(row['kode desa').trim() === kelId);
 
         const tpsIcon = L.divIcon({
             className: 'custom-div-icon',
@@ -603,7 +610,7 @@
         if (map.hasLayer(geoJsonLayerDesa)) map.removeLayer(geoJsonLayerDesa);
         if (!map.hasLayer(geoJsonLayerKec)) map.addLayer(geoJsonLayerKec);
         
-        // Reset view ke tampilan awal (Start) - SKALA SAMA
+        // Reset view ke tampilan awal (Start)
         map.fitBounds(geoJsonLayerKec.getBounds(), { padding: [20, 20] });
         map.closePopup();
         
