@@ -216,6 +216,14 @@
     let desaNameMap = {};
     let kecamatanNameMap = {};
 
+    // Fungsi untuk mengubah teks menjadi Capitalize Each Word
+    function toTitleCase(str) {
+        if (!str) return "";
+        return str.toLowerCase().replace(/(?:^|\s)\S/g, function(char) {
+            return char.toUpperCase();
+        });
+    }
+
     function stringToColor(str) {
         let hash = 0;
         for (let i = 0; i < str.length; i++) { hash = str.charCodeAt(i) + ((hash << 5) - hash); }
@@ -290,7 +298,7 @@
 
     function showKecamatanPopup(feature, layer) {
         const kecId = String(feature.properties.kec_id).trim();
-        const kecName = getFeatureName(feature, 'kecamatan');
+        const kecName = toTitleCase(getFeatureName(feature, 'kecamatan'));
         const activeData = getActiveData();
         const dataInKec = activeData.filter(row => String(row['kode kec'] || row['Kode Kec']).trim() === kecId);
         const headerTitle = `DATA KECAMATAN`;
@@ -383,10 +391,10 @@
 
     function showDesaPopup(feature, layer) {
         const kelId = String(feature.properties.kel_id).trim();
-        const desaName = getFeatureName(feature, 'desa');
+        const desaName = toTitleCase(getFeatureName(feature, 'desa'));
         const activeData = getActiveData();
         const dataInDesa = activeData.filter(row => String(row['kode desa'] || row['Kode Desa']).trim() === kelId);
-        const kecNameFromData = dataInDesa.length > 0 ? (dataInDesa[0].kecamatan || dataInDesa[0].Kecamatan) : "-";
+        const kecNameFromData = dataInDesa.length > 0 ? toTitleCase(dataInDesa[0].kecamatan || dataInDesa[0].Kecamatan) : "-";
         const headerTitle = `DATA DESA`;
 
         const isTPSShown = tpsMarkersLayer.getLayers().length > 0 && selectedDesaLayer === layer;
@@ -451,11 +459,8 @@
                 const popupContent = `
                     <div class="popup-header" style="font-size:0.9rem">DATA TPS ${tpsName}</div>
                     <div class="popup-body">
-                        <div class="popup-row"><span class="popup-label">Kecamatan:</span> <span class="popup-val">${row.kecamatan || row.Kecamatan}</span></div>
-                        <div class="popup-row"><span class="popup-label">Desa:</span> <span class="popup-val">${row.desa || row.Desa}</span></div>
-                        <div class="popup-row"><span class="popup-label">Laki-laki:</span> <span class="popup-val">${row['laki-laki'] || row['Laki-laki']}</span></div>
-                        <div class="popup-row"><span class="popup-label">Perempuan:</span> <span class="popup-val">${row['perempuan'] || row['Perempuan']}</span></div>
-                        <div class="popup-row total-bold"><span class="popup-label">Total:</span> <span class="popup-val">${jml}</span></div>
+                        <div class="popup-row"><span class="popup-label">Kecamatan:</span> <span class="popup-val">${toTitleCase(row.kecamatan || row.Kecamatan)}</span></div>
+                        <div class="popup-row"><span class="popup-label">Desa:</span> <span class="popup-val">${toTitleCase(row.desa || row.Desa)}</span></div>
                     </div>`;
                 marker.bindPopup(popupContent);
                 tpsMarkersLayer.addLayer(marker);
