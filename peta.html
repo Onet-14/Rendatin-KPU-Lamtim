@@ -49,6 +49,7 @@
             background-color: #C8102E; color: white; border: none; width: 100%;
             padding: 12px; border-radius: 6px; font-weight: 700; transition: all 0.2s;
             display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 1rem;
+            margin-bottom: 15px;
         }
         .btn-lihat:hover:not(:disabled) { background-color: #a50d24; color: white; transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .btn-lihat:disabled { background-color: #e0a3ac; cursor: not-allowed; }
@@ -186,8 +187,7 @@
             "PEMILU 2019",
             "PILKADA 2020",
             "PEMILU 2024",
-            "PILKADA 2024",
-            "(REKAP PEMUTAKHIRAN)"
+            "PILKADA 2024"
         ],
         pdpb: [
             "PDPB TRIWULAN II 2025",
@@ -253,7 +253,7 @@
         return { fillColor: color, weight: 1, opacity: 1, color: '#ffffff', fillOpacity: 0.5 };
     }
 
-    const styleDesaSelected = { weight: 3, color: '#ffffff', fillOpacity: 0.9, fillColor: '#ffcccc' };
+    const styleDesaSelected = { weight: 3, color: '#ffffff', fillOpacity: 0.5, fillColor: '#52a322' };
     const styleDesaDimmed = { weight: 1, color: '#ffffff', fillOpacity: 0.7, fillColor: '#d3d3d3' };
     const styleDesaHover = { weight: 2, color: '#ffffff', fillOpacity: 0.6, dashArray: '3, 3' };
 
