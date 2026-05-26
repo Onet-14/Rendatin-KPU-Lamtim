@@ -531,9 +531,8 @@
             layer.setStyle(styleDesaDimmed);
         });
 
-        clickedLayer.setStyle(styleDesaSelected);
-        tpsMarkersLayer.clearLayers();
-        map.fitBounds(clickedLayer.getBounds(), { padding: [50, 50], maxZoom: 16 });
+    clickedLayer.setStyle(styleDesaSelected);
+    tpsMarkersLayer.clearLayers();
     }
 
     function showDesaPopup(feature, layer) {
@@ -585,10 +584,19 @@
     }
 
     window.triggerShowTPS = function() {
-        if (selectedDesaFeature) {
-            showTPSPoints(selectedDesaFeature);
-            if (selectedDesaLayer) {
-                showDesaPopup(selectedDesaFeature, selectedDesaLayer);
+    if (selectedDesaFeature) {
+        
+        // 1. ZOOM IN ke desa yang dipilih (Dipindahkan dari highlightSelectedDesa)
+        if (selectedDesaLayer) {
+            map.fitBounds(selectedDesaLayer.getBounds(), { padding: [50, 50], maxZoom: 16 });
+        }
+
+        // 2. Tampilkan Titik TPS
+        showTPSPoints(selectedDesaFeature);
+        
+        // 3. Update Popup (Ubah tombol jadi teks hijau)
+        if (selectedDesaLayer) {
+            showDesaPopup(selectedDesaFeature, selectedDesaLayer);
             }
         }
     }
