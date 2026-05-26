@@ -396,7 +396,7 @@
 
     function onEachFeatureKecamatan(feature, layer) {
         const name = getFeatureName(feature, 'kecamatan');
-        layer.bindTooltip("Kecamatan " + name, {
+        layer.bindTooltip("KECAMATAN " + name.toUpperCase(), {
             sticky: true, direction: 'top', className: 'custom-tooltip'
         });
 
@@ -489,7 +489,7 @@
 
     function onEachFeatureDesa(feature, layer) {
         const name = getFeatureName(feature, 'desa');
-        layer.bindTooltip("DESA " + name, { 
+        layer.bindTooltip("DESA " + name.toUpperCase(), { 
             sticky: true, direction: 'top', className: 'custom-tooltip'
         });
 
