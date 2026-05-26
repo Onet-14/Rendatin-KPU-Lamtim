@@ -355,13 +355,13 @@
         };
     }
 
-    const styleDesaSelected = {
-        weight: 3,
-        color: '#ffffff',
-        fillOpacity: 0.9,
-        fillColor: '#ffcccc'
+        const styleDesaSelected = {
+        weight: 3,           // Garis tepi tetap tebal
+        color: '#ffffff',    // Warna garis tepi putih
+        fillOpacity: 0.85    // Transparansi dinaikkan agar warna aslinya terlihat lebih mencolok/seggar dibanding desa lain yang di-dim
+        // fillColor sengaja TIDAK ditulis agar tetap pakai warna asli dari getFeatureColor
     };
-
+    
     const styleDesaDimmed = {
         weight: 1,
         color: '#ffffff',
