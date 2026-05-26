@@ -24,7 +24,7 @@
             display: flex; 
         }
 
-        /* FIX: Hapus efek kotak hitam/garis saat klik */
+        /* FIX: Hapus efek kotak hitam */
         .leaflet-container path.leaflet-interactive { outline: none; }
         .leaflet-container :focus { outline: none; box-shadow: none; }
 
@@ -131,7 +131,7 @@
             font-size: 1rem; 
         }
 
-        /* STYLE UNTUK TOMBOL DI POPUP */
+        /* BUTTON STYLE IN POPUP */
         .btn-popup-action {
             width: 100%;
             background-color: #ffffff;
@@ -150,27 +150,7 @@
             color: white;
         }
 
-        /* CUSTOM TPS ICON */
-        .custom-div-icon {
-            background: transparent;
-            border: none;
-        }
-        .tps-pin {
-            font-size: 32px; 
-            color: #C8102E; 
-            filter: drop-shadow(0px 3px 3px rgba(0,0,0,0.4));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            line-height: 1;
-            transition: transform 0.2s;
-        }
-        .tps-pin:hover {
-            transform: scale(1.2) translateY(-5px);
-            color: #a50d24;
-        }
-
-        /* BUTTON STYLE IN POPUP (TPS) */
+        /* TPS BUTTON */
         .btn-popup-tps {
             width: 100%;
             background-color: #C8102E;
@@ -186,21 +166,16 @@
         }
         .btn-popup-tps:hover { background-color: #a50d24; }
 
-        /* STYLE TOMBOL TUTUP (KEDUA) */
-        .btn-popup-close {
-            width: 100%;
-            background-color: #6c757d;
-            color: white;
-            border: none;
-            padding: 10px;
-            border-radius: 6px;
-            font-weight: 700;
-            cursor: pointer;
-            margin-top: 15px;
-            transition: background 0.2s;
-            font-size: 1rem;
+        /* CUSTOM TPS ICON */
+        .custom-div-icon { background: transparent; border: none; }
+        .tps-pin {
+            font-size: 32px; 
+            color: #C8102E; 
+            filter: drop-shadow(0px 3px 3px rgba(0,0,0,0.4));
+            display: flex; align-items: center; justify-content: center; line-height: 1;
+            transition: transform 0.2s;
         }
-        .btn-popup-close:hover { background-color: #5a6268; }
+        .tps-pin:hover { transform: scale(1.2) translateY(-5px); color: #a50d24; }
 
         /* RESPONSIVE */
         @media (max-width: 768px) {
@@ -245,9 +220,10 @@
     <div class="info-card">
         <small><i class="fas fa-info-circle"></i> <strong>Panduan:</strong></small><br>
         <ul style="margin-bottom: 0; padding-left: 20px; font-size: 0.8rem; margin-top: 5px; color: #555;">
-            <li>Hover untuk melihat Label Data.</li>
-            <li>Klik wilayah untuk melihat Data.</li>
-            <li>Tekan tombol di Popup untuk Zoom & Lihat TPS.</li>
+            <li>Hover wilayah untuk Label Data.</li>
+            <li>Klik Desa untuk melihat Popup Data.</li>
+            <li>Klik tombol "LIHAT TITIK TPS" untuk Zoom In & Pin.</li>
+            <li>Gunakan tombol Reset untuk kembali.</li>
         </ul>
     </div>
 </aside>
@@ -469,13 +445,19 @@
 
         layer.on({
             mouseover: (e) => {
-                e.target.setStyle({ weight: 2, color: '#ffffff', fillOpacity: 0.8 });
+                if (selectedDesaLayer !== e.target) {
+                    e.target.setStyle({ weight: 2, color: '#ffffff', fillOpacity: 0.8 });
+                }
             },
             mouseout: (e) => {
-                geoJsonLayerDesa.resetStyle(e.target);
+                if (selectedDesaLayer === e.target) {
+                    e.target.setStyle(styleDesaSelected);
+                } else {
+                    geoJsonLayerDesa.resetStyle(e.target);
+                }
             },
             click: (e) => {
-                e.target.bringToFront();
+                e.target.bringToFront(); // Pastikan diklik
                 highlightSelectedDesa(e.target, feature);
             }
         });
@@ -485,10 +467,21 @@
         selectedDesaLayer = clickedLayer;
         selectedDesaFeature = feature;
 
+        // 1. Reset semua style desa ke default
+        geoJsonLayerDesa.eachLayer(function (layer) {
+            layer.setStyle(styleDesa(layer.feature));
+        });
+
+        // 2. Highlight desa yang diklik
         clickedLayer.setStyle(styleDesaSelected);
+        
+        // 3. Bersihkan TPS lama
         tpsMarkersLayer.clearLayers();
 
+        // 4. Munculkan Popup Data
         showDesaPopup(feature, clickedLayer);
+
+        // 5. Jangan zoom (sesuai alur: Zoom dilakukan saat klik tombol TPS)
     }
 
     function showDesaPopup(feature, layer) {
@@ -499,6 +492,9 @@
 
         const kecNameFromData = dataInDesa.length > 0 ? dataInDesa[0].kecamatan : "-";
         const headerTitle = `DATA DESA`;
+
+        // Cek status TPS
+        const isTPSShown = tpsMarkersLayer.getLayers().length > 0 && selectedDesaLayer === layer;
 
         if (dataInDesa.length === 0) {
             const content = `
@@ -517,9 +513,10 @@
         const totalJumlah = totalLaki + totalPerempuan;
         const uniqueTPS = dataInDesa.length;
 
-        // TOMBOL DENGAN ID KHUSUS
-        // Status awal selalu Tidak Ditampilkan
-        const btnHtml = `<button id="btn-show-tps-action" class="btn-popup-tps" onclick="triggerShowTPS()"><i class="fas fa-map-marker-alt"></i> LIHAT TITIK TPS</button>`;
+        // Tombol TPS dengan ID Unik agar mudah dimanipulasi tanpa re-render popup
+        const btnHtml = isTPSShown 
+            ? `<div id="btn-tps-action" class="text-center mt-2 text-success fw-bold"><i class="fas fa-check-circle"></i> Titik TPS Ditampilkan</div>`
+            : `<button id="btn-tps-action" class="btn-popup-tps" onclick="triggerShowTPS()"><i class="fas fa-map-marker-alt"></i> LIHAT TITIK TPS</button>`;
 
         const content = `
             <div class="popup-header">${headerTitle}</div>
@@ -536,40 +533,24 @@
         layer.bindPopup(content).openPopup();
     }
 
-    // --- PERBAIKAN FUNGSI TRIGGER TPS (TOGGLE LOGIC) ---
+    // --- PERBAIKAN BUG TOMBOL TPS ---
     window.triggerShowTPS = function() {
-        const btn = document.getElementById('btn-show-tps-action');
-        if(!btn) return;
-
-        const isShown = tpsMarkersLayer.getLayers().length > 0;
-
-        if (isShown) {
-            // MODE TUTUP TPS
-            tpsMarkersLayer.clearLayers();
+        if (selectedDesaLayer && selectedDesaFeature) {
+            // 1. Zoom In ke desa tersebut
+            map.fitBounds(selectedDesaLayer.getBounds(), { padding: 20, maxZoom: 16 });
             
-            // Kembalikan tombol ke Merah
-            btn.innerHTML = `<i class="fas fa-map-marker-alt"></i> LIHAT TITIK TPS`;
-            btn.className = "btn-popup-tps";
-            btn.style.backgroundColor = "#C8102E";
-            btn.style.color = "white";
+            // 2. Munculkan Titik TPS
+            showTPSPoints(selectedDesaFeature);
             
-            // Opsional: Zoom out kembali (user meminta hanya klik tombol untuk tampil, tapi biasanya enak jika bisa balik)
-            // map.fitBounds(selectedDesaLayer.getBounds(), { padding: 50, maxZoom: 14 });
+            // 3. Update Tampilan Tombol (Langsung manipulasi DOM, jangan bindPopup ulang)
+            const popup = selectedDesaLayer.getPopup();
+            const btn = popup ? popup.getElement().querySelector('#btn-tps-action') : null;
             
-        } else {
-            // MODE LIHAT TPS
-            if (selectedDesaLayer && selectedDesaFeature) {
-                // 1. Zoom In
-                map.fitBounds(selectedDesaLayer.getBounds(), { padding: 20, maxZoom: 16 });
-                
-                // 2. Munculkan Titik TPS
-                showTPSPoints(selectedDesaFeature);
-                
-                // 3. Ubah Tombol jadi Abu-abu (Tutup)
-                btn.innerHTML = `<i class="fas fa-times-circle"></i> TUTUP TITIK TPS`;
-                btn.className = "btn-popup-close"; // Class abu-abu
-                btn.style.backgroundColor = "#6c757d";
-                btn.style.color = "white";
+            if (btn) {
+                btn.innerHTML = `<i class="fas fa-check-circle"></i> Titik TPS Ditampilkan`;
+                btn.className = "text-center mt-2 text-success fw-bold";
+                // Hilangkan event listener agar tombol tidak bisa diklik 2x
+                btn.onclick = null;
             }
         }
     }
@@ -613,13 +594,16 @@
     }
 
     function resetMap() {
+        // Reset state
         selectedDesaLayer = null;
         selectedDesaFeature = null;
         tpsMarkersLayer.clearLayers();
         
+        // Reset layers
         if (map.hasLayer(geoJsonLayerDesa)) map.removeLayer(geoJsonLayerDesa);
         if (!map.hasLayer(geoJsonLayerKec)) map.addLayer(geoJsonLayerKec);
         
+        // Reset view ke tampilan awal (Start) - SKALA SAMA
         map.fitBounds(geoJsonLayerKec.getBounds(), { padding: [20, 20] });
         map.closePopup();
         
@@ -636,6 +620,7 @@
             geoJsonLayerKec.addData(dataKec);
             rawDesaGeoJson = dataDesa; 
             
+            // Tampilan Awal (Start)
             map.fitBounds(geoJsonLayerKec.getBounds(), { padding: [20, 20] });
             
             const loader = document.getElementById('loading-overlay');
