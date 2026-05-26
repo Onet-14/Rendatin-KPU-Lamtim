@@ -461,6 +461,9 @@
                     <div class="popup-body">
                         <div class="popup-row"><span class="popup-label">Kecamatan:</span> <span class="popup-val">${toTitleCase(row.kecamatan || row.Kecamatan)}</span></div>
                         <div class="popup-row"><span class="popup-label">Desa:</span> <span class="popup-val">${toTitleCase(row.desa || row.Desa)}</span></div>
+                        <div class="popup-row"><span class="popup-label">Laki-laki:</span> <span class="popup-val">${row['laki-laki'] || row['Laki-laki']}</span></div>
+                        <div class="popup-row"><span class="popup-label">Perempuan:</span> <span class="popup-val">${row['perempuan'] || row['Perempuan']}</span></div>
+                        <div class="popup-row total-bold"><span class="popup-label">Jumlah:</span> <span class="popup-val">${jml}</span></div>
                     </div>`;
                 marker.bindPopup(popupContent);
                 tpsMarkersLayer.addLayer(marker);
