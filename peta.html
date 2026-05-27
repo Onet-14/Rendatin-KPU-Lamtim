@@ -61,6 +61,41 @@
         }
         .btn-reset:hover { background-color: #5a6268; color: white; transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
 
+        /* STYLE UNTUK KOTAK WILAYAH TERPILIH */
+        .status-card {
+            background-color: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-left: 4px solid #C8102E;
+            border-radius: 4px;
+            padding: 12px 15px;
+            margin-top: 5px;
+        }
+        .status-title {
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .status-row {
+            display: flex;
+            margin-bottom: 4px;
+            font-size: 0.85rem;
+        }
+        .status-label {
+            color: #666;
+            font-weight: 600;
+            width: 40%;
+        }
+        .status-value {
+            color: #C8102E;
+            font-weight: 700;
+            width: 60%;
+            text-transform: capitalize;
+        }
+
         .info-card {
             background: #f8f9fa; border-left: 4px solid #C8102E; padding: 15px; border-radius: 4px;
             font-size: 0.8rem; color: #444; margin-top: auto;
@@ -150,6 +185,19 @@
         <button class="btn btn-reset" onclick="resetMap()">
             <i class="fas fa-undo"></i> Reset Peta
         </button>
+
+        <!-- KOTAK KETERANGAN WILAYAH TERPILIH -->
+        <div class="status-card">
+            <div class="status-title"><i class="fas fa-map-pin"></i> Wilayah Terpilih</div>
+            <div class="status-row">
+                <span class="status-label">Kecamatan:</span>
+                <span id="status-kecamatan" class="status-value">-</span>
+            </div>
+            <div class="status-row">
+                <span class="status-label">Desa:</span>
+                <span id="status-desa" class="status-value">-</span>
+            </div>
+        </div>
     </div>
 
     <div class="info-card">
@@ -222,6 +270,12 @@
         return str.toLowerCase().replace(/(?:^|\s)\S/g, function(char) {
             return char.toUpperCase();
         });
+    }
+
+    // FUNGSI BARU: UNTUK UPDATE SIDEBAR STATUS
+    function updateSidebarStatus(kec, desa) {
+        document.getElementById('status-kecamatan').innerText = kec || '-';
+        document.getElementById('status-desa').innerText = desa || '-';
     }
 
     function stringToColor(str) {
@@ -305,6 +359,9 @@
 
         const actionBtn = `<button class="btn-popup-action" onclick="triggerDrillDownFromPopup()"><i class="fas fa-search-location"></i> MASUK KE PETA DESA</button>`;
 
+        // UPDATE SIDEBAR: Saat klik kecamatan
+        updateSidebarStatus(kecName, '-');
+
         if (dataInKec.length === 0) {
             const content = `<div class="popup-header">${headerTitle}</div><div class="popup-body text-center text-muted"><div class="popup-row"><span class="popup-label">Kecamatan:</span> <span class="popup-val">${kecName}</span></div><div style="margin-top:10px;">Tidak ada data pada tahapan ini.</div></div>`;
             layer.bindPopup(content).openPopup();
@@ -340,6 +397,7 @@
     function drillDownToDesa(feature, layer) {
         if (!rawDesaGeoJson) return;
         const kecId = String(feature.properties.kec_id).trim();
+        const kecName = toTitleCase(getFeatureName(feature, 'kecamatan'));
         
         selectedDesaLayer = null; selectedDesaFeature = null;
         map.removeLayer(geoJsonLayerKec);
@@ -354,6 +412,9 @@
         
         tpsMarkersLayer.clearLayers();
         document.getElementById('btn-back').style.display = 'block';
+
+        // UPDATE SIDEBAR: Saat masuk ke peta desa
+        updateSidebarStatus(kecName, '-');
     }
 
     function onEachFeatureDesa(feature, layer) {
@@ -394,10 +455,16 @@
         const desaName = toTitleCase(getFeatureName(feature, 'desa'));
         const activeData = getActiveData();
         const dataInDesa = activeData.filter(row => String(row['kode desa'] || row['Kode Desa']).trim() === kelId);
-        const kecNameFromData = dataInDesa.length > 0 ? toTitleCase(dataInDesa[0].kecamatan || dataInDesa[0].Kecamatan) : "-";
+        
+        let kecNameFromData = dataInDesa.length > 0 ? toTitleCase(dataInDesa[0].kecamatan || dataInDesa[0].Kecamatan) : "-";
+        if(kecNameFromData === "-") kecNameFromData = document.getElementById('status-kecamatan').innerText; // Fallback ke sidebar jika data kosong
+
         const headerTitle = `DATA DESA`;
 
         const isTPSShown = tpsMarkersLayer.getLayers().length > 0 && selectedDesaLayer === layer;
+
+        // UPDATE SIDEBAR: Saat klik desa
+        updateSidebarStatus(kecNameFromData, desaName);
 
         if (dataInDesa.length === 0) {
             const content = `<div class="popup-header">${headerTitle}</div><div class="popup-body text-center text-muted"><div class="popup-row"><span class="popup-label">Kecamatan:</span> <span class="popup-val">${kecNameFromData}</span></div><div class="popup-row"><span class="popup-label">Desa:</span> <span class="popup-val">${desaName}</span></div><div style="margin-top:10px;">Tidak ada data TPS.</div></div>`;
@@ -477,6 +544,9 @@
         if (map.hasLayer(geoJsonLayerDesa)) map.removeLayer(geoJsonLayerDesa);
         if (!map.hasLayer(geoJsonLayerKec)) map.addLayer(geoJsonLayerKec);
         map.fitBounds(geoJsonLayerKec.getBounds(), { padding: [20, 20] });
+        
+        // UPDATE SIDEBAR: Kembali ke tampilan kecamatan
+        updateSidebarStatus('-', '-');
     }
 
     function resetMap() {
@@ -493,6 +563,9 @@
         document.getElementById('tahapan-select').innerHTML = '<option value="">-- Pilih Tahapan Dulu --</option>';
         document.getElementById('tahapan-select').disabled = true;
         document.getElementById('btn-lihat-peta').disabled = true;
+
+        // UPDATE SIDEBAR: Reset keterangan wilayah
+        updateSidebarStatus('-', '-');
     }
 
     function loadGeoJsons() {
@@ -543,7 +616,7 @@
         
         btnLihat.disabled = !(jenis && tahapan);
 
-        // Jika data sudah pernah di-load, langsung update popup (jika ganti tahapan)
+        // Jika data sudah pernah di-loaded, langsung update popup (jika ganti tahapan)
         if (currentCsvData.length > 0 && selectedDesaLayer) {
             showDesaPopup(selectedDesaFeature, selectedDesaLayer);
         }
