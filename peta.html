@@ -315,7 +315,7 @@
         const totalPerempuan = dataInKec.reduce((sum, item) => sum + parseInt(item['perempuan'] || item['Perempuan'] || 0), 0);
         const totalJumlah = totalLaki + totalPerempuan;
         const uniqueDesa = [...new Set(dataInKec.map(item => item['kode desa'] || item['Kode Desa']))].length;
-        const uniqueTPS = [...new Set(dataInKec.map(item => item.tps || item.TPS))].length;
+        const uniqueTPS = [...new Set(dataInKec.map(item => `${item['kode desa'] || item['Kode Desa']}-${item.tps || item.TPS}`))].length;
 
         const content = `
             <div class="popup-header">${headerTitle}</div>
@@ -408,7 +408,7 @@
         const totalLaki = dataInDesa.reduce((sum, item) => sum + parseInt(item['laki-laki'] || item['Laki-laki'] || 0), 0);
         const totalPerempuan = dataInDesa.reduce((sum, item) => sum + parseInt(item['perempuan'] || item['Perempuan'] || 0), 0);
         const totalJumlah = totalLaki + totalPerempuan;
-        const uniqueTPS = dataInDesa.length;
+        const uniqueTPS = [...new Set(dataInDesa.map(item => `${item['kode desa'] || item['Kode Desa']}-${item.tps || item.TPS}`))].length;
 
         const btnHtml = isTPSShown 
             ? `<div class="text-center mt-2"><small class="text-success fw-bold"><i class="fas fa-check-circle"></i> Titik TPS Ditampilkan</small></div>`
